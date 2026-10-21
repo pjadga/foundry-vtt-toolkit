@@ -93,10 +93,13 @@ export async function importEntries(entries, { overwrite = false } = {}) {
   }
 
   // Decide every entry's id up front so links can point at documents that don't exist yet.
+  // An entry with `replaces:` supersedes that document (keeping its id, so links to it survive) even
+  // without the overwrite option; otherwise an existing document of the same name is the target.
   const plan = supported.map(e => {
     const documentName = documentNameFor(e.type);
-    const existing = game.collections.get(documentName).find(d => d.name === e.name && d.folder?.id === folders[e.type].id) ?? null;
-    return { entry: e, documentName, existing, id: existing?.id ?? foundry.utils.randomID() };
+    const inFolder = name => game.collections.get(documentName).find(d => normalizeName(d.name) === normalizeName(name) && d.folder?.id === folders[e.type].id);
+    const existing = (e.replaces && inFolder(e.replaces)) || inFolder(e.name) || null;
+    return { entry: e, documentName, existing, replace: overwrite || !!e.replaces, id: existing?.id ?? foundry.utils.randomID() };
   });
   const orderOf = type => HANDLERS[type]?.order ?? 0;
   plan.sort((a, b) => orderOf(a.entry.type) - orderOf(b.entry.type));
@@ -106,8 +109,8 @@ export async function importEntries(entries, { overwrite = false } = {}) {
 
   const toCreate = [];
   const newPages = new Map();
-  for (const { entry, documentName, existing, id } of plan) {
-    if (existing && !overwrite) {
+  for (const { entry, documentName, existing, replace, id } of plan) {
+    if (existing && !replace) {
       report.skipped.push(`${entry.name} (already exists)`);
       continue;
     }
@@ -121,7 +124,7 @@ export async function importEntries(entries, { overwrite = false } = {}) {
       // raw keeps the [[links]] for relinking; generated lets relink tell whether the GM edited the page.
       const flags = { [MODULE_ID]: { ...baseFlags, raw, generated: markdown } };
       if (existing) {
-        await existing.update({ flags });
+        await existing.update({ name: entry.name, flags });
         await replacePage(existing, page);
       } else {
         toCreate.push({ _id: id, name: entry.name, folder: folders[entry.type].id, flags });

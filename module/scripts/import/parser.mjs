@@ -3,7 +3,7 @@
  * tested with `node --test`. Format: see docs/notebooklm/format.md.
  */
 
-const META_KEYS = new Set(["type", "name", "tags"]);
+const META_KEYS = new Set(["type", "name", "tags", "replaces"]);
 
 /** Undo the damage copying out of NotebookLM tends to do. */
 export function clean(raw) {
@@ -87,7 +87,9 @@ export function parseBundle(raw) {
     const tags = (fields.tags ?? "").split(",").map(t => t.trim()).filter(Boolean);
     const extra = Object.fromEntries(Object.entries(fields).filter(([k]) => !META_KEYS.has(k)));
     const links = findLinks(`${Object.values(extra).join("\n")}\n${body}`);
-    entries.push({ type, name, tags, fields: extra, body, links });
+    // replaces: the name of an earlier entry this one supersedes (from the consistency-check prompt).
+    const replaces = fields.replaces?.trim() || null;
+    entries.push({ type, name, tags, fields: extra, body, links, replaces });
   });
 
   // NotebookLM often repeats an entry when revising it; keep the last copy, in its position.

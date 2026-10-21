@@ -24,6 +24,9 @@ Markdown body. Refer to other entries as [[Exact Name]].
   fences, citations like `[1, 2-4]`, backslash escapes (`\#\#ENTRY`, `\[\[Name\]\]`), trailing spaces
   and HTML entities. If the line breaks were lost the importer says so; copy again from the code block.
 - If an entry appears twice (NotebookLM repeats revised entries), the later copy is used.
+- `replaces: <name>` (from the consistency-check prompt) replaces that existing document, keeping its
+  id so links to it survive, even when "Replace ... that already exist" is not ticked. The entry's
+  `name` becomes the document's name, so it can also rename. It is not shown as a field.
 
 ## Types
 

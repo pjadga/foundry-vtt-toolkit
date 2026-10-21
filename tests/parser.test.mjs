@@ -53,6 +53,13 @@ test("normalizeName ignores case, quotes, stray punctuation and a leading The", 
   assert.equal(normalizeName("The Flooded Docks"), normalizeName("Flooded Docks"));
 });
 
+test("replaces is metadata, not a displayed field", () => {
+  const { entries } = parseBundle("##ENTRY\ntype: npc\nname: Silas\nreplaces: Old Man Silas\nrole: civilian\n##BODY\n##END");
+  assert.equal(entries[0].replaces, "Old Man Silas");
+  assert.deepEqual(Object.keys(entries[0].fields), ["role"]);
+  assert.equal(parseBundle("##ENTRY\ntype: npc\nname: Rook\n##BODY\n##END").entries[0].replaces, null);
+});
+
 test("keeps only the last copy of a repeated entry", () => {
   const { entries, warnings } = parseBundle("##ENTRY\ntype: npc\nname: Silas\nv: 1\n##BODY\n##END\n##ENTRY\ntype: npc\nname: Rook\n##BODY\n##END\n##ENTRY\ntype: npc\nname: Silas\nv: 2\n##BODY\n##END");
   assert.deepEqual(entries.map(e => `${e.name}${e.fields.v ?? ""}`), ["Rook", "Silas2"]);
