@@ -1,0 +1,31 @@
+name: Release module
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Stamp version and download URL into module.json
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          jq --arg v "$VERSION" \
+             --arg dl "https://github.com/${{ github.repository }}/releases/download/${GITHUB_REF_NAME}/module.zip" \
+             '.version = $v | .download = $dl' module/module.json > module.json.tmp
+          mv module.json.tmp module/module.json
+
+      - name: Zip module
+        run: cd module && zip -r ../module.zip .
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            module/module.json
+            module.zip
