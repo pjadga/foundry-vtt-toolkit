@@ -13,7 +13,7 @@ Macros and a module for FoundryVTT v13. See `README.md` for layout and release s
 
 ## Open items
 
-- `sw25` system ID is unverified. Check it against the installed Sword World 2.5 system before relying on it.
+- Confirm `sw25-fvtt` against the installed Sword World 2.5 system's `system.json` on the live server.
 - The sw25 and cpred macros only log actor data. Field paths are not yet mapped.
 - No license chosen yet.
 

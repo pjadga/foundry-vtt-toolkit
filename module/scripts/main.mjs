@@ -3,7 +3,7 @@ const MODULE_ID = "foundry-vtt-toolkit";
 // Add an entry here to give a game system its own code. The key is game.system.id.
 const SYSTEM_MODULES = {
   dnd5e: "./systems/dnd5e.mjs",
-  sw25: "./systems/sw25.mjs",
+  "sw25-fvtt": "./systems/sw25.mjs",
   "cyberpunk-red-core": "./systems/cpred.mjs"
 };
 

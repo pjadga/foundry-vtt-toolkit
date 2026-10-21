@@ -47,5 +47,5 @@ The workflow writes the version and download URL into `module.json`, zips `modul
 | System | `game.system.id` |
 | --- | --- |
 | D&D 5e | `dnd5e` |
-| Sword World 2.5 | `sw25` (unverified, confirm against the installed system's `system.json`) |
+| Sword World 2.5 | `sw25-fvtt` |
 | Cyberpunk RED Core | `cyberpunk-red-core` |
