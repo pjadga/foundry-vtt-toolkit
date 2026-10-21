@@ -28,7 +28,7 @@ Install from the manifest URL (available once a release exists):
 https://github.com/pjadga/foundry-vtt-toolkit/releases/latest/download/module.json
 ```
 
-For development, symlink or copy `module/` to `<foundry data>/Data/modules/foundry-vtt-toolkit/`.
+For development, run `FOUNDRY_DATA="<path>/Data" npm run link` to symlink `module/` into `<foundry data>/Data/modules/foundry-vtt-toolkit/`, or copy it by hand.
 
 The entry point, `module/scripts/main.mjs`, loads `module/scripts/systems/<system>.mjs` for the
 active game system. Add new system support by adding a file and a line in `SYSTEM_MODULES`.
@@ -47,5 +47,5 @@ The workflow writes the version and download URL into `module.json`, zips `modul
 | System | `game.system.id` |
 | --- | --- |
 | D&D 5e | `dnd5e` |
-| Sword World 2.5 | `sw25-fvtt` |
-| Cyberpunk RED Core | `cyberpunk-red-core` |
+| Sword World 2.5 | `sw25` |
+| Cyberpunk RED Core | `cyberpunk-red-core` (v13 needs the unreleased 0.93 `dev` build; see CLAUDE.md) |

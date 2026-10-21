@@ -17,6 +17,12 @@ Macros and a module for FoundryVTT v13. See `README.md` for layout and release s
 - The sw25 and cpred macros only log actor data. Field paths are not yet mapped.
 - No license chosen yet.
 
+## System notes
+
+- **Cyberpunk RED Core** 0.92.x (latest release) is v12 only. v13 support (0.93) is on the upstream `dev` branch, unreleased; build it with `npm ci --ignore-scripts && npx gulp build` and copy `dist/` into `Data/systems/cyberpunk-red-core`. Its windows are ApplicationV2.
+- D&D 5e 5.3.x supports v13 and v14.
+- `npm run link` symlinks `module/` into a Foundry Data folder for development (set `FOUNDRY_DATA`).
+
 ## Verifying changes
 
 No test suite. JSON files must parse (`jq . module/module.json module/lang/en.json`) and `.mjs`
