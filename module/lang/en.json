@@ -1,0 +1,4 @@
+{
+  "FVTK.Settings.Debug.Name": "Debug logging",
+  "FVTK.Settings.Debug.Hint": "Log Foundry VTT Toolkit activity to the browser console."
+}

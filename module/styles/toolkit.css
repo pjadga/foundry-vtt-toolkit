@@ -1,0 +1,3 @@
+/* Foundry VTT Toolkit styles. Scope every rule under .fvtk to avoid leaking into core or systems. */
+.fvtk {
+}
