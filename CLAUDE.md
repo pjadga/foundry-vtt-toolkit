@@ -21,7 +21,13 @@ Macros and a module for FoundryVTT v13. See `README.md` for layout and release s
 
 `module/scripts/import/parser.mjs` is pure (no Foundry globals) so it stays testable; Foundry calls live in
 `importer.mjs`. Format and supported types: `docs/notebooklm/format.md`. Journals, locations and threads
-import today; npc, item, scene and playlist are parsed but skipped until their importers exist.
+import as journals; system modules add other types with `api.importer.registerType` (Cyberpunk RED
+registers `npc`, see `systems/cpred.mjs`, with its pure rules in `systems/cpred-npc.mjs`). item, scene
+and playlist are parsed but skipped until their importers exist.
+
+Cyberpunk RED gotcha: `CPRActor.create` only adds core skills/cyberware when no `system` data is given,
+and on that path it drops the passed `items` and resolves before the actor is in `game.actors`. The NPC
+importer therefore builds the full actor itself and uses the base `Actor.create`.
 
 ## System notes
 

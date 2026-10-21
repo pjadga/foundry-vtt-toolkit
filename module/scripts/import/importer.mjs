@@ -10,64 +10,138 @@ const JOURNAL_TYPES = {
   thread: "Story Threads"
 };
 
-/** name -> uuid for every journal in the world, matched loosely (see normalizeName). */
-function worldJournalLookup() {
-  const index = new Map(game.journal.map(j => [normalizeName(j.name), j.uuid]));
+/**
+ * Importers for other entry types, registered by system code (see registerType).
+ * @type {Record<string, {label: string, documentName: string, folder: string, import: Function}>}
+ */
+const HANDLERS = {};
+
+/**
+ * Register an importer for an entry type, e.g. Cyberpunk RED registers "npc".
+ * handler.import(entry, ctx) creates or replaces one document and returns it. ctx has:
+ * id (use with keepId), existing (document to replace, or null), folder, flags (merge into the
+ * document's flags), lookup (name -> uuid for [[links]]) and notes (builds linkable notes HTML,
+ * see notesHTML; pass its result through ctx.track to enable relinking).
+ * @param {string} type
+ * @param {{label: string, documentName: "Actor"|"Item", folder: string, import: Function}} handler
+ */
+export function registerType(type, handler) {
+  HANDLERS[type] = handler;
+}
+
+const documentNameFor = type => (type in JOURNAL_TYPES ? "JournalEntry" : HANDLERS[type]?.documentName);
+const destinationFor = type => JOURNAL_TYPES[type] ?? HANDLERS[type]?.label;
+const isSupported = type => !!documentNameFor(type);
+
+/**
+ * name -> uuid across journals and actors, matched loosely (see normalizeName). NotebookLM imports
+ * win over other documents with the same name.
+ */
+function worldLookup() {
+  const index = new Map();
+  const docs = [...game.actors, ...game.items, ...game.journal];
+  const isImport = d => d.flags[MODULE_ID]?.source === "notebooklm";
+  for (const d of [...docs.filter(d => !isImport(d)), ...docs.filter(isImport)]) index.set(normalizeName(d.name), d.uuid);
   return name => index.get(normalizeName(name)) ?? null;
 }
 
-/** Find or create a JournalEntry folder, optionally under a parent. */
-async function ensureFolder(name, parent = null) {
-  const existing = game.folders.find(f => f.type === "JournalEntry" && f.name === name && (f.folder?.id ?? null) === (parent?.id ?? null));
-  return existing ?? Folder.create({ name, type: "JournalEntry", folder: parent?.id ?? null });
+/** Find or create a folder of a document type, optionally under a parent. */
+async function ensureFolder(name, type, parent = null) {
+  const existing = game.folders.find(f => f.type === type && f.name === name && (f.folder?.id ?? null) === (parent?.id ?? null));
+  return existing ?? Folder.create({ name, type, folder: parent?.id ?? null });
 }
 
 /**
- * Import parsed entries as journal entries. Entries of other types are reported as skipped.
- * Links between entries in the bundle, and to existing journals with the same name, are resolved,
- * then earlier imports are re-linked to anything new (see relink).
+ * Notes HTML for an imported document: a public part and a GM-only secret part, both Markdown with
+ * [[links]]. The secret id is derived from the document id so the output is stable for relinking.
+ * @param {{public: string, secret: string}} raw
+ * @param {string} docId
+ * @param {(name: string) => string|null} lookup
+ */
+export function notesHTML(raw, docId, lookup) {
+  const converter = new showdown.Converter(CONST.SHOWDOWN_OPTIONS);
+  const html = md => converter.makeHtml(resolveLinks(md, lookup));
+  const parts = [];
+  if (raw.public) parts.push(html(raw.public));
+  if (raw.secret) parts.push(`<section class="secret" id="secret-${docId}">${html(raw.secret)}</section>`);
+  return parts.join("\n");
+}
+
+/**
+ * Import parsed entries. Journal types become journal entries; types with a registered handler
+ * are passed to it; the rest are reported as skipped. Every entry's id is decided first, so
+ * [[links]] resolve between entries of any type in the bundle and to existing documents. Earlier
+ * imports are then re-linked to anything new (see relink).
  * @param {object[]} entries From parseBundle.
  * @param {{overwrite?: boolean}} options
  * @returns {Promise<{created: string[], updated: string[], skipped: string[], relinked: string[]}>}
  */
 export async function importEntries(entries, { overwrite = false } = {}) {
   const report = { created: [], updated: [], skipped: [], relinked: [] };
-  const journalEntries = entries.filter(e => e.type in JOURNAL_TYPES);
-  for (const e of entries) if (!(e.type in JOURNAL_TYPES)) report.skipped.push(`${e.name} (${e.type || "no type"}: not supported yet)`);
-  if (!journalEntries.length) return report;
+  for (const e of entries) if (!isSupported(e.type)) report.skipped.push(`${e.name} (${e.type || "no type"}: not supported yet)`);
+  const supported = entries.filter(e => isSupported(e.type));
+  if (!supported.length) return report;
 
-  const root = await ensureFolder(ROOT_FOLDER);
+  const roots = {};
   const folders = {};
-  for (const type of new Set(journalEntries.map(e => e.type))) folders[type] = await ensureFolder(JOURNAL_TYPES[type], root);
+  for (const type of new Set(supported.map(e => e.type))) {
+    const documentName = documentNameFor(type);
+    roots[documentName] ??= await ensureFolder(ROOT_FOLDER, documentName);
+    folders[type] = await ensureFolder(JOURNAL_TYPES[type] ?? HANDLERS[type].folder, documentName, roots[documentName]);
+  }
 
-  // Decide every entry's id up front so links can point at journals that don't exist yet.
-  const plan = journalEntries.map(e => {
-    const existing = game.journal.find(j => j.name === e.name && j.folder?.id === folders[e.type].id);
-    return { entry: e, existing, id: existing?.id ?? foundry.utils.randomID() };
+  // Decide every entry's id up front so links can point at documents that don't exist yet.
+  const plan = supported.map(e => {
+    const documentName = documentNameFor(e.type);
+    const existing = game.collections.get(documentName).find(d => d.name === e.name && d.folder?.id === folders[e.type].id) ?? null;
+    return { entry: e, documentName, existing, id: existing?.id ?? foundry.utils.randomID() };
   });
-  const byName = new Map(plan.map(p => [normalizeName(p.entry.name), `JournalEntry.${p.id}`]));
-  const inWorld = worldJournalLookup();
+  const byName = new Map(plan.map(p => [normalizeName(p.entry.name), `${p.documentName}.${p.id}`]));
+  const inWorld = worldLookup();
   const lookup = name => byName.get(normalizeName(name)) ?? inWorld(name);
 
   const toCreate = [];
   const newPages = new Map();
-  for (const { entry, existing, id } of plan) {
-    const raw = toMarkdown(entry);
-    const markdown = resolveLinks(raw, lookup);
-    const page = pageData(entry.name, markdown);
-    // raw keeps the [[links]] for relinking; generated lets relink tell whether the GM edited the page.
-    const flags = { [MODULE_ID]: { source: "notebooklm", type: entry.type, tags: entry.tags, raw, generated: markdown } };
-
-    if (!existing) {
-      toCreate.push({ _id: id, name: entry.name, folder: folders[entry.type].id, flags });
-      newPages.set(id, page);
-      report.created.push(entry.name);
-    } else if (overwrite) {
-      await existing.update({ flags });
-      await replacePage(existing, page);
-      report.updated.push(entry.name);
-    } else {
+  for (const { entry, documentName, existing, id } of plan) {
+    if (existing && !overwrite) {
       report.skipped.push(`${entry.name} (already exists)`);
+      continue;
+    }
+    const outcome = existing ? report.updated : report.created;
+    const baseFlags = { source: "notebooklm", type: entry.type, tags: entry.tags };
+
+    if (documentName === "JournalEntry") {
+      const raw = toMarkdown(entry);
+      const markdown = resolveLinks(raw, lookup);
+      const page = pageData(entry.name, markdown);
+      // raw keeps the [[links]] for relinking; generated lets relink tell whether the GM edited the page.
+      const flags = { [MODULE_ID]: { ...baseFlags, raw, generated: markdown } };
+      if (existing) {
+        await existing.update({ flags });
+        await replacePage(existing, page);
+      } else {
+        toCreate.push({ _id: id, name: entry.name, folder: folders[entry.type].id, flags });
+        newPages.set(id, page);
+      }
+      outcome.push(entry.name);
+      continue;
+    }
+
+    try {
+      const ctx = {
+        id,
+        existing,
+        folder: folders[entry.type],
+        flags: { [MODULE_ID]: baseFlags },
+        lookup,
+        notes: raw => notesHTML(raw, id, lookup),
+        track: (doc, notesPath, raw) => trackNotes(doc, notesPath, raw)
+      };
+      await HANDLERS[entry.type].import(entry, ctx);
+      outcome.push(entry.name);
+    } catch (err) {
+      console.error(`${MODULE_ID} | Failed to import ${entry.type} "${entry.name}"`, err);
+      report.skipped.push(`${entry.name} (error: ${err.message})`);
     }
   }
   if (toCreate.length) {
@@ -78,6 +152,16 @@ export async function importEntries(entries, { overwrite = false } = {}) {
   const touched = new Set([...report.created, ...report.updated]);
   report.relinked = (await relink()).filter(name => !touched.has(name));
   return report;
+}
+
+/**
+ * Record what was generated into a document's notes field, so relink can rebuild it later and
+ * tell whether the GM has edited it. Reads the stored value back, since the server may normalize
+ * the HTML.
+ */
+async function trackNotes(doc, notesPath, raw) {
+  const generated = foundry.utils.getProperty(doc, notesPath);
+  await doc.update({ [`flags.${MODULE_ID}.notes`]: { path: notesPath, raw, generated } });
 }
 
 function pageData(name, markdown) {
@@ -92,14 +176,14 @@ async function replacePage(journal, page) {
 }
 
 /**
- * Re-resolve links in every NotebookLM journal, so a journal imported before its link targets
- * existed picks them up (and links to deleted journals fall back to bold text). Pages the GM has
- * edited since import are left alone.
- * @returns {Promise<string[]>} Names of journals whose page was rewritten.
+ * Re-resolve links in every NotebookLM journal and in the notes of imported actors and items, so a
+ * document imported before its link targets existed picks them up (and links to deleted documents
+ * fall back to bold text). Anything the GM has edited since import is left alone.
+ * @returns {Promise<string[]>} Names of documents that were rewritten.
  */
 export async function relink() {
   const changed = [];
-  const lookup = worldJournalLookup();
+  const lookup = worldLookup();
   for (const journal of game.journal) {
     const flags = journal.flags[MODULE_ID];
     const page = journal.pages.contents[0];
@@ -111,6 +195,15 @@ export async function relink() {
     await replacePage(journal, pageData(page.name, markdown));
     changed.push(journal.name);
   }
+  for (const doc of [...game.actors, ...game.items]) {
+    const notes = doc.flags[MODULE_ID]?.notes;
+    if (!notes?.raw || foundry.utils.getProperty(doc, notes.path) !== notes.generated) continue;
+    const html = notesHTML(notes.raw, doc.id, lookup);
+    if (html === notes.generated) continue;
+    await doc.update({ [notes.path]: html });
+    await trackNotes(doc, notes.path, notes.raw);
+    changed.push(doc.name);
+  }
   return changed;
 }
 
@@ -118,7 +211,7 @@ const escape = s => foundry.utils.escapeHTML(String(s));
 
 function previewHTML({ entries, warnings }) {
   const rows = entries.map(e => {
-    const status = e.type in JOURNAL_TYPES ? JOURNAL_TYPES[e.type] : "skipped (not supported yet)";
+    const status = destinationFor(e.type) ?? "skipped (not supported yet)";
     return `<li><strong>${escape(e.name)}</strong> <em>${escape(e.type)}</em> → ${escape(status)}${e.links.length ? `<br><small>links: ${e.links.map(escape).join(", ")}</small>` : ""}</li>`;
   });
   const warn = warnings.length ? `<p><strong>Warnings</strong></p><ul>${warnings.map(w => `<li>${escape(w)}</li>`).join("")}</ul>` : "";
@@ -154,7 +247,7 @@ export async function openImporter() {
   if (!text.trim()) return;
 
   const parsed = parseBundle(text);
-  const importable = parsed.entries.filter(e => e.type in JOURNAL_TYPES).length;
+  const importable = parsed.entries.filter(e => isSupported(e.type)).length;
   if (!importable) {
     return DialogV2.prompt({ window: { title: game.i18n.localize("FVTK.Import.Title") }, content: previewHTML(parsed), rejectClose: false });
   }

@@ -39,7 +39,8 @@ Write campaign material in NotebookLM using the prompts in
 [docs/notebooklm/cyberpunk-red-prompts.md](docs/notebooklm/cyberpunk-red-prompts.md), copy the output,
 then click **Import from NotebookLM** in Foundry's Journal sidebar (GM only) and paste it. Format:
 [docs/notebooklm/format.md](docs/notebooklm/format.md). Journals, locations and story threads import
-today; NPCs, items, scenes and playlists are next.
+as journals; in a Cyberpunk RED world NPCs import as mook actors with role, stats, skills and
+compendium gear. Items, scenes and playlists are next.
 
 ## Releasing
 

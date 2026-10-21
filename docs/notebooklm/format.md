@@ -32,7 +32,26 @@ Markdown body. Refer to other entries as [[Exact Name]].
 | `journal` | Journal entry | NotebookLM / Campaign |
 | `location` | Journal entry | NotebookLM / Locations |
 | `thread` | Journal entry | NotebookLM / Story Threads |
-| `npc`, `item`, `scene`, `playlist` | Not yet; listed as skipped | |
+| `npc` (Cyberpunk RED) | Mook actor | NotebookLM / NPCs (Actors) |
+| `npc` (other systems), `item`, `scene`, `playlist` | Not yet; listed as skipped | |
+
+### Cyberpunk RED NPCs
+
+Handled by `module/scripts/systems/cpred.mjs`; the pure rules are in `cpred-npc.mjs`.
+
+| Field | Used for |
+| --- | --- |
+| `role` | Role item from the system's roles compendium, rank by tier; `civilian` adds none |
+| `tier` | `non-combatant`, `mook`, `lieutenant` or `boss` (anything else counts as `mook`). Sets default stats, skill levels and role rank (see `TIERS`); these are toolkit defaults to adjust, not rulebook values |
+| `stats` | `INT 6, REF 8, ...` overrides the tier defaults (clamped 1 to 10) |
+| `skills` | `Handgun 6, Evasion 5` sets core skill levels; unknown skills are noted for the GM |
+| `gear` | `[[links]]` matched to the system's core compendiums (exact name, body-armor names such as "Kevlar Vest", everyday terms such as "submachine gun", or a multi-word item name inside the gear name). Weapons and armor are equipped, cyberware installed. Unmatched gear is listed in the notes |
+| `appearance`, `voice_and_mannerisms`, body | Notes on the sheet |
+| everything else (`what_they_want`, `what_theyre_hiding`, ...) | A GM-only secret section of the notes |
+
+The actor gets all core skills and core cyberware like a new mook. HP is 10 + 5 × ceil((BODY +
+WILL) / 2); Humanity is EMP × 10 minus the static Humanity Loss of the gear cyberware, and EMP drops
+by one per 10 lost.
 
 Re-importing an entry with the same name skips it unless "Replace journals that already exist" is
 ticked, which replaces its page.

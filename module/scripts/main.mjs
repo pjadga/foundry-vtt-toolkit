@@ -1,4 +1,4 @@
-import { openImporter, importEntries, parseBundle, relink } from "./import/importer.mjs";
+import { openImporter, importEntries, parseBundle, relink, registerType } from "./import/importer.mjs";
 
 const MODULE_ID = "foundry-vtt-toolkit";
 
@@ -21,7 +21,7 @@ Hooks.once("init", () => {
 });
 
 Hooks.once("ready", async () => {
-  const api = { id: MODULE_ID, log, system: null, importer: { open: openImporter, importEntries, parseBundle, relink } };
+  const api = { id: MODULE_ID, log, system: null, importer: { open: openImporter, importEntries, parseBundle, relink, registerType } };
   game.modules.get(MODULE_ID).api = api;
 
   const path = SYSTEM_MODULES[game.system.id];

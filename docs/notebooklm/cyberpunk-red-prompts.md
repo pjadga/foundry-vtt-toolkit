@@ -46,7 +46,7 @@ Create 10 locations as "location" entries for the campaign. Include a mix: a hom
 ## Prompt 4: NPCs
 
 ```
-Create 12 NPCs as "npc" entries. Include allies, rivals, a fixer, a recurring contact, the main antagonist, and a companion who can travel with the player (this is a single-player game, so the companion should be useful and likable). Fields for each: role (Cyberpunk RED role, or "civilian"), tier (mook, lieutenant, boss, or non-combatant), appearance, voice and mannerisms, what they want, what they're hiding, their relationship to the player, and 2 to 4 pieces of gear or cyberware as [[item links]]. In the body, write a short backstory. Make them memorable and unlike the stock NPCs in my sources.
+Create 12 NPCs as "npc" entries. Include allies, rivals, a fixer, a recurring contact, the main antagonist, and a companion who can travel with the player (this is a single-player game, so the companion should be useful and likable). Fields for each: role (Cyberpunk RED role, or "civilian"), tier (mook, lieutenant, boss, or non-combatant), stats (one line: "INT 6, REF 7, DEX 6, TECH 5, COOL 6, WILL 6, LUCK 5, MOVE 6, BODY 7, EMP 5", values 2 to 8 for ordinary people), skills (one line of their 6 to 10 most important skills with levels, using Cyberpunk RED core skill names, e.g. "Handgun 6, Evasion 5, Persuasion 4"), appearance, voice and mannerisms, what they want, what they're hiding, their relationship to the player, and 2 to 4 pieces of gear or cyberware as [[item links]] using the item names from the Cyberpunk RED core rulebook where one fits (e.g. [[Heavy Pistol]], [[Kevlar]], [[Cyberarm]]). In the body, write a short backstory. Make them memorable and unlike the stock NPCs in my sources.
 ```
 
 ## Prompt 5: items
