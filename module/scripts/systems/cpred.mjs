@@ -1,14 +1,37 @@
 import { normalizeName, findLinks } from "../import/parser.mjs";
 import { STAT_KEYS, TIERS, tierOf, buildStats, buildSkills, derivedStats, matchGear, npcNotes } from "./cpred-npc.mjs";
+import { itemType, itemChanges, itemDescription } from "./cpred-items.mjs";
 
+const MODULE_ID = "foundry-vtt-toolkit";
 const SYSTEM_ID = "cyberpunk-red-core";
 const NOTES_PATH = "system.information.notes"; // the only text field the mook sheet shows
-const GEAR_TYPES = new Set(["weapon", "armor", "cyberware", "gear", "drug", "clothing", "itemUpgrade", "cyberdeck", "ammo", "program"]);
+const DESCRIPTION_PATH = "system.description.value";
+const GEAR_TYPES = new Set(["weapon", "armor", "cyberware", "gear", "drug", "clothing", "itemUpgrade", "cyberdeck", "ammo", "program", "vehicle"]);
 const EQUIP_TYPES = new Set(["weapon", "armor"]);
 
 export function register(api) {
-  api.importer.registerType("npc", { label: "NPCs (Cyberpunk RED mook actors)", documentName: "Actor", folder: "NPCs", import: importNpc });
+  // Items first, so NPCs in the same import pick up the custom items by name.
+  api.importer.registerType("item", { label: "Items (Cyberpunk RED)", documentName: "Item", folder: "Items", order: 10, import: importItem });
+  api.importer.registerType("npc", { label: "NPCs (Cyberpunk RED mook actors)", documentName: "Actor", folder: "NPCs", order: 20, import: importNpc });
+  Hooks.on("renderActorSheetV2", showSecretsToOwner);
+  Hooks.on("renderItemSheetV2", showSecretsToOwner);
   api.log("Cyberpunk RED support registered");
+}
+
+/**
+ * The system's sheets show notes and descriptions enriched without `secrets`, so secret sections are
+ * hidden from everyone outside the editor. For a user who owns the document (the GM, or a player's
+ * own character) re-enrich those fields with secrets shown, as core sheets do. Others are untouched.
+ */
+async function showSecretsToOwner(app, element) {
+  const doc = app.document;
+  if (!doc?.isOwner) return;
+  for (const field of element.querySelectorAll("prose-mirror[name]")) {
+    const raw = foundry.utils.getProperty(doc, field.getAttribute("name"));
+    const display = field.querySelector(".editor-content");
+    if (!display || typeof raw !== "string" || !raw.includes('class="secret"')) continue;
+    display.innerHTML = await foundry.applications.ux.TextEditor.implementation.enrichHTML(raw, { secrets: true, relativeTo: doc, rollData: doc.getRollData?.() });
+  }
 }
 
 let gearIndexCache;
@@ -29,12 +52,41 @@ async function packIndex(name) {
   return game.packs.get(`${SYSTEM_ID}.${name}`)?.getIndex() ?? [];
 }
 
-/** Item data for an embedded copy of a compendium or world item. */
+/** Item data for a copy of a compendium or world item. */
 async function itemData(uuid) {
   const data = (await fromUuid(uuid)).toObject();
   delete data._id;
   delete data.folder;
+  // A copy must not be relinked as if it were the imported original.
+  delete data.flags?.[MODULE_ID]?.notes;
   return data;
+}
+
+/**
+ * NotebookLM "item" entry -> Cyberpunk RED item. The closest compendium item of the same type is the
+ * template (so weapon type, skill, DV table and ammo stay valid); the entry's name, price, damage,
+ * ROF, SP, penalty and Humanity Loss are applied on top. With no template the item starts from the
+ * type's defaults. Replacing an existing item deletes and recreates it with the same id.
+ */
+async function importItem(entry, ctx) {
+  const type = itemType(entry);
+  const template = matchGear(entry.name, (await gearIndex()).filter(i => i.type === type));
+  const base = template ? await itemData(template.uuid) : { type, system: {} };
+  const { changes, used, problems } = itemChanges(entry, type, !!template);
+
+  const raw = itemDescription(entry, used, template?.name ?? null, problems);
+  const system = foundry.utils.mergeObject(base.system, foundry.utils.expandObject({ ...changes, "description.value": ctx.notes(raw) }), { inplace: false });
+  if (EQUIP_TYPES.has(type) && "equipped" in system) system.equipped = "owned";
+  // Not from a book: don't inherit the template's source and page.
+  if ("sources" in system) system.sources = [];
+
+  if (ctx.existing) await ctx.existing.delete();
+  const [item] = await CONFIG.Item.documentClass.createDocuments(
+    [{ ...base, _id: ctx.id, name: entry.name, type, folder: ctx.folder.id, flags: foundry.utils.mergeObject(base.flags ?? {}, ctx.flags, { inplace: false }), system }],
+    { keepId: true }
+  );
+  await ctx.track(item, DESCRIPTION_PATH, raw);
+  return item;
 }
 
 /**
@@ -69,6 +121,17 @@ async function importNpc(entry, ctx) {
     if (EQUIP_TYPES.has(data.type) && "equipped" in data.system) data.system.equipped = "equipped";
     items.push(data);
     gear.matched.push({ wanted: name, name: hit.name, exact: hit.exact });
+
+    // Armor cyberware (Subdermal Armor, Skin Weave) is two items in this system: the cyberware for
+    // Humanity Loss and an armor item of the same name for SP. Add the armor when it exists.
+    if (data.type === "cyberware") {
+      const armor = index.find(i => i.type === "armor" && normalizeName(i.name) === normalizeName(data.name));
+      if (armor && !items.some(i => i.type === "armor" && normalizeName(i.name) === normalizeName(data.name))) {
+        const armorData = await itemData(armor.uuid);
+        armorData.system.equipped = "equipped";
+        items.push(armorData);
+      }
+    }
   }
 
   let roleName = "";

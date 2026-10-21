@@ -5,7 +5,7 @@
   "FVTK.Import.Title": "Import from NotebookLM",
   "FVTK.Import.Instructions": "Paste one or more ##ENTRY blocks copied from NotebookLM. Journal, location and thread entries become journals; the preview shows what every other type becomes, or that it is not supported yet.",
   "FVTK.Import.File": "…or choose a file exported from NotebookLM (.md or .txt):",
-  "FVTK.Import.Overwrite": "Replace journals and NPCs that already exist with the same name",
+  "FVTK.Import.Overwrite": "Replace journals, items and NPCs that already exist with the same name",
   "FVTK.Import.Preview": "Preview",
   "FVTK.Import.Confirm": "Import {count}",
   "FVTK.Import.Done": "NotebookLM import: {created} created, {updated} updated, {skipped} skipped, {relinked} earlier journals re-linked.",

@@ -52,7 +52,7 @@ Create 12 NPCs as "npc" entries. Include allies, rivals, a fixer, a recurring co
 ## Prompt 5: items
 
 ```
-Create 15 items as "item" entries for the campaign: 5 weapons, 3 armor pieces, 4 cyberware pieces, 3 other gear items. Fields: category, price (in eb), and for the type: weapon (damage, rate of fire, range or melee), armor (SP, penalty), cyberware (effect, Humanity Loss). Make at least 4 of them unique story items with a history tied to a thread or NPC. Mark each with "story_item: yes/no". Stay within the power level of the items in my sources, and flag any you think might be too strong.
+Create 15 items as "item" entries for the campaign: 5 weapons, 3 armor pieces, 4 cyberware pieces, 3 other gear items. Use exactly these field names. All items: category (weapon, armor, cyberware, gear, drug or clothing), price (e.g. "500 eb"). Weapons: damage (e.g. "3d6"), rate_of_fire (a number), range_or_melee ("range" or "melee"). Armor: sp (a number), penalty (a number, or "none"). Cyberware: effect (one sentence), humanity_loss (e.g. "7 (2d6)"). When an item is a variant of a core rulebook item, include that item's name in its name (e.g. "Militech Heavy Pistol", "Kevlar Vest"). Make at least 4 of them unique story items with a history tied to a thread or NPC. Mark each with "story_item: yes/no". Stay within the power level of the items in my sources, and mark any you think might be too strong with "too_strong_flag: yes".
 ```
 
 ## Prompt 6: scenes and music

@@ -22,8 +22,13 @@ Macros and a module for FoundryVTT v13. See `README.md` for layout and release s
 `module/scripts/import/parser.mjs` is pure (no Foundry globals) so it stays testable; Foundry calls live in
 `importer.mjs`. Format and supported types: `docs/notebooklm/format.md`. Journals, locations and threads
 import as journals; system modules add other types with `api.importer.registerType` (Cyberpunk RED
-registers `npc`, see `systems/cpred.mjs`, with its pure rules in `systems/cpred-npc.mjs`). item, scene
-and playlist are parsed but skipped until their importers exist.
+registers `item` and `npc`, see `systems/cpred.mjs`, with pure rules in `systems/cpred-items.mjs` and
+`systems/cpred-npc.mjs`; handler `order` makes items import before NPCs). scene and playlist are parsed
+but skipped until their importers exist.
+
+Cyberpunk RED sheets enrich notes/descriptions without `secrets: true`, so secret sections are hidden
+in view mode for everyone, GM included. `showSecretsToOwner` in `systems/cpred.mjs` (render hooks for
+`ActorSheetV2`/`ItemSheetV2`) re-enriches `<prose-mirror>` fields that contain secrets, for owners only.
 
 Cyberpunk RED gotcha: `CPRActor.create` only adds core skills/cyberware when no `system` data is given,
 and on that path it drops the passed `items` and resolves before the actor is in `game.actors`. The NPC

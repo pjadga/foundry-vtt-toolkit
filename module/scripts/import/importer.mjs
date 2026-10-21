@@ -17,13 +17,15 @@ const JOURNAL_TYPES = {
 const HANDLERS = {};
 
 /**
- * Register an importer for an entry type, e.g. Cyberpunk RED registers "npc".
- * handler.import(entry, ctx) creates or replaces one document and returns it. ctx has:
+ * Register an importer for an entry type, e.g. Cyberpunk RED registers "item" and "npc".
+ * Types are imported in ascending handler.order (journals first, at 0), so an NPC importer can
+ * use items imported in the same run. handler.import(entry, ctx) creates or replaces one document
+ * and returns it. ctx has:
  * id (use with keepId), existing (document to replace, or null), folder, flags (merge into the
  * document's flags), lookup (name -> uuid for [[links]]) and notes (builds linkable notes HTML,
  * see notesHTML; pass its result through ctx.track to enable relinking).
  * @param {string} type
- * @param {{label: string, documentName: "Actor"|"Item", folder: string, import: Function}} handler
+ * @param {{label: string, documentName: "Actor"|"Item", folder: string, order?: number, import: Function}} handler
  */
 export function registerType(type, handler) {
   HANDLERS[type] = handler;
@@ -34,7 +36,7 @@ const destinationFor = type => JOURNAL_TYPES[type] ?? HANDLERS[type]?.label;
 const isSupported = type => !!documentNameFor(type);
 
 /**
- * name -> uuid across journals and actors, matched loosely (see normalizeName). NotebookLM imports
+ * name -> uuid across journals, actors and items, matched loosely (see normalizeName). NotebookLM imports
  * win over other documents with the same name.
  */
 function worldLookup() {
@@ -96,6 +98,8 @@ export async function importEntries(entries, { overwrite = false } = {}) {
     const existing = game.collections.get(documentName).find(d => d.name === e.name && d.folder?.id === folders[e.type].id) ?? null;
     return { entry: e, documentName, existing, id: existing?.id ?? foundry.utils.randomID() };
   });
+  const orderOf = type => HANDLERS[type]?.order ?? 0;
+  plan.sort((a, b) => orderOf(a.entry.type) - orderOf(b.entry.type));
   const byName = new Map(plan.map(p => [normalizeName(p.entry.name), `${p.documentName}.${p.id}`]));
   const inWorld = worldLookup();
   const lookup = name => byName.get(normalizeName(name)) ?? inWorld(name);

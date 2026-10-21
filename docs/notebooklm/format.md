@@ -32,8 +32,35 @@ Markdown body. Refer to other entries as [[Exact Name]].
 | `journal` | Journal entry | NotebookLM / Campaign |
 | `location` | Journal entry | NotebookLM / Locations |
 | `thread` | Journal entry | NotebookLM / Story Threads |
+| `item` (Cyberpunk RED) | Item | NotebookLM / Items (Items) |
 | `npc` (Cyberpunk RED) | Mook actor | NotebookLM / NPCs (Actors) |
-| `npc` (other systems), `item`, `scene`, `playlist` | Not yet; listed as skipped | |
+| `npc` and `item` (other systems), `scene`, `playlist` | Not yet; listed as skipped | |
+
+Items are imported before NPCs, so an NPC whose gear names an item in the same import gets that item.
+
+### Cyberpunk RED items
+
+The closest core compendium item of the same type is copied as a template (same matching as NPC
+gear), so weapon type, skill, DV table and ammo stay valid; the entry's fields are applied on top.
+With no match the item starts from the type's defaults. The template's book and page are cleared.
+
+| Field | Used for |
+| --- | --- |
+| `category` | Item type: weapon, armor, cyberware, gear, drug, clothing, ammo, program, cyberdeck, vehicle, upgrade (else a tag naming one, else gear) |
+| `price` | Market price (`"1,000 eb"` → 1000) |
+| `damage`, `rate_of_fire`, `range_or_melee` | Weapon damage formula, ROF, ranged or melee (melee items without a template get the Melee Weapon skill) |
+| `sp`, `penalty` | Body SP, or head SP when the name or tags say head/helmet; the system has one penalty number, so the largest given is used |
+| `humanity_loss` | `"7 (2d6)"` → static 7, roll 2d6 |
+| `effect`, body | Description |
+| everything else (`story_item`, ...), `too_strong_flag: yes`, the template used | GM-only secret section of the description |
+
+Armor cyberware such as Subdermal Armor is two items in this system (cyberware for Humanity Loss,
+armor for SP); an NPC given the cyberware also gets the compendium armor of the same name.
+
+**GM-only sections.** Cyberpunk RED's own sheets hide secret sections in the normal view for
+everyone, GM included. With the toolkit enabled, sheets show them to users who own the document (the
+GM, or a player viewing their own character), as Foundry's core sheets do; anyone else still sees the
+field without them.
 
 ### Cyberpunk RED NPCs
 
