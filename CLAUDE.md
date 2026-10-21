@@ -17,6 +17,12 @@ Macros and a module for FoundryVTT v13. See `README.md` for layout and release s
 - The sw25 and cpred macros only log actor data. Field paths are not yet mapped.
 - No license chosen yet.
 
+## NotebookLM import
+
+`module/scripts/import/parser.mjs` is pure (no Foundry globals) so it stays testable; Foundry calls live in
+`importer.mjs`. Format and supported types: `docs/notebooklm/format.md`. Journals, locations and threads
+import today; npc, item, scene and playlist are parsed but skipped until their importers exist.
+
 ## System notes
 
 - **Cyberpunk RED Core** 0.92.x (latest release) is v12 only. v13 support (0.93) is on the upstream `dev` branch, unreleased; build it with `npm ci --ignore-scripts && npx gulp build` and copy `dist/` into `Data/systems/cyberpunk-red-core`. Its windows are ApplicationV2.
@@ -25,5 +31,5 @@ Macros and a module for FoundryVTT v13. See `README.md` for layout and release s
 
 ## Verifying changes
 
-No test suite. JSON files must parse (`jq . module/module.json module/lang/en.json`) and `.mjs`
+`npm test` runs the NotebookLM parser tests (`tests/parser.test.mjs`, no Foundry needed). JSON files must parse (`jq . module/module.json module/lang/en.json`) and `.mjs`
 files should pass `node --check`. Real verification means loading the module in a Foundry v13 world.

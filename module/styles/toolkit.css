@@ -1,3 +1,13 @@
 /* Foundry VTT Toolkit styles. Scope every rule under .fvtk to avoid leaking into core or systems. */
 .fvtk {
 }
+
+.fvtk textarea[name="text"] {
+  width: 100%;
+  font-family: monospace;
+}
+
+.fvtk-import-preview ul {
+  max-height: 50vh;
+  overflow-y: auto;
+}

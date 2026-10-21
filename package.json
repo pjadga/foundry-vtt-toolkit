@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "link": "node scripts/link-module.mjs"
+    "link": "node scripts/link-module.mjs",
+    "test": "node --test tests/parser.test.mjs"
   }
 }

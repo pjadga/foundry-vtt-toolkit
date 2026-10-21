@@ -1,0 +1,39 @@
+##ENTRY
+type: journal
+name: Campaign Overview
+tags: cyberpunk-red, campaign, solo-play, 2045, night-city, street-level
+premise: When a routine scavenge job in the Old Combat Zone uncovers a malfunctioning military datachip belonging to a deceased relative, a lone Edgerunner gets dragged into a bitter neighborhood turf war. As a ruthless slumlord attempts to bulldoze their residential block, the player must unravel the chip's dark secrets to protect their home and community.
+tone: Gritty, intimate noir with desperate street-level survival, high-tension personal stakes, and atmospheric neon dread.
+themes: Community resilience versus corporate exploitation, the burden of family legacy, and the true price of survival in the Time of the Red.
+central_conflict: The fight to protect [[The Overlook]] residential tenement block from violent eviction, sabotage, and corporate acquisition by a rising shadow syndicate.
+antagonist: [[Vance "Hard-Line" Miller]], a cold-hearted Exec-turned-Fixer who wants to forcibly clear [[The Overlook]] to extract a high-value pre-War Petrochem data vault hidden beneath its foundation.
+plot_twists: 1) The datachip contains the digital neural imprint of the player's lost relative, revealing [[Vance "Hard-Line" Miller]] betrayed them decades ago. 2) [[Doctor Maya Chen]], the trusted local street doc, has been secretly informing for Miller to secure medical supplies for her clinic. 3) The hidden Petrochem vault powers the entire block's jury-rigged infrastructure, so extracting its data core will destroy the building.
+ending: In a final subterranean showdown, the player defeats [[Vance "Hard-Line" Miller]] inside the vault, re-programs the AI power matrix to grant tenants total legal ownership of the block, and establishes [[The Overlook]] as a permanent, autonomous sanctuary on The Street.
+sessions: 12
+##BODY
+### Campaign Overview: Grounded Solo Campaign Framework (12 Sessions)
+
+This single-player campaign is designed specifically for one player character (PC) operating in Night City during the Time of the Red (2045). It focuses on low-level, street-tier survival that gradually escalates into deeply personal stakes as the player transforms from a mercenary paying monthly rent (1,000 eb/month) into the defensive anchor of their local community.
+
+---
+
+### Session-by-Session Narrative Arc
+
+#### Act I: Street-Level Survival & Discovery (Sessions 1–4)
+* **Session 1: Rent Is Due** — The PC is scraping together cash for rent. They accept a 500 eb salvage gig from local Fixer [[Rook]] to clear scavengers out of an abandoned warehouse in the Old Combat Zone. Inside, the PC retrieves a damaged pre-War military datachip bearing the serial number of their estranged parent.
+* **Session 2: Muscle on the Block** — Cyber-gangers hired by [[Vance "Hard-Line" Miller]] attack [[The Overlook]], cutting power lines and harassing tenants. The PC collaborates with neighborhood Medtech [[Doctor Maya Chen]] to repel the gangers (requiring DV 13 Brawling or Handgun checks) and secure basic supplies.
+* **Session 3: Night Market Infiltration** — Seeking a rogue Netrunner to decrypt the datachip, the PC visits a local Night Market. While negotiating, they discover Miller is buying heavy industrial demolition equipment and military combat cyberware to forcibly raze [[The Overlook]].
+* **Session 4: First Blood & Twist One** — The PC ambushes a demolition crew sent to plant explosives on the building's structural columns. Upon decrypting the datachip, the PC uncovers **Twist 1**: the chip holds an encrypted memory log revealing [[Vance "Hard-Line" Miller]] was their relative's former partner who betrayed and left them to die during the Fourth Corporate War.
+
+#### Act II: Escalation & Internal Betrayal (Sessions 5–8)
+* **Session 5: Securing the Turf** — Utilizing Headquarters (HQ) Advancement Rules, the PC spends earned Improvement Points (IP) to fortify [[The Overlook]] with surveillance feeds, reinforced doors (SP 12), and an emergency medical bay.
+* **Session 6: Striking the Supply Line** — The PC executes a tactical raid against Miller’s cyberware distribution depot in Heywood to disrupt his mercenary reinforcements, engaging heavily armored guards (SP 11) in close-quarters combat.
+* **Session 7: Shadow in the Clinic & Twist Two** — When an enemy strike team bypasses security to target the building's power grid, the PC investigates the security breach and reveals **Twist 2**: [[Doctor Maya Chen]] has been leaking internal building layouts to Miller in exchange for rare immunosuppressants needed for local children.
+* **Session 8: The Subterranean Probe** — Confronting Chen leads to a crucial clue: Miller isn't after the real estate above ground, but a sealed subterranean access hatch in [[The Overlook]]'s sub-basement. Breach attempts reveal a locked pre-War Petrochem NET architecture.
+
+#### Act III: The Climax & Legend of The Street (Sessions 9–12)
+* **Session 9: Beneath the Red Dirt & Twist Three** — Jacking into the localized sub-basement NET architecture, the PC discovers **Twist 3**: an unmapped pre-DataKRASH AI fragment is currently stabilizing the entire district's jury-rigged power grid. Extracting or removing the vault's core will cause [[The Overlook]]'s foundation to implode.
+* **Session 10: Rallied Streets** — With Miller’s heavy strike team deadline 24 hours away, the PC leverages their personal Lifepath contacts, street rats, and converted gang allies to prepare a neighborhood defense network.
+* **Session 11: The Siege of The Overlook** — Miller launches a full-scale assault using armored combat vehicles and heavy mercenaries. The PC conducts a multi-stage tactical defense through choked stairwells and barricaded hallways.
+* **Session 12: Confrontation & Legacy** — The PC corners [[Vance "Hard-Line" Miller]] inside the subterranean Petrochem vault. After defeating Miller in single combat, the PC re-routes the AI’s power matrix directly to the building's tenants, establishing [[The Overlook]] as a legally protected, self-sustaining community shelter and cementing the PC's legacy as a Street Legend.
+##END

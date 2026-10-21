@@ -33,6 +33,14 @@ For development, run `FOUNDRY_DATA="<path>/Data" npm run link` to symlink `modul
 The entry point, `module/scripts/main.mjs`, loads `module/scripts/systems/<system>.mjs` for the
 active game system. Add new system support by adding a file and a line in `SYSTEM_MODULES`.
 
+## Importing from NotebookLM
+
+Write campaign material in NotebookLM using the prompts in
+[docs/notebooklm/cyberpunk-red-prompts.md](docs/notebooklm/cyberpunk-red-prompts.md), copy the output,
+then click **Import from NotebookLM** in Foundry's Journal sidebar (GM only) and paste it. Format:
+[docs/notebooklm/format.md](docs/notebooklm/format.md). Journals, locations and story threads import
+today; NPCs, items, scenes and playlists are next.
+
 ## Releasing
 
 ```
