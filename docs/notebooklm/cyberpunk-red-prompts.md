@@ -57,8 +57,13 @@ Create 15 items as "item" entries for the campaign: 5 weapons, 3 armor pieces, 4
 
 ## Prompt 6: scenes and music
 
+Scene entries import as journals. To give locations and scenes a Foundry scene, save one image per
+location named after it (e.g. `the-overlook.jpg`) and choose that folder in the import dialog;
+scenes reuse their location's image unless you give them their own. Scenes are numbered in campaign
+order from the session each one names, so ask for a `session:` field (the epilogue can leave it out).
+
 ```
-Create 8 key scenes as "scene" entries for the main thread: opening, three mid-campaign set pieces, the lead-up to the finale, the finale, and the epilogue. Fields: location as [[link]], NPCs present as [[links]], objective, complications, and the best and worst outcomes. Then create 3 "playlist" entries (street, tension, finale), each with a mood description and a list of 6 suggested track styles or genres, e.g. "dark synthwave, slow, 90 bpm". Don't name copyrighted songs.
+Create 8 key scenes as "scene" entries for the main thread: opening, three mid-campaign set pieces, the lead-up to the finale, the finale, and the epilogue. Fields: session (the session number it happens in; leave it out for the epilogue), location as [[link]], NPCs present as [[links]], objective, complications, and the best and worst outcomes. Then create 3 "playlist" entries (street, tension, finale), each with a mood field and a "tracks" field listing 6 suggested track styles, one numbered line each, e.g. "1. Dark synthwave with rain field recordings, slow, 90 bpm". Don't name copyrighted songs.
 ```
 
 ## Prompt 7: consistency check

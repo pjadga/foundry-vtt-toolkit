@@ -23,8 +23,22 @@ Macros and a module for FoundryVTT v13. See `README.md` for layout and release s
 `importer.mjs`. Format and supported types: `docs/notebooklm/format.md`. Journals, locations and threads
 import as journals; system modules add other types with `api.importer.registerType` (Cyberpunk RED
 registers `item` and `npc`, see `systems/cpred.mjs`, with pure rules in `systems/cpred-items.mjs` and
-`systems/cpred-npc.mjs`; handler `order` makes items import before NPCs). scene and playlist are parsed
-but skipped until their importers exist.
+`systems/cpred-npc.mjs`; handler `order` makes items import before NPCs). Locations and scene entries
+also become Foundry scenes when an image matches (`findImage` in the parser, `importScenes` in the
+importer; images come from the dialog's image folder via `FilePicker.browse`). `playlist` entries
+become Foundry playlists (`youtube/playlists.mjs`, registered in `main.mjs`).
+
+## YouTube playback
+
+`module/scripts/youtube/`: `youtube.mjs` (pure helpers, tested), `search.mjs` (Data API v3 with the GM's
+client-scoped key, oEmbed fallback), `picker.mjs` (ApplicationV2 track picker), `player.mjs` (playback).
+A YouTube track is a PlaylistSound with `path` = `assets/silence.wav`, `repeat: true` and the video in
+`flags.foundry-vtt-toolkit.youtube`; every client plays it in a visible ≥200×200 embedded player (YouTube
+policy: don't hide or shrink it). Shared timing: `startedAt` (server ms) while playing, `pausedAt` (s)
+while paused, written by the user who changed playback. Gotchas: the playlist's own controls (play,
+next, stopAll) update sounds via `updatePlaylist` with a `sounds` array, not `updatePlaylistSound`, so
+both hooks are handled; `stopAll` leaves a stale `pausedTime`, so pause vs stop is read from the change
+(`pausedTime` set = pause). No downloading from YouTube.
 
 Cyberpunk RED sheets enrich notes/descriptions without `secrets: true`, so secret sections are hidden
 in view mode for everyone, GM included. `showSecretsToOwner` in `systems/cpred.mjs` (render hooks for

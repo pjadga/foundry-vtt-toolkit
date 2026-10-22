@@ -11,3 +11,88 @@
   max-height: 50vh;
   overflow-y: auto;
 }
+
+/* YouTube track picker */
+.fvtk-youtube-picker .window-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.fvtk-yt-toolbar,
+.fvtk-yt-footer {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+.fvtk-yt-footer {
+  justify-content: space-between;
+}
+.fvtk-yt-rows {
+  flex: 1;
+  overflow-y: auto;
+  margin: 0;
+  padding-left: 1.5rem;
+}
+.fvtk-yt-row {
+  margin-bottom: 0.75rem;
+}
+.fvtk-yt-line {
+  font-weight: bold;
+  margin-bottom: 0.25rem;
+}
+.fvtk-yt-controls {
+  display: grid;
+  grid-template-columns: 2fr auto 1.5fr auto;
+  gap: 0.25rem;
+}
+.fvtk-yt-status {
+  font-style: italic;
+  opacity: 0.8;
+}
+.fvtk-yt-results {
+  list-style: none;
+  margin: 0.25rem 0 0;
+  padding: 0;
+}
+.fvtk-yt-result {
+  display: grid;
+  grid-template-columns: 64px 1fr auto;
+  grid-template-rows: auto auto;
+  column-gap: 0.5rem;
+  align-items: center;
+  padding: 0.25rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.fvtk-yt-result:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+.fvtk-yt-result.chosen {
+  outline: 1px solid var(--color-border-highlight, #ff6400);
+  background: rgba(255, 100, 0, 0.1);
+}
+.fvtk-yt-result img {
+  grid-row: span 2;
+  width: 64px;
+  height: 48px;
+  object-fit: cover;
+}
+.fvtk-yt-result a {
+  grid-row: span 2;
+}
+
+/* Now playing window: the embedded player stays visible at 356x200; YouTube's minimum is 200x200. */
+.fvtk-youtube-deck .fvtk-yt-slot + .fvtk-yt-slot {
+  margin-top: 0.5rem;
+}
+.fvtk-youtube-deck iframe {
+  display: block;
+  width: 356px;
+  height: 200px;
+  border: 0;
+}
+.fvtk-yt-caption {
+  font-size: var(--font-size-12, 12px);
+  opacity: 0.8;
+  margin-top: 0.25rem;
+}

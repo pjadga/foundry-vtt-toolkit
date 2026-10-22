@@ -39,8 +39,12 @@ Write campaign material in NotebookLM using the prompts in
 [docs/notebooklm/cyberpunk-red-prompts.md](docs/notebooklm/cyberpunk-red-prompts.md), copy the output,
 then click **Import from NotebookLM** in Foundry's Journal sidebar (GM only) and paste it. Format:
 [docs/notebooklm/format.md](docs/notebooklm/format.md). Journals, locations and story threads import
-as journals; in a Cyberpunk RED world items import as real weapons, armor, cyberware and gear, and
-NPCs as mook actors with role, stats, skills and gear. Scenes and playlists are next.
+as journals; locations and scenes also become Foundry scenes when you pick a folder of images named
+after them. In a Cyberpunk RED world items import as real weapons, armor, cyberware and gear, and
+NPCs as mook actors with role, stats, skills and gear. Playlists import too; fill them with
+**YouTube tracks** in the Playlists sidebar (search with your own YouTube Data API key, or paste
+links), and they play for everyone through YouTube's embedded player, synced with Foundry's playlist
+controls. Nothing is downloaded. See [docs/notebooklm/format.md](docs/notebooklm/format.md).
 
 ## Releasing
 

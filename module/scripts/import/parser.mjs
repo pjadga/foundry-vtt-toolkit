@@ -3,7 +3,8 @@
  * tested with `node --test`. Format: see docs/notebooklm/format.md.
  */
 
-const META_KEYS = new Set(["type", "name", "tags", "replaces"]);
+const META_KEYS = new Set(["type", "name", "tags", "replaces", "image", "map"]);
+const IMAGE_EXTENSIONS = /\.(webp|png|jpe?g|avif|gif|svg)$/i;
 
 /** Undo the damage copying out of NotebookLM tends to do. */
 export function clean(raw) {
@@ -22,10 +23,70 @@ export function clean(raw) {
 
 /**
  * Key for matching names loosely, so [[Vance "Hard-Line" Miller"]] (a stray quote NotebookLM
- * produced) still finds Vance "Hard-Line" Miller. Case, quotes and punctuation are ignored.
+ * produced) still finds Vance "Hard-Line" Miller. Case, quotes, punctuation and a leading "The"
+ * are ignored; apostrophes are dropped rather than splitting words ("Chen's" -> "chens").
  */
 export function normalizeName(name) {
-  return String(name).toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim().replace(/^the /, "");
+  return String(name).toLowerCase().replace(/['’]/g, "").replace(/[^\p{L}\p{N}]+/gu, " ").trim().replace(/^the /, "");
+}
+
+/**
+ * The image file for an entry: its `image:` value if that is a path or URL, or a file in `files`
+ * whose name (without folder or extension) matches the entry name or that value.
+ * "worlds/x/the-overlook.jpg" matches "The Overlook"; "dr-chens-free-clinic.webp" matches
+ * "Dr. Chen's Free Clinic".
+ * @param {{name: string, image?: string|null}} entry
+ * @param {string[]} files Image paths, e.g. from a FilePicker browse of the image folder.
+ * @returns {string|null}
+ */
+export function findImage(entry, files = []) {
+  const wanted = entry.image?.trim();
+  if (wanted && (wanted.includes("/") || /^https?:/i.test(wanted)) && IMAGE_EXTENSIONS.test(wanted)) return wanted;
+  const stem = path => decodeURIComponent(path.split("/").pop()).replace(IMAGE_EXTENSIONS, "");
+  const keys = [wanted && normalizeName(wanted.replace(IMAGE_EXTENSIONS, "")), normalizeName(entry.name)].filter(Boolean);
+  const images = files.filter(f => IMAGE_EXTENSIONS.test(f));
+  for (const key of keys) {
+    const hit = images.find(f => normalizeName(stem(f)) === key);
+    if (hit) return hit;
+  }
+  return null;
+}
+
+/**
+ * Where an entry falls in the campaign, for ordering scenes: its `session:` field, else the first
+ * "Session N" in its fields or body, else last for an epilogue (first for a prologue). null if
+ * there is nothing to go on.
+ * @param {{fields?: object, tags?: string[], body?: string}} entry
+ * @returns {number|null}
+ */
+export function progressionKey(entry) {
+  const fields = entry.fields ?? {};
+  const explicit = String(fields.session ?? fields.order ?? "").match(/\d+/);
+  if (explicit) return Number(explicit[0]);
+  const text = `${Object.values(fields).join("\n")}\n${entry.body ?? ""}`;
+  const session = text.match(/\bsessions?\s+(\d+)/i);
+  if (session) return Number(session[1]);
+  const words = `${(entry.tags ?? []).join(" ")}\n${text}`;
+  if (/\bepilogue\b/i.test(words)) return 1000;
+  if (/\bprologue\b/i.test(words)) return 0;
+  return null;
+}
+
+/** "3. Defense of the Block" -> "Defense of the Block". */
+export function stripNumber(name) {
+  return String(name).replace(/^\d+\.\s+/, "");
+}
+
+/**
+ * Numbered names in campaign order: ascending key (entries without one go last), ties by name.
+ * Numbers are zero-padded once there are ten or more, so alphabetical sorting keeps the order.
+ * @param {{name: string, key: number|null}[]} items
+ * @returns {Map<string, string>} name -> numbered name
+ */
+export function numberInOrder(items) {
+  const sorted = [...items].sort((a, b) => (a.key ?? Infinity) - (b.key ?? Infinity) || a.name.localeCompare(b.name));
+  const width = String(sorted.length).length;
+  return new Map(sorted.map((item, i) => [item.name, `${String(i + 1).padStart(width, "0")}. ${item.name}`]));
 }
 
 /** Extract unique [[link]] targets from a string. */
@@ -89,7 +150,9 @@ export function parseBundle(raw) {
     const links = findLinks(`${Object.values(extra).join("\n")}\n${body}`);
     // replaces: the name of an earlier entry this one supersedes (from the consistency-check prompt).
     const replaces = fields.replaces?.trim() || null;
-    entries.push({ type, name, tags, fields: extra, body, links, replaces });
+    // image: a background for the entry's Foundry scene (a path, or a file name in the image folder).
+    const image = (fields.image ?? fields.map)?.trim() || null;
+    entries.push({ type, name, tags, fields: extra, body, links, replaces, image });
   });
 
   // NotebookLM often repeats an entry when revising it; keep the last copy, in its position.

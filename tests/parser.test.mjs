@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import { parseBundle, resolveLinks, toMarkdown, clean, normalizeName } from "../module/scripts/import/parser.mjs";
+import { parseBundle, resolveLinks, toMarkdown, clean, normalizeName, findImage, progressionKey, stripNumber, numberInOrder } from "../module/scripts/import/parser.mjs";
 
 const sample = fs.readFileSync(new URL("../docs/notebooklm/examples/campaign-overview.txt", import.meta.url), "utf8");
 
@@ -49,7 +49,7 @@ test("reads a Markdown export with every character escaped and trailing spaces",
 
 test("normalizeName ignores case, quotes, stray punctuation and a leading The", () => {
   assert.equal(normalizeName('Vance "Hard-Line" Miller"'), normalizeName('vance "hard-line" miller'));
-  assert.equal(normalizeName("Dr. Chen's Free Clinic"), "dr chen s free clinic");
+  assert.equal(normalizeName("Dr. Chen's Free Clinic"), "dr chens free clinic");
   assert.equal(normalizeName("The Flooded Docks"), normalizeName("Flooded Docks"));
 });
 
@@ -58,6 +58,37 @@ test("replaces is metadata, not a displayed field", () => {
   assert.equal(entries[0].replaces, "Old Man Silas");
   assert.deepEqual(Object.keys(entries[0].fields), ["role"]);
   assert.equal(parseBundle("##ENTRY\ntype: npc\nname: Rook\n##BODY\n##END").entries[0].replaces, null);
+});
+
+test("findImage matches file names to entry names, or uses an explicit image", () => {
+  const files = ["worlds/w/assets/the-overlook.jpg", "worlds/w/assets/dr-chens-free-clinic.webp", "worlds/w/assets/Red%20Cloud%20Night%20Market.png", "worlds/w/assets/notes.txt", "worlds/w/assets/vault.jpg"];
+  const e = (name, image = null) => ({ name, image });
+  assert.equal(findImage(e("The Overlook"), files), files[0]);
+  assert.equal(findImage(e("Dr. Chen's Free Clinic"), files), files[1]);
+  assert.equal(findImage(e("The Red Cloud Night Market"), files), files[2]);
+  assert.equal(findImage(e("Showdown", "vault.jpg"), files), files[4]);
+  assert.equal(findImage(e("Showdown", "maps/other.jpg"), files), "maps/other.jpg");
+  assert.equal(findImage(e("Notes"), files), null);
+  assert.equal(findImage(e("Nowhere"), files), null);
+  assert.equal(parseBundle("##ENTRY\ntype: location\nname: X\nimage: x.jpg\n##BODY\n##END").entries[0].image, "x.jpg");
+});
+
+test("progressionKey reads the session, then epilogue/prologue", () => {
+  assert.equal(progressionKey({ fields: { session: "S07" }, body: "Session 2" }), 7);
+  assert.equal(progressionKey({ fields: {}, body: "### Scene Overview: Early-Campaign Climax (Session 2)" }), 2);
+  assert.equal(progressionKey({ fields: { objective: "Hold out until Sessions 11" }, body: "" }), 11);
+  assert.equal(progressionKey({ fields: {}, tags: ["epilogue"], body: "### Scene Overview: Campaign Epilogue" }), 1000);
+  assert.equal(progressionKey({ fields: {}, tags: [], body: "A prologue in the rain." }), 0);
+  assert.equal(progressionKey({ fields: {}, tags: [], body: "No hints." }), null);
+});
+
+test("numberInOrder numbers by key, pads at ten, and stripNumber undoes it", () => {
+  const names = numberInOrder([{ name: "Showdown", key: 12 }, { name: "Salvage", key: 1 }, { name: "Sanctuary", key: 1000 }, { name: "Odd", key: null }, { name: "Defense", key: 2 }]);
+  assert.deepEqual([...names.values()], ["1. Salvage", "2. Defense", "3. Showdown", "4. Sanctuary", "5. Odd"]);
+  const ten = numberInOrder(Array.from({ length: 10 }, (_, i) => ({ name: `S${i}`, key: i })));
+  assert.equal(ten.get("S0"), "01. S0");
+  assert.equal(stripNumber("07. Calm Before the Siege"), "Calm Before the Siege");
+  assert.equal(stripNumber("Petrochem Relay Station 09"), "Petrochem Relay Station 09");
 });
 
 test("keeps only the last copy of a repeated entry", () => {

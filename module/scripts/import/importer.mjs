@@ -1,4 +1,4 @@
-import { parseBundle, resolveLinks, toMarkdown, normalizeName } from "./parser.mjs";
+import { parseBundle, resolveLinks, toMarkdown, normalizeName, findImage, findLinks, progressionKey, stripNumber, numberInOrder } from "./parser.mjs";
 
 const MODULE_ID = "foundry-vtt-toolkit";
 const ROOT_FOLDER = "NotebookLM";
@@ -7,7 +7,14 @@ const ROOT_FOLDER = "NotebookLM";
 const JOURNAL_TYPES = {
   journal: "Campaign",
   location: "Locations",
-  thread: "Story Threads"
+  thread: "Story Threads",
+  scene: "Scenes"
+};
+
+// Journal types that also become a Foundry scene when they have an image, and the scene subfolder.
+const SCENE_TYPES = {
+  location: "Locations",
+  scene: "Scenes"
 };
 
 /**
@@ -73,13 +80,14 @@ export function notesHTML(raw, docId, lookup) {
  * Import parsed entries. Journal types become journal entries; types with a registered handler
  * are passed to it; the rest are reported as skipped. Every entry's id is decided first, so
  * [[links]] resolve between entries of any type in the bundle and to existing documents. Earlier
- * imports are then re-linked to anything new (see relink).
+ * imports are then re-linked to anything new (see relink). Locations and scenes with an image (see
+ * sceneImages) also get a Foundry scene linked to their journal.
  * @param {object[]} entries From parseBundle.
- * @param {{overwrite?: boolean}} options
- * @returns {Promise<{created: string[], updated: string[], skipped: string[], relinked: string[]}>}
+ * @param {{overwrite?: boolean, images?: string[]}} options images: paths in the scene image folder.
+ * @returns {Promise<{created: string[], updated: string[], skipped: string[], relinked: string[], scenes: {created: string[], updated: string[], skipped: string[]}}>}
  */
-export async function importEntries(entries, { overwrite = false } = {}) {
-  const report = { created: [], updated: [], skipped: [], relinked: [] };
+export async function importEntries(entries, { overwrite = false, images = [] } = {}) {
+  const report = { created: [], updated: [], skipped: [], relinked: [], scenes: { created: [], updated: [], skipped: [] } };
   for (const e of entries) if (!isSupported(e.type)) report.skipped.push(`${e.name} (${e.type || "no type"}: not supported yet)`);
   const supported = entries.filter(e => isSupported(e.type));
   if (!supported.length) return report;
@@ -116,6 +124,7 @@ export async function importEntries(entries, { overwrite = false } = {}) {
     }
     const outcome = existing ? report.updated : report.created;
     const baseFlags = { source: "notebooklm", type: entry.type, tags: entry.tags };
+    if (entry.type === "scene") baseFlags.order = progressionKey(entry);
 
     if (documentName === "JournalEntry") {
       const raw = toMarkdown(entry);
@@ -156,9 +165,149 @@ export async function importEntries(entries, { overwrite = false } = {}) {
     for (const journal of created) await journal.createEmbeddedDocuments("JournalEntryPage", [newPages.get(journal.id)]);
   }
 
+  report.scenes = await importScenes(plan.filter(p => p.entry.type in SCENE_TYPES), images);
+  await orderScenes();
+
   const touched = new Set([...report.created, ...report.updated]);
   report.relinked = (await relink()).filter(name => !touched.has(name));
   return report;
+}
+
+/**
+ * The background for each location or scene entry: its own image (see findImage), else, for a
+ * scene entry, the image of the first [[location]] it names, from this bundle or from an existing
+ * scene of that name.
+ * @param {object[]} entries
+ * @param {string[]} images
+ * @returns {Map<object, string>} entry -> image path, for entries that have one.
+ */
+export function sceneImages(entries, images) {
+  const out = new Map();
+  const byLocation = new Map();
+  for (const e of entries.filter(e => e.type in SCENE_TYPES)) {
+    const src = findImage(e, images);
+    if (!src) continue;
+    out.set(e, src);
+    if (e.type === "location") byLocation.set(normalizeName(e.name), src);
+  }
+  for (const e of entries.filter(e => e.type === "scene" && !out.has(e))) {
+    for (const location of findLinks(e.fields.location ?? "")) {
+      const src = byLocation.get(normalizeName(location)) ?? game.scenes.find(s => normalizeName(sceneBaseName(s)) === normalizeName(location))?.background.src;
+      if (src) {
+        out.set(e, src);
+        break;
+      }
+    }
+  }
+  return out;
+}
+
+/**
+ * Create or update a gridless Foundry scene, sized to its image, for each location or scene entry
+ * with an image, with the scene's notes pointing at the entry's journal. An existing scene is
+ * updated in place (keeping tokens, drawings and walls) when the entry is being replaced, and
+ * skipped otherwise; a missing scene is created even if its journal already existed.
+ */
+async function importScenes(plan, images) {
+  const result = { created: [], updated: [], skipped: [] };
+  const srcFor = sceneImages(plan.map(p => p.entry), images);
+  const root = srcFor.size ? await ensureFolder(ROOT_FOLDER, "Scene") : null;
+  for (const { entry, id, replace } of plan) {
+    const src = srcFor.get(entry);
+    if (!src) {
+      if (entry.type === "scene") result.skipped.push(`${entry.name} (no image)`);
+      continue;
+    }
+    const folder = await ensureFolder(SCENE_TYPES[entry.type], "Scene", root);
+    const sameName = name => game.scenes.find(s => s.folder?.id === folder.id && normalizeName(sceneBaseName(s)) === normalizeName(name));
+    const existing = (entry.replaces && sameName(entry.replaces)) || sameName(entry.name);
+    if (existing && !replace) {
+      result.skipped.push(`${entry.name} (scene already exists)`);
+      continue;
+    }
+    let texture;
+    try {
+      texture = await foundry.canvas.loadTexture(src);
+    } catch (err) {
+      console.error(`${MODULE_ID} | Could not load ${src}`, err);
+    }
+    if (!texture) {
+      result.skipped.push(`${entry.name} (could not load ${src})`);
+      continue;
+    }
+    const data = {
+      // Scene entries get their number from orderScenes; keep any number the scene already has.
+      name: entry.type === "scene" && existing ? existing.name.replace(stripNumber(existing.name), entry.name) : entry.name,
+      folder: folder.id,
+      background: { src },
+      width: texture.width,
+      height: texture.height,
+      padding: 0,
+      grid: { type: CONST.GRID_TYPES.GRIDLESS },
+      navigation: false,
+      journal: game.journal.get(id) ? id : null,
+      flags: { [MODULE_ID]: { source: "notebooklm", type: entry.type, baseName: entry.name, order: entry.type === "scene" ? progressionKey(entry) : null } }
+    };
+    const scene = existing ? (await existing.update(data), existing) : await Scene.create(data);
+    try {
+      const { thumb } = await scene.createThumbnail();
+      await scene.update({ thumb });
+    } catch (err) {
+      console.warn(`${MODULE_ID} | No thumbnail for ${scene.name}`, err);
+    }
+    (existing ? result.updated : result.created).push(entry.name);
+  }
+  return result;
+}
+
+/** A scene's name without the progression number orderScenes gives it. */
+function sceneBaseName(scene) {
+  return scene.flags[MODULE_ID]?.baseName ?? stripNumber(scene.name);
+}
+
+/**
+ * Number the NotebookLM story scenes in campaign order ("1. Salvage in the Old Combat Zone", ...)
+ * and sort them, and their journals, in that order. The order comes from each scene entry's session
+ * (see progressionKey), recorded at import; for anything imported before that, it is read from the
+ * scene's journal. Run after every import, so a scene added later slots into place. Journals keep
+ * their names, so [[links]] to them still resolve.
+ * @returns {Promise<string[]>} Names of scenes that were renamed.
+ */
+export async function orderScenes() {
+  const folderOf = type => game.folders.find(f => f.type === type && f.name === (type === "Scene" ? SCENE_TYPES.scene : JOURNAL_TYPES.scene) && f.folder?.name === ROOT_FOLDER);
+  const isStory = d => d.flags[MODULE_ID]?.source === "notebooklm" && d.flags[MODULE_ID]?.type === "scene";
+  const journalKey = journal => {
+    const flags = journal?.flags[MODULE_ID];
+    if (!flags) return null;
+    return flags.order ?? progressionKey({ fields: {}, tags: flags.tags, body: journal.pages.contents[0]?.text.markdown ?? "" });
+  };
+  const renamed = [];
+
+  const journalFolder = folderOf("JournalEntry");
+  if (journalFolder) {
+    const journals = journalFolder.contents.filter(isStory);
+    const order = [...numberInOrder(journals.map(j => ({ name: j.name, key: journalKey(j) }))).keys()];
+    if (journalFolder.sorting !== "m") await journalFolder.update({ sorting: "m" });
+    const updates = journals.map(j => ({ _id: j.id, sort: (order.indexOf(j.name) + 1) * 100 })).filter(u => game.journal.get(u._id).sort !== u.sort);
+    if (updates.length) await JournalEntry.updateDocuments(updates);
+  }
+
+  const sceneFolder = folderOf("Scene");
+  if (sceneFolder) {
+    const scenes = sceneFolder.contents.filter(isStory);
+    const items = scenes.map(s => ({ name: sceneBaseName(s), key: s.flags[MODULE_ID].order ?? journalKey(game.journal.get(s.journal?.id ?? s.journal)), scene: s }));
+    const names = numberInOrder(items);
+    const order = [...names.keys()];
+    if (sceneFolder.sorting !== "m") await sceneFolder.update({ sorting: "m" });
+    const updates = [];
+    for (const { name, key, scene } of items) {
+      const update = { _id: scene.id, name: names.get(name), sort: (order.indexOf(name) + 1) * 100, [`flags.${MODULE_ID}.baseName`]: name, [`flags.${MODULE_ID}.order`]: key };
+      if (scene.name !== update.name || scene.sort !== update.sort || scene.flags[MODULE_ID].baseName !== name || scene.flags[MODULE_ID].order !== key) updates.push(update);
+      if (scene.name !== update.name) renamed.push(update.name);
+    }
+    if (updates.length) await Scene.updateDocuments(updates);
+  }
+  return renamed;
 }
 
 /**
@@ -216,9 +365,14 @@ export async function relink() {
 
 const escape = s => foundry.utils.escapeHTML(String(s));
 
-function previewHTML({ entries, warnings }) {
+function previewHTML({ entries, warnings }, images = []) {
+  const srcFor = sceneImages(entries, images);
   const rows = entries.map(e => {
-    const status = destinationFor(e.type) ?? "skipped (not supported yet)";
+    let status = destinationFor(e.type) ?? "skipped (not supported yet)";
+    if (e.type in SCENE_TYPES) {
+      const src = srcFor.get(e);
+      status += src ? ` + scene (${src.split("/").pop()})` : e.type === "scene" ? " (no image, so no scene)" : "";
+    }
     return `<li><strong>${escape(e.name)}</strong> <em>${escape(e.type)}</em> → ${escape(status)}${e.links.length ? `<br><small>links: ${e.links.map(escape).join(", ")}</small>` : ""}</li>`;
   });
   const warn = warnings.length ? `<p><strong>Warnings</strong></p><ul>${warnings.map(w => `<li>${escape(w)}</li>`).join("")}</ul>` : "";
@@ -237,13 +391,16 @@ export async function openImporter() {
       <p>${game.i18n.localize("FVTK.Import.Instructions")}</p>
       <textarea name="text" rows="18" placeholder="##ENTRY&#10;type: journal&#10;name: ..."></textarea>
       <label>${game.i18n.localize("FVTK.Import.File")} <input type="file" name="file" accept=".md,.txt,text/markdown,text/plain"></label>
+      <label>${game.i18n.localize("FVTK.Import.ImageFolder")}
+        <file-picker name="imageFolder" type="folder" value="${escape(game.settings.get(MODULE_ID, "imageFolder"))}"></file-picker></label>
       <label><input type="checkbox" name="overwrite"> ${game.i18n.localize("FVTK.Import.Overwrite")}</label>
     </div>`,
     ok: {
       label: game.i18n.localize("FVTK.Import.Preview"),
       callback: (event, button) => {
         const { text, file, overwrite } = button.form.elements;
-        return { text: text.value, file: file.files[0] ?? null, overwrite: overwrite.checked };
+        const imageFolder = button.form.querySelector("file-picker[name=imageFolder]")?.value?.trim() ?? "";
+        return { text: text.value, file: file.files[0] ?? null, overwrite: overwrite.checked, imageFolder };
       }
     },
     rejectClose: false
@@ -252,26 +409,43 @@ export async function openImporter() {
   // A chosen file wins over pasted text.
   const text = input.file ? await input.file.text() : input.text;
   if (!text.trim()) return;
+  await game.settings.set(MODULE_ID, "imageFolder", input.imageFolder);
+  const images = await listImages(input.imageFolder);
 
   const parsed = parseBundle(text);
   const importable = parsed.entries.filter(e => isSupported(e.type)).length;
   if (!importable) {
-    return DialogV2.prompt({ window: { title: game.i18n.localize("FVTK.Import.Title") }, content: previewHTML(parsed), rejectClose: false });
+    return DialogV2.prompt({ window: { title: game.i18n.localize("FVTK.Import.Title") }, content: previewHTML(parsed, images), rejectClose: false });
   }
 
   const confirmed = await DialogV2.confirm({
     window: { title: game.i18n.localize("FVTK.Import.Title") },
     position: { width: 560 },
-    content: previewHTML(parsed),
+    content: previewHTML(parsed, images),
     yes: { label: game.i18n.format("FVTK.Import.Confirm", { count: importable }) },
     rejectClose: false
   });
   if (!confirmed) return;
 
-  const report = await importEntries(parsed.entries, { overwrite: input.overwrite });
-  ui.notifications.info(game.i18n.format("FVTK.Import.Done", { created: report.created.length, updated: report.updated.length, skipped: report.skipped.length, relinked: report.relinked.length }));
-  if (report.skipped.length) console.info(`${MODULE_ID} | Skipped:`, report.skipped);
+  const report = await importEntries(parsed.entries, { overwrite: input.overwrite, images });
+  const { scenes } = report;
+  ui.notifications.info(game.i18n.format("FVTK.Import.Done", { created: report.created.length, updated: report.updated.length, skipped: report.skipped.length, relinked: report.relinked.length, scenes: scenes.created.length + scenes.updated.length }));
+  const skipped = [...report.skipped, ...scenes.skipped];
+  if (skipped.length) console.info(`${MODULE_ID} | Skipped:`, skipped);
   return report;
+}
+
+/** Image paths in a folder of the user data directory (a FilePicker "data" path); [] if none or unreadable. */
+async function listImages(folder) {
+  if (!folder) return [];
+  try {
+    const { files } = await foundry.applications.apps.FilePicker.implementation.browse("data", folder);
+    return files;
+  } catch (err) {
+    ui.notifications.warn(game.i18n.format("FVTK.Import.ImageFolderError", { folder }));
+    console.warn(`${MODULE_ID} | Could not browse ${folder}`, err);
+    return [];
+  }
 }
 
 export { parseBundle };

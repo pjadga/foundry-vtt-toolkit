@@ -33,13 +33,69 @@ Markdown body. Refer to other entries as [[Exact Name]].
 | `type` | Imported as | Folder |
 | --- | --- | --- |
 | `journal` | Journal entry | NotebookLM / Campaign |
-| `location` | Journal entry | NotebookLM / Locations |
+| `location` | Journal entry, plus a scene when it has an image | NotebookLM / Locations (Journal and Scenes) |
 | `thread` | Journal entry | NotebookLM / Story Threads |
+| `scene` | Journal entry, plus a scene when it or its location has an image | NotebookLM / Scenes (Journal and Scenes) |
 | `item` (Cyberpunk RED) | Item | NotebookLM / Items (Items) |
 | `npc` (Cyberpunk RED) | Mook actor | NotebookLM / NPCs (Actors) |
-| `npc` and `item` (other systems), `scene`, `playlist` | Not yet; listed as skipped | |
+| `playlist` | Playlist (tracks are picked from YouTube afterwards) | NotebookLM / Playlists (Playlists) |
+| `npc` and `item` (other systems) | Not yet; listed as skipped | |
+
+### Playlists and YouTube tracks
+
+A `playlist` entry becomes a sequential Foundry playlist whose description holds its `mood` and
+body. Its `tracks:` lines (numbered or bulleted, one per line) are kept for the YouTube picker;
+replacing a playlist keeps the tracks already picked.
+
+**Picking tracks.** In the Playlists sidebar, **YouTube tracks** (GM only) opens a window with one
+row per track line. Each row searches YouTube with the official Data API v3 (the line without its
+bpm, plus "instrumental"; edit the search freely) and lists embeddable videos with channel and
+length. Click one to pick it, open it on YouTube to listen first, or paste a link. **Save** replaces
+the playlist's YouTube tracks with the picks, in row order. Nothing is downloaded.
+
+**API key.** Searching needs a YouTube Data API key: in Google Cloud Console create a project,
+enable *YouTube Data API v3*, create an API key and restrict it to *YouTube Data API v3* and your
+Foundry site (HTTP referrer). Put it in Configure Settings → Foundry VTT Toolkit. It is a client
+setting, so it stays in your browser and is never sent to players. A search costs about 101 of the
+free 10,000 daily units, so a few full playlists a day. Pasted links work without a key.
+
+**Playback.** Each track is a normal playlist sound (a silent placeholder file that loops) with the
+video in its flags, so Foundry's play, pause, stop, next, volume and sync all work as usual. Every
+connected client plays the video in YouTube's embedded player in a small **Now playing** window,
+which stays visible at 356×200 as YouTube's embedding rules require (at least 200×200). The shared
+start time lives in the sound's flags, so players who join late start at the right point and drift
+over 2 seconds is corrected. Volume follows the sound's volume and each user's Music (or Ambience)
+slider. When a video ends the active GM's client plays the next track (sequential and shuffle),
+loops it (simultaneous) or stops (soundboard). Closing the window silences YouTube on that screen
+until the track changes. Browsers only play sound after the first click on the page, as with any
+Foundry audio. Some videos don't allow embedding; the GM sees a warning and can pick another.
 
 Items are imported before NPCs, so an NPC whose gear names an item in the same import gets that item.
+
+### Scenes
+
+NotebookLM can't make images, so put yours in a folder under Foundry's user data (e.g.
+`worlds/<world>/assets/<campaign>/`) and choose it as the **Scene image folder** in the import
+dialog (remembered for next time). An image belongs to the location or scene whose name matches its
+file name, ignoring case, punctuation, apostrophes and a leading "The": `the-overlook.jpg` → *The
+Overlook*, `dr-chens-free-clinic.webp` → *Dr. Chen's Free Clinic*. An `image:` (or `map:`) line in an
+entry overrides that: a file name in the folder, or a full path or URL.
+
+A scene entry with no image of its own uses the image of the first `[[location]]` in its
+`location:` field, from the same import or from an existing scene of that name. The preview shows
+which image each entry gets.
+
+Story scenes (from `scene` entries) are numbered and sorted in campaign order, e.g. `1. Salvage in
+the Old Combat Zone` … `8. A Sanctuary on The Street`; their journals in NotebookLM / Scenes are
+sorted the same way but keep their names, so `[[links]]` still work. The order comes from a
+`session:` line if the entry has one, else the first "Session N" in its text; an epilogue goes last
+and a prologue first. Every import renumbers the folder, so a scene added later slots into place,
+and the number is ignored when matching names for replacement. Location scenes are not numbered.
+
+Scenes are gridless, sized to the image, kept out of the player navigation bar, and their Notes open
+the entry's journal. An existing scene is skipped unless the entry is being replaced; then it is
+updated in place, so its tokens, walls and drawings survive. A scene is still created for a location
+whose journal already existed.
 
 ### Cyberpunk RED items
 
