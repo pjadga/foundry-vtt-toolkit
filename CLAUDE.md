@@ -160,9 +160,11 @@ each machine by hand.
   servers. Never type passwords or API keys: the user enters keys in the browser, and they are
   client settings that stay in that browser.
 - **Deploy** by packing `module/` and extracting it over the module folder on the server, then
-  reload the Foundry page (F5). There is no build step:
-  `tar -czf fvtk.tgz -C module .`, copy it with `scp`, then
-  `tar -xzf fvtk.tgz -C <Data>/modules/foundry-vtt-toolkit` over `ssh`.
+  reload the Foundry page (F5). There is no build step. Pack what's committed with
+  `git -c core.autocrlf=false archive --format=tar.gz -o fvtk.tgz HEAD:module`, copy it with `scp`,
+  then `tar -xzf fvtk.tgz -C <Data>/modules/foundry-vtt-toolkit` over `ssh`. Archiving the
+  `HEAD:module` subtree doesn't see the root `.gitattributes`, so without `core.autocrlf=false` a
+  Windows machine packs CRLF files. Check with `git hash-object` on the server, which has git.
   The host, user, key and paths are in `docs/handoff.local.md`. Module styles are bundled by Foundry,
   so CSS changes also need a reload.
 - **Deploying from Windows:** `.gitattributes` keeps text files LF in every checkout, so a deploy

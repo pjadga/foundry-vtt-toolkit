@@ -14,8 +14,8 @@ file the user copies between machines.
 - **`main`** is at `b7488bb`. It has everything: the NotebookLM importer (Build campaign), scene images
   (Pollinations, Cloudflare, Gemini), YouTube playlists, the GM Assistant with sources, combat
   resolution and narration, and Pack campaign. 89 tests pass.
-- **The cpr-test server** runs `main` as of `55a891f`, so it doesn't have the Gemini image work yet.
-  Deploy `main` before testing that.
+- **The cpr-test server** runs `main` as of `bca2f40`, including the Gemini image work, deployed
+  on 23 October. All 35 module files match the repository, checked with `git hash-object`.
 - **NotebookLM:** the user's notebook ("Cyberpunk RED Single Player Mode") has the current Prompt 0
   (9,023 characters) in **Configure Chat → Custom**, with response length **Longer**. Edit Prompt 0 in
   `docs/notebooklm/cyberpunk-red-prompts.md` and the notebook together.
@@ -30,19 +30,18 @@ file the user copies between machines.
    Old Combat Zone". An earlier round of the user's rolls is still in its chat.
 2. **Gemini images need billing** on the user's Gemini key. Without it, the provider says so rather
    than failing silently. Not tested live, because the key is on the free tier.
-3. **Deploy `b7488bb`** to cpr-test, so the Gemini image code is there.
-4. **Branches:**
+3. **Branches:**
    - `claude/reverent-torvalds-b7384c` is merged and can be deleted.
    - `claude/quirky-keller-i3z8q3` is from the first scaffold. It still has "Use sw25-fvtt as the
      Sword World 2.5 system id", while `main` uses `sw25`. Settle that with the open item in
      `CLAUDE.md`, then delete the branch.
-5. **Never tested end to end:** a complete NotebookLM v2 campaign (Prompts 1–8) built in one go with
+4. **Never tested end to end:** a complete NotebookLM v2 campaign (Prompts 1–8) built in one go with
    Build campaign. Parts were tested with QA bundles only.
-6. **Known limits** the user knows about, all listed in the user guide's *Known issues*:
+5. **Known limits** the user knows about, all listed in the user guide's *Known issues*:
    - Story-scene numbering is shared by every campaign in a world.
    - Auto-pick fills every empty NotebookLM playlist, not just the ones being imported.
    - Combat doesn't model cover, ambushes, autofire multipliers or suppressive fire.
-7. **From `CLAUDE.md`:** the sw25 system id, mapping the sw25 and cpred macros, and choosing a license.
+6. **From `CLAUDE.md`:** the sw25 system id, mapping the sw25 and cpred macros, and choosing a license.
 
 ## Decisions, and why
 
