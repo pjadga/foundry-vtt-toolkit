@@ -7,7 +7,7 @@ const t = (key, data) => (data ? game.i18n.format(`FVTK.Images.${key}`, data) : 
 const EXTENSIONS = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
 
 /** Create a folder (and its parents) in the user data directory; existing ones are fine. */
-async function ensureDirectory(path) {
+export async function ensureDirectory(path) {
   const FP = foundry.applications.apps.FilePicker.implementation;
   const parts = path.split("/").filter(Boolean);
   for (let i = 1; i <= parts.length; i++) {

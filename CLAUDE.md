@@ -58,6 +58,14 @@ lite model by default, other models 30 s then lite), `assistant.mjs` (`campaignC
 Build button via `renderChatMessageHTML`). Answers render through `resolveLinks` outside code blocks;
 brackets inside code blocks are escaped so Foundry's inline-roll enricher doesn't read `[[Name]]`.
 `openImporter({ text })` starts Build campaign with entries filled in.
+Sources: `sources.mjs` (pure, tested: `classify`, `syncPlan`, `citations` from `groundingMetadata`),
+`filesearch.mjs` (File Search REST from the browser, which CORS allows: resumable
+`uploadToFileSearchStore`, then poll the *document* until `STATE_ACTIVE`, because the returned
+`.../upload/operations/...` name never reports done), `sources-sync.mjs` (folder walk with
+`FilePicker.browse` and HEAD for size/Last-Modified; each document's customMetadata holds its
+`path` in the folder and `fingerprint`, so the store is the sync record; the store is found by
+display name per world). `askGemini` adds `tools: [{file_search: {file_search_store_names}}]`, which
+works with `system_instruction` on `generateContent`.
 
 ## YouTube playback
 

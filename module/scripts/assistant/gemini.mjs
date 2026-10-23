@@ -41,7 +41,7 @@ async function generate(model, body, key, timeout) {
       const candidate = data.candidates?.[0];
       const text = candidate?.content?.parts?.map(p => p.text ?? "").join("").trim() ?? "";
       if (!text) throw new GeminiError(`no answer (${candidate?.finishReason ?? data.promptFeedback?.blockReason ?? "empty"})`);
-      return { text, model, tokens: data.usageMetadata?.totalTokenCount ?? null };
+      return { text, model, tokens: data.usageMetadata?.totalTokenCount ?? null, grounding: candidate.groundingMetadata ?? null };
     }
     const message = data.error?.message ?? `${response.status} ${response.statusText}`;
     if (!isBusy(response.status)) throw new GeminiError(message);
@@ -51,17 +51,19 @@ async function generate(model, body, key, timeout) {
 }
 
 /**
- * Ask Gemini, with the chosen model first and the lite model if that one is busy or slow.
- * @param {{system: string, history: {role: "user"|"model", text: string}[]}} chat
+ * Ask Gemini, with the chosen model first and the lite model if that one is busy or slow. With
+ * `stores`, Gemini searches those File Search stores and returns what it used in `grounding`.
+ * @param {{system: string, history: {role: "user"|"model", text: string}[], stores?: string[]}} chat
  * @param {string} key
  * @param {string} [model]
- * @returns {Promise<{text: string, model: string, tokens: number|null}>}
+ * @returns {Promise<{text: string, model: string, tokens: number|null, grounding: object|null}>}
  * @throws {GeminiError}
  */
-export async function askGemini({ system, history }, key, model = DEFAULT_ASSISTANT_MODEL) {
+export async function askGemini({ system, history, stores = [] }, key, model = DEFAULT_ASSISTANT_MODEL) {
   const body = JSON.stringify({
     system_instruction: { parts: [{ text: system }] },
     contents: history.map(m => ({ role: m.role, parts: [{ text: m.text }] })),
+    ...(stores.length ? { tools: [{ file_search: { file_search_store_names: stores } }] } : {}),
     generationConfig: { temperature: 0.8 }
   });
   const wanted = [...new Set([model || DEFAULT_ASSISTANT_MODEL, FALLBACK_MODEL])];

@@ -50,16 +50,19 @@ export function contextText(docs, { perDocument = PER_DOCUMENT, limit = CONTEXT_
 
 /**
  * The system instruction: the assistant's job and rules, the entry format, then the campaign.
- * @param {{system?: string, world?: string, context: string}} options
+ * @param {{system?: string, world?: string, context: string, sources?: boolean}} options
+ *   sources: the GM's source library can be searched (File Search).
  */
-export function systemPrompt({ system = "", world = "", context }) {
+export function systemPrompt({ system = "", world = "", context, sources = false }) {
   return [
     `You are the game master's assistant for a tabletop campaign run in Foundry VTT${system ? ` with the ${system} system` : ""}${world ? `, in the world "${world}"` : ""}. Only the game master talks to you.`,
     "",
     "HOW TO ANSWER",
     "- Ground every answer in the CAMPAIGN below: its journals, threads, locations, scenes, NPCs, items and playlists. Use their exact names in [[double brackets]] when you mention them.",
     "- For questions, ideas, rulings and summaries, answer in short Markdown prose. Say plainly when the campaign doesn't cover something, and offer an idea that fits it.",
-    "- You don't have the rulebooks. If an answer depends on a game rule, give the usual convention and name the rule to check, rather than inventing one.",
+    sources
+      ? "- You can search the GM's SOURCE LIBRARY: their rulebooks, notes and references. Search it for game rules, setting facts, slang and tone, and answer rules questions from it rather than from memory. For this campaign's own people, places and plot, the CAMPAIGN below wins over the sources."
+      : "- You don't have the rulebooks. If an answer depends on a game rule, give the usual convention and name the rule to check, rather than inventing one.",
     "- When I ask you to create or change campaign content (an NPC, a location, a scene, an item, a fix), answer with entries in the format below, in one code block, and nothing outside it but one short sentence saying what the entries are.",
     "- To change an existing entry, output it complete, keep its exact name and add \"replaces: <its name>\". Never contradict what the campaign says unless I ask you to change it.",
     "",

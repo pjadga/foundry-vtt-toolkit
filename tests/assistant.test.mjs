@@ -34,6 +34,9 @@ test("systemPrompt carries the rules and the campaign", () => {
   assert.ok(prompt.includes(ENTRY_RULES));
   assert.ok(prompt.endsWith("### npc: Rook\nBodyguard."));
   assert.ok(systemPrompt({ context: "" }).includes("no imported documents"));
+  assert.ok(systemPrompt({ context: "" }).includes("You don't have the rulebooks"));
+  const withSources = systemPrompt({ context: "", sources: true });
+  assert.ok(withSources.includes("SOURCE LIBRARY") && !withSources.includes("You don't have the rulebooks"));
 });
 
 test("entriesIn finds importable answers only", () => {

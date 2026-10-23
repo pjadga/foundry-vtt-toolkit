@@ -283,3 +283,16 @@
   font-style: italic;
   opacity: 0.8;
 }
+
+/* Sources an assistant answer used. */
+.fvtk-assistant-sources {
+  margin-top: 0.5rem;
+  font-size: var(--font-size-12, 12px);
+}
+.fvtk-assistant-sources summary {
+  cursor: pointer;
+  opacity: 0.85;
+}
+.fvtk-sources ul {
+  margin: 0.25rem 0;
+}

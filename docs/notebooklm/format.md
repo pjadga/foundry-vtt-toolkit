@@ -261,9 +261,8 @@ Google's free tier.
 - **What it knows:** every NotebookLM journal, thread, location and scene (with their GM secrets),
   the NPCs (notes and gear), items, playlists and the story scenes in order. The window shows how
   much that is. It's sent with every question, so the assistant always sees the world as it is now,
-  including anything you've imported or edited since the last question. It doesn't have your
-  NotebookLM sources, so it doesn't know the rulebooks: for a rule it gives the usual convention
-  and names the rule to check.
+  including anything you've imported or edited since the last question. On its own it doesn't
+  know the rulebooks; give it your sources (below) and it does.
 - **Asking:** type in the window (Enter sends, Shift+Enter for a new line), or type
   `/gm <question>` in the chat box. Chat answers are whispered to the GMs only. Both share one
   conversation, so follow-up questions work; **New chat** starts over, and so does reloading.
@@ -277,8 +276,38 @@ Google's free tier.
   seconds an answer). Another model gets 30 seconds before the lite one answers instead, and is
   skipped for 10 minutes after being busy or slow.
 
+#### Sources (your rulebooks and notes)
+
+NotebookLM can't hand its sources to anything else, so the assistant gets its own copy. **Sources**
+in the GM Assistant window opens the source library:
+
+1. Put the files in the sources folder, `worlds/<world>/sources` by default (choose another in the
+   dialog). Subfolders are fine, e.g. one per NotebookLM source group. **Add files…** opens
+   Foundry's file browser there to upload them. It takes PDF, TXT, Markdown, CSV, JSON, XML and
+   YAML; Word and HTML files work too if you copy them onto the server another way.
+2. **Sync now** uploads them to a Gemini File Search store on your Gemini key ("Foundry VTT
+   Toolkit sources: <world id>"), with a progress bar. Each file is indexed once; later syncs upload
+   only new and changed files and remove the ones you deleted from the folder. The dialog says
+   what a sync would do before you run it. The store records what it holds, so a second browser
+   with the same key uses the same store.
+3. The assistant then searches the sources with every question (untick *Search the sources when
+   answering* to stop) and lists what it used under each answer, with page numbers for PDFs and
+   the passage it read. Rules questions are answered from your rulebooks. For this campaign's own
+   people, places and plot, the campaign documents win over the sources.
+
+What to know:
+
+- **Formats:** audio and video aren't searchable. For podcast and YouTube sources, use transcripts
+  (NotebookLM shows a source's text when you open it). Save web pages as PDF or text.
+- **Limits:** up to 100 MB a file. The free tier holds about 1 GB of index, roughly 330 MB of files;
+  split a huge PDF if it's over the limit. Unsearchable files are listed after a sync.
+- **Cost:** storing and searching are free. Google charges $0.15 per million tokens to index a file
+  the first time, which comes to a few dollars at most for a large rules library, if the free tier
+  charges for it at all.
+- **Removing it:** **Remove from Gemini** deletes the whole store; the files in Foundry stay.
+
 The campaign, GM secrets included, and your questions are sent to Google's Gemini API with each
-question. NotebookLM is still the better place to write the campaign, since it draws on all your
+question, and so are the source files when they're synced. NotebookLM is still the better place to write the campaign, since it draws on all your
 sources. The assistant is for quick questions, ideas and small additions while you prepare or
 play.
 

@@ -4,6 +4,7 @@ import { YouTubePicker, chooseAndPick } from "./youtube/picker.mjs";
 import { autoPickTracks } from "./youtube/tracks.mjs";
 import { openPacker, packAdventure, clearCampaign } from "./import/adventure.mjs";
 import { openAssistant, setupAssistant, ask as askAssistant } from "./assistant/assistant.mjs";
+import { openSources, syncSources } from "./assistant/sources-sync.mjs";
 import { DEFAULT_ASSISTANT_MODEL } from "./assistant/gemini.mjs";
 import { setupYouTubePlayback } from "./youtube/player.mjs";
 import { DEFAULT_MODEL as GEMINI_DEFAULT_MODEL } from "./youtube/gemini.mjs";
@@ -64,6 +65,9 @@ Hooks.once("init", () => {
     type: String,
     default: DEFAULT_ASSISTANT_MODEL
   });
+  // The assistant's source library: a folder of the GM's files, synced to Gemini File Search.
+  game.settings.register(MODULE_ID, "sourcesFolder", { scope: "client", config: false, type: String, default: "" });
+  game.settings.register(MODULE_ID, "assistantUseSources", { scope: "client", config: false, type: Boolean, default: true });
   game.settings.register(MODULE_ID, "geminiModel", {
     name: "FVTK.Settings.GeminiModel.Name",
     hint: "FVTK.Settings.GeminiModel.Hint",
@@ -127,7 +131,7 @@ Hooks.once("ready", async () => {
     system: null,
     importer: { open: openImporter, importEntries, parseBundle, relink, registerType, orderScenes, pack: openPacker, packAdventure, clearCampaign },
     youtube: { pick: playlist => new YouTubePicker(playlist).render({ force: true }), choose: chooseAndPick, autoPick: autoPickTracks },
-    assistant: { open: openAssistant, ask: askAssistant }
+    assistant: { open: openAssistant, ask: askAssistant, sources: openSources, syncSources }
   };
   game.modules.get(MODULE_ID).api = api;
 

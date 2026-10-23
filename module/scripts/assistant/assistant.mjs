@@ -8,6 +8,8 @@ import { askGemini, DEFAULT_ASSISTANT_MODEL } from "./gemini.mjs";
 import { campaignDocuments } from "../import/adventure.mjs";
 import { openImporter, worldLookup } from "../import/importer.mjs";
 import { resolveLinks } from "../import/parser.mjs";
+import { citations } from "./sources.mjs";
+import { searchStore, currentStore, openSources } from "./sources-sync.mjs";
 
 const MODULE_ID = "foundry-vtt-toolkit";
 const escape = s => foundry.utils.escapeHTML(String(s ?? ""));
@@ -74,10 +76,12 @@ export async function ask(question) {
   refreshWindow();
   try {
     const context = contextText(campaignContext());
-    const system = systemPrompt({ system: game.system.title, world: game.world.title, context: context.text });
+    const store = await searchStore();
+    const system = systemPrompt({ system: game.system.title, world: game.world.title, context: context.text, sources: !!store });
     const model = game.settings.get(MODULE_ID, "assistantModel").trim() || DEFAULT_ASSISTANT_MODEL;
-    const answer = await askGemini({ system, history: conversation.slice(-HISTORY) }, key, model);
-    const message = { role: "model", text: answer.text, entries: entriesIn(answer.text), model: answer.model, html: await renderAnswer(answer.text) };
+    const answer = await askGemini({ system, history: conversation.slice(-HISTORY), stores: store ? [store.name] : [] }, key, model);
+    const cited = citations(answer.grounding);
+    const message = { role: "model", text: answer.text, entries: entriesIn(answer.text), model: answer.model, citations: cited, html: (await renderAnswer(answer.text)) + citationsHTML(cited) };
     conversation.push(message);
     return message;
   } catch (err) {
@@ -101,6 +105,14 @@ export async function renderAnswer(markdown) {
   const converter = new showdown.Converter(CONST.SHOWDOWN_OPTIONS);
   const html = converter.makeHtml(linked).replace(/<code[^>]*>[\s\S]*?<\/code>/g, code => code.replace(/\[/g, "&#91;").replace(/\]/g, "&#93;"));
   return foundry.applications.ux.TextEditor.implementation.enrichHTML(html);
+}
+
+/** The sources an answer used, as a folded list under it. */
+function citationsHTML(cited) {
+  if (!cited.length) return "";
+  const names = cited.map(c => c.title).join(", ");
+  const items = cited.map(c => `<li><strong>${escape(c.path || c.title)}</strong>${c.pages.length ? ` (${escape(t("Pages", { pages: c.pages.join(", ") }))})` : ""}${c.snippet ? `<br><small>“${escape(c.snippet)}…”</small>` : ""}</li>`).join("");
+  return `<details class="fvtk-assistant-sources"><summary><i class="fa-solid fa-book"></i> ${escape(t("SourcesUsed", { names }))}</summary><ul>${items}</ul></details>`;
 }
 
 /** Open Build campaign with an answer's entries. */
@@ -134,7 +146,8 @@ class GMAssistant extends foundry.applications.api.ApplicationV2 {
       newChat: GMAssistant.#onNewChat,
       build: GMAssistant.#onBuild,
       post: GMAssistant.#onPost,
-      copy: GMAssistant.#onCopy
+      copy: GMAssistant.#onCopy,
+      sources: GMAssistant.#onSources
     }
   };
 
@@ -156,10 +169,15 @@ class GMAssistant extends foundry.applications.api.ApplicationV2 {
       })
       .join("");
     const empty = conversation.length ? "" : `<li class="fvtk-assistant-empty">${escape(t("Empty"))}</li>`;
+    const store = await currentStore();
+    const sourcesOn = store && game.settings.get(MODULE_ID, "assistantUseSources");
+    const sourcesLine = escape(sourcesOn ? t("SourcesOn") : store ? t("SourcesOff") : t("SourcesNone"));
     const thinking = busy ? `<li class="fvtk-assistant-msg model thinking"><i class="fa-solid fa-spinner fa-spin"></i> ${escape(t("Thinking"))}</li>` : "";
     return `${key ? "" : `<p class="notification warning">${escape(t("NoKey"))}</p>`}
       <div class="fvtk-assistant-bar"><span>${escape(t("Context", { count: context.included, k: Math.round(context.text.length / 1000) }))}${context.omitted ? ` ${escape(t("Omitted", { count: context.omitted }))}` : ""}</span>
         <button type="button" data-action="newChat"><i class="fa-solid fa-broom"></i> ${escape(t("NewChat"))}</button></div>
+      <div class="fvtk-assistant-bar"><span>${sourcesLine}</span>
+        <button type="button" data-action="sources"><i class="fa-solid fa-book"></i> ${escape(t("Sources"))}</button></div>
       <ol class="fvtk-assistant-log">${empty}${messages}${thinking}</ol>
       ${this.#status ? `<p class="fvtk-assistant-status">${escape(this.#status)}</p>` : ""}
       <form class="fvtk-assistant-form">
@@ -222,6 +240,10 @@ class GMAssistant extends foundry.applications.api.ApplicationV2 {
   static async #onPost(event, target) {
     const index = Number(target.dataset.index);
     await postAnswer(conversation[index], conversation[index - 1]?.text);
+  }
+
+  static #onSources() {
+    return openSources(() => this.render());
   }
 
   static async #onCopy(event, target) {
