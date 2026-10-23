@@ -19,6 +19,9 @@ Macros and a module for FoundryVTT v13. See `README.md` for layout and release s
 
 ## NotebookLM import
 
+`openImporter` is the Build campaign flow: preview with `campaignCheck` (`check.mjs`, pure, tested)
+→ image review → `importEntries` → auto-pick tracks → summary.
+
 `module/scripts/import/parser.mjs` is pure (no Foundry globals) so it stays testable; Foundry calls live in
 `importer.mjs`. Format and supported types: `docs/notebooklm/format.md`. Journals, locations and threads
 import as journals; system modules add other types with `api.importer.registerType` (Cyberpunk RED
@@ -26,7 +29,8 @@ registers `item` and `npc`, see `systems/cpred.mjs`, with pure rules in `systems
 `systems/cpred-npc.mjs`; handler `order` makes items import before NPCs). Locations and scene entries
 also become Foundry scenes when an image matches (`findImage` in the parser, `importScenes` in the
 importer; images come from the dialog's image folder via `FilePicker.browse`). `setupScene` then
-places hidden NPC tokens, a journal pin and the `soundtrack` playlist (pure layout in `setup.mjs`;
+places hidden NPC tokens, a journal pin and the `soundtrack` playlist (once, flag `setup`, for an
+existing scene that isn't being replaced) (pure layout in `setup.mjs`;
 what it placed is flagged `placed` so re-imports update only that). `playlist` entries
 become Foundry playlists (`youtube/playlists.mjs`, registered in `main.mjs`).
 

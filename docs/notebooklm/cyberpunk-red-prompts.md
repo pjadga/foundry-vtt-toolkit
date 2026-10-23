@@ -9,8 +9,8 @@ built in one import with no manual setup.
 
 **Getting it all into one file.** After each prompt, add NotebookLM's answer to a single note (or a
 Google Doc) in order. When you're done, export or download it as `.md` or `.txt` and choose that file
-in **Import from NotebookLM**. You can also import prompt by prompt; later imports link to earlier
-ones automatically.
+in **Build campaign** (Journal sidebar). You can also import prompt by prompt; later imports link
+to earlier ones automatically.
 
 ## Prompt 0: output format
 

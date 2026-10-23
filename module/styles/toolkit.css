@@ -171,3 +171,20 @@
   flex: 0 0 auto;
   width: auto;
 }
+
+/* Campaign check in the import preview. */
+.fvtk-check {
+  margin: 0.5rem 0;
+}
+.fvtk-check.ok {
+  color: var(--color-level-success, #3c9d3c);
+}
+.fvtk-check summary {
+  cursor: pointer;
+  font-weight: bold;
+  color: var(--color-level-warning, #ee9b3a);
+}
+.fvtk-check textarea {
+  width: 100%;
+  font-size: var(--font-size-12, 12px);
+}

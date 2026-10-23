@@ -1,7 +1,21 @@
 # NotebookLM bundle format
 
-The importer (`module/scripts/import/`) reads plain-text entries. NotebookLM is told to write them
-by the custom instruction in [cyberpunk-red-prompts.md](cyberpunk-red-prompts.md) (Prompt 0).
+The importer (`module/scripts/import/`, **Build campaign** in the Journal sidebar) reads plain-text
+entries. NotebookLM is told to write them by the custom instruction in
+[cyberpunk-red-prompts.md](cyberpunk-red-prompts.md) (Prompt 0).
+
+**What one build does:** preview with the campaign check (below) → generate missing scene images
+(review window) → import journals, items, NPCs and playlists → build, number and set up scenes →
+pick YouTube tracks → a summary with a button to activate the first scene.
+
+**Campaign check.** The preview lists gaps that would leave the campaign hard to run: `[[links]]`
+that match no entry or document, NPCs in no scene, location or thread, items no one uses, locations
+no scene or thread visits, scenes without `session`, `location`, `npcs_present`, `soundtrack` or
+`visual`, locations without `visual`, a scene `location:` or `soundtrack:` that names the wrong kind
+of entry, and playlists without tracks. Links and connections count what is already in the world, so
+importing prompt by prompt doesn't raise false alarms. You can import anyway. **Copy fix prompt**
+copies a prompt that asks NotebookLM to fix them with `replaces:` entries; build again with its
+answer and those entries update what is already there.
 
 ```
 ##ENTRY

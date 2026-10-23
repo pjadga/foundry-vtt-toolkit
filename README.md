@@ -33,18 +33,27 @@ For development, run `FOUNDRY_DATA="<path>/Data" npm run link` to symlink `modul
 The entry point, `module/scripts/main.mjs`, loads `module/scripts/systems/<system>.mjs` for the
 active game system. Add new system support by adding a file and a line in `SYSTEM_MODULES`.
 
-## Importing from NotebookLM
+## Building a campaign from NotebookLM
 
-Write campaign material in NotebookLM using the prompts in
-[docs/notebooklm/cyberpunk-red-prompts.md](docs/notebooklm/cyberpunk-red-prompts.md), copy the output,
-then click **Import from NotebookLM** in Foundry's Journal sidebar (GM only) and paste it. Format:
-[docs/notebooklm/format.md](docs/notebooklm/format.md). Journals, locations and story threads import
-as journals; locations and scenes also become Foundry scenes when you pick a folder of images named
-after them. In a Cyberpunk RED world items import as real weapons, armor, cyberware and gear, and
-NPCs as mook actors with role, stats, skills and gear. Playlists import too; fill them with
-**YouTube tracks** in the Playlists sidebar (search with your own YouTube Data API key, or paste
-links), and they play for everyone through YouTube's embedded player, synced with Foundry's playlist
-controls. Nothing is downloaded. See [docs/notebooklm/format.md](docs/notebooklm/format.md).
+Write the campaign in NotebookLM with the prompts in
+[docs/notebooklm/cyberpunk-red-prompts.md](docs/notebooklm/cyberpunk-red-prompts.md), collect the
+answers in one file, then click **Build campaign** in Foundry's Journal sidebar (GM only) and choose
+it. One run:
+
+1. checks the campaign for gaps (broken links, unused NPCs and items, unvisited locations, scenes
+   missing fields) and gives you a fix prompt to paste back into NotebookLM;
+2. generates scene images for locations and scenes that have none, free (Pollinations, or your own
+   Cloudflare Worker), for you to review;
+3. imports journals, locations and story threads, and in a Cyberpunk RED world real weapons, armor,
+   cyberware and gear, and NPCs as mook actors with role, stats, skills and gear;
+4. builds Foundry scenes in campaign order, each with hidden NPC tokens, a journal pin and its
+   soundtrack playlist;
+5. fills the playlists with YouTube tracks (with your own YouTube Data API key, optionally helped by
+   Gemini), which play for everyone through YouTube's embedded player, synced with Foundry's
+   playlist controls. Nothing is downloaded;
+6. offers to activate the first scene.
+
+Details: [docs/notebooklm/format.md](docs/notebooklm/format.md).
 
 ## Releasing
 
