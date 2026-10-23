@@ -71,6 +71,14 @@ videos with channel, length and the search that found them. Click one to pick it
 to listen first, or paste a link. **Save** replaces the playlist's YouTube tracks with the picks, in
 row order. Nothing is downloaded.
 
+**Picked during import.** With a YouTube key and **Pick YouTube tracks during import** on (the
+default), every NotebookLM playlist that has no YouTube tracks yet is filled straight after the
+import: each track line gets the top result of the same search as below, with a progress bar. It
+stops a line after 2 searches (or once 2 videos are found), about 200 units a line, so a campaign's
+three five-track playlists use about 3,000 of the 10,000 daily units. If the quota runs out it
+stops, saves what it has and says so; open the picker the next day for the rest. Open the picker
+any time to swap a pick.
+
 YouTube matches the words in video titles, so a long NotebookLM description often finds nothing.
 How a row is searched:
 

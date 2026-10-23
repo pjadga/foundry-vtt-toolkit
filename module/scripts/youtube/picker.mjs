@@ -1,12 +1,7 @@
-import { searchVideos, videoDetails, oEmbed } from "./search.mjs";
-import { searchQuery, fallbackQueries, videoIdFrom, formatSeconds } from "./youtube.mjs";
-import { suggestSearches } from "./gemini.mjs";
-import { SILENCE, youtubeOf } from "./player.mjs";
-
-// Stop searching a row once this many videos are found, or after this many YouTube searches
-// (each costs about 101 quota units).
-const ENOUGH = 6;
-const MAX_SEARCHES = { plain: 3, gemini: 5 };
+import { videoDetails, oEmbed } from "./search.mjs";
+import { videoIdFrom, formatSeconds } from "./youtube.mjs";
+import { youtubeOf } from "./player.mjs";
+import { TrackSearch, trackRow, saveTracks, LIMITS } from "./tracks.mjs";
 
 const MODULE_ID = "foundry-vtt-toolkit";
 const escape = s => foundry.utils.escapeHTML(String(s ?? ""));
@@ -14,11 +9,9 @@ const t = (key, data) => (data ? game.i18n.format(`FVTK.YouTube.${key}`, data) :
 
 /**
  * GM window for filling a playlist with YouTube tracks: one row per track line (from the NotebookLM
- * playlist entry), each searched with the YouTube Data API. With a Gemini key, Gemini first turns the
- * line into short searches and real track suggestions; without one, the search falls back to shorter
- * versions of the line (fallbackQueries). Only real, embeddable videos found on YouTube are shown.
- * Pick a result per row, edit the search, or paste a link; saving replaces the playlist's YouTube
- * tracks with the picks, in row order.
+ * playlist entry), each searched with the YouTube Data API (see TrackSearch). Pick a result per row,
+ * edit the search, or paste a link; saving replaces the playlist's YouTube tracks with the picks, in
+ * row order.
  */
 export class YouTubePicker extends foundry.applications.api.ApplicationV2 {
   static DEFAULT_OPTIONS = {
@@ -45,65 +38,18 @@ export class YouTubePicker extends foundry.applications.api.ApplicationV2 {
       const yt = picked.get(line);
       const chosen = yt ? { id: yt.videoId, title: yt.title, channel: yt.channel, duration: yt.duration, thumb: yt.thumb ?? "" } : null;
       // A track already saved counts as picked by hand, so a new search doesn't replace it.
-      return { line, query: line ? searchQuery(line) : "", results: chosen ? [chosen] : [], chosen, manual: !!chosen, status: "", note: "" };
+      return { ...trackRow(line), results: chosen ? [chosen] : [], chosen, manual: !!chosen };
     });
-    this.rows = rows.length ? rows : [YouTubePicker.#blankRow()];
-  }
-
-  static #blankRow() {
-    return { line: "", query: "", results: [], chosen: null, status: "", note: "" };
+    this.rows = rows.length ? rows : [trackRow()];
+    this.tracks = new TrackSearch(playlist, this.rows);
   }
 
   get apiKey() {
-    return game.settings.get(MODULE_ID, "youtubeApiKey").trim();
+    return this.tracks.apiKey;
   }
 
   get geminiKey() {
-    return game.settings.get(MODULE_ID, "geminiApiKey").trim();
-  }
-
-  // Set when Gemini is overloaded or times out during Search all, so the remaining rows don't wait
-  // on it too. Cleared at the start of every search the GM starts.
-  #geminiBusy = false;
-
-  /**
-   * The searches to try for a row, in order. A search the GM typed (changed from the default) goes
-   * first; then Gemini's track suggestions and searches, if there is a Gemini key; then the short
-   * genre searches cut from the line (YouTube matches title words, so these find music where the
-   * full description finds sound effects); the full description last, and only without Gemini.
-   * @returns {Promise<{query: string, max: number, gemini: false|"track"|"search"}[]>}
-   */
-  async #plan(row) {
-    const typed = row.query.trim();
-    const edited = row.line && typed && typed !== searchQuery(row.line);
-    const [full, ...shorter] = typed ? fallbackQueries(typed) : [];
-    const plain = query => ({ query, max: 5, gemini: false });
-    const plan = edited ? [plain(full)] : [];
-    row.note = "";
-    let gemini = false;
-    if (this.geminiKey && !this.#geminiBusy && (row.line || typed)) {
-      try {
-        const mood = this.playlist.flags[MODULE_ID]?.mood;
-        const model = game.settings.get(MODULE_ID, "geminiModel").trim();
-        // Tell Gemini what the playlist's other rows already have, so it suggests something else.
-        const others = this.rows.filter(r => r !== row);
-        const avoid = [...others.flatMap(r => r.suggested ?? []), ...others.map(r => r.chosen?.title).filter(Boolean)];
-        const s = await suggestSearches(row.line || typed, { name: this.playlist.name, mood }, this.geminiKey, model, avoid);
-        plan.push(...s.tracks.map(tr => ({ query: tr.query, max: 2, gemini: "track" })), ...s.queries.map(query => ({ query, max: 4, gemini: "search" })));
-        row.suggested = s.tracks.map(tr => `${tr.artist} – ${tr.title}`);
-        if (s.tracks.length) row.note = t("GeminiSuggested", { tracks: row.suggested.join("; ") });
-        gemini = plan.length > (edited ? 1 : 0);
-      } catch (err) {
-        console.warn(`${MODULE_ID} | Gemini suggestions failed`, err);
-        this.#geminiBusy = !!err.busy;
-        row.note = t(err.busy ? "GeminiBusy" : "GeminiError", { message: err.message });
-      }
-    } else if (this.geminiKey && this.#geminiBusy) {
-      row.note = t("GeminiSkipped");
-    }
-    plan.push(...shorter.map(plain));
-    if (!edited && !gemini && full) plan.push(plain(full));
-    return plan;
+    return this.tracks.geminiKey;
   }
 
   async _renderHTML() {
@@ -138,7 +84,7 @@ export class YouTubePicker extends foundry.applications.api.ApplicationV2 {
     const count = this.rows.filter(r => r.chosen).length;
     return `${keyHint}
       <div class="fvtk-yt-toolbar"><button type="button" data-action="searchAll"><i class="fa-solid fa-magnifying-glass"></i> ${t("SearchAll")}</button>
-        <span class="hint">${t(this.geminiKey ? "GeminiOn" : "GeminiOff")} ${t("QuotaHint", { searches: this.geminiKey ? MAX_SEARCHES.gemini : MAX_SEARCHES.plain })}</span></div>
+        <span class="hint">${t(this.geminiKey ? "GeminiOn" : "GeminiOff")} ${t("QuotaHint", { searches: this.geminiKey ? LIMITS.picker.gemini : LIMITS.picker.plain })}</span></div>
       <ol class="fvtk-yt-rows">${rows}</ol>
       <footer class="fvtk-yt-footer">
         <button type="button" data-action="addRow"><i class="fa-solid fa-plus"></i> ${t("AddRow")}</button>
@@ -162,62 +108,21 @@ export class YouTubePicker extends foundry.applications.api.ApplicationV2 {
   }
 
   async #search(i) {
-    const row = this.rows[i];
     if (!this.apiKey) return ui.notifications.warn(t("NoKey"));
-    if (!row.query.trim() && !row.line) return;
-    row.status = t(this.geminiKey ? "AskingGemini" : "Searching");
-    await this.render();
-
-    const plan = await this.#plan(row);
-    const limit = this.geminiKey ? MAX_SEARCHES.gemini : MAX_SEARCHES.plain;
-    const found = new Map();
-    let searches = 0;
-    let error = null;
-    for (const step of plan) {
-      if (found.size >= ENOUGH || searches >= limit) break;
-      // Shorter fallbacks only while results are still thin.
-      if (!step.gemini && searches && found.size >= ENOUGH / 2) break;
-      row.status = t("SearchingFor", { query: step.query });
-      await this.render();
-      try {
-        searches++;
-        for (const v of await searchVideos(step.query, this.apiKey, step.max)) {
-          if (!found.has(v.id)) found.set(v.id, { ...v, via: step.query, gemini: step.gemini });
-        }
-      } catch (err) {
-        console.error(`${MODULE_ID} | YouTube search failed`, err);
-        error = err;
-        if (/quota/i.test(err.message)) break;
-      }
-    }
-
-    row.results = [...found.values()];
-    // A pick made by hand survives a new search (and stays visible); otherwise take the top result.
-    if (row.manual && row.chosen) {
-      if (!found.has(row.chosen.id)) row.results.unshift(row.chosen);
-    } else {
-      // Prefer a video no other row has picked, and not another upload of a song another row picked
-      // through the same Gemini suggestion, so the playlist doesn't repeat itself.
-      const others = this.rows.filter(r => r !== row && r.chosen).map(r => r.chosen);
-      const ids = new Set(others.map(v => v.id));
-      const songs = new Set(others.filter(v => v.gemini === "track").map(v => v.via.toLowerCase()));
-      const fresh = v => !ids.has(v.id) && !(v.gemini === "track" && songs.has(v.via.toLowerCase()));
-      row.chosen = row.results.find(fresh) ?? row.results.find(v => !ids.has(v.id)) ?? row.results[0] ?? row.chosen;
-    }
-    if (found.size) row.status = t(searches === 1 ? "FoundOne" : "Found", { count: found.size, searches });
-    else row.status = error ? t("SearchError", { message: error.message }) : t("NoResults");
-    await this.render();
+    await this.tracks.search(this.rows[i], () => this.render());
   }
 
   static async #onSearch(event, target) {
     this.#readInputs();
-    this.#geminiBusy = false;
+    this.tracks.geminiBusy = false;
+    this.tracks.quotaError = null;
     await this.#search(Number(target.dataset.row));
   }
 
   static async #onSearchAll() {
     this.#readInputs();
-    this.#geminiBusy = false;
+    this.tracks.geminiBusy = false;
+    this.tracks.quotaError = null;
     for (let i = 0; i < this.rows.length; i++) await this.#search(i);
   }
 
@@ -254,35 +159,13 @@ export class YouTubePicker extends foundry.applications.api.ApplicationV2 {
 
   static async #onAddRow() {
     this.#readInputs();
-    this.rows.push(YouTubePicker.#blankRow());
+    this.rows.push(trackRow());
     await this.render();
   }
 
   static async #onSave() {
-    const playlist = this.playlist;
-    const picks = this.rows.filter(r => r.chosen);
-    const old = playlist.sounds.filter(youtubeOf).map(s => s.id);
-    if (old.length) await playlist.deleteEmbeddedDocuments("PlaylistSound", old);
-    await playlist.createEmbeddedDocuments(
-      "PlaylistSound",
-      picks.map((row, i) => {
-        const v = row.chosen;
-        return {
-          name: v.title,
-          path: SILENCE,
-          // The placeholder loops forever; the YouTube player decides when a track ends.
-          repeat: true,
-          volume: 0.5,
-          sort: (i + 1) * 100,
-          description: `${v.channel} · https://www.youtube.com/watch?v=${v.id}`,
-          flags: { [MODULE_ID]: { youtube: { videoId: v.id, title: v.title, channel: v.channel, duration: v.duration, thumb: v.thumb, line: row.line } } }
-        };
-      })
-    );
-    const update = { sorting: "m" };
-    if (playlist.mode === CONST.PLAYLIST_MODES.DISABLED) update.mode = CONST.PLAYLIST_MODES.SEQUENTIAL;
-    await playlist.update(update);
-    ui.notifications.info(t("Saved", { count: picks.length, name: playlist.name }));
+    const count = await saveTracks(this.playlist, this.rows);
+    ui.notifications.info(t("Saved", { count, name: this.playlist.name }));
     await this.close();
   }
 }

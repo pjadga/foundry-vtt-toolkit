@@ -2,6 +2,7 @@ import { parseBundle, resolveLinks, toMarkdown, normalizeName, findImage, findLi
 import { imagePrompt, imagesNeeded, DEFAULT_STYLE } from "../images/prompts.mjs";
 import { PROVIDERS } from "../images/generate.mjs";
 import { generateSceneImages } from "../images/review.mjs";
+import { autoPickTracks, playlistsToFill } from "../youtube/tracks.mjs";
 
 const MODULE_ID = "foundry-vtt-toolkit";
 const ROOT_FOLDER = "NotebookLM";
@@ -451,7 +452,23 @@ export async function openImporter() {
   ui.notifications.info(game.i18n.format("FVTK.Import.Done", { created: report.created.length, updated: report.updated.length, skipped: report.skipped.length, relinked: report.relinked.length, scenes: scenes.created.length + scenes.updated.length }));
   const skipped = [...report.skipped, ...scenes.skipped];
   if (skipped.length) console.info(`${MODULE_ID} | Skipped:`, skipped);
+  report.tracks = await autoPick();
   return report;
+}
+
+/** Fill imported playlists that have no YouTube tracks yet, if the GM has a key and auto-pick is on. */
+async function autoPick() {
+  const playlists = playlistsToFill();
+  if (!playlists.length || !game.settings.get(MODULE_ID, "youtubeAutoPick")) return null;
+  if (!game.settings.get(MODULE_ID, "youtubeApiKey").trim()) {
+    ui.notifications.info(game.i18n.format("FVTK.YouTube.AutoPickNoKey", { count: playlists.length }));
+    return null;
+  }
+  const result = await autoPickTracks(playlists);
+  const summary = result.filled.map(f => `${f.name} ${f.count}/${f.of}`).join(", ");
+  if (result.quotaExceeded) ui.notifications.warn(game.i18n.format("FVTK.YouTube.AutoPickQuota", { summary }));
+  else ui.notifications.info(game.i18n.format("FVTK.YouTube.AutoPicked", { summary }));
+  return result;
 }
 
 /** The image generation settings, or null when generation is off. */

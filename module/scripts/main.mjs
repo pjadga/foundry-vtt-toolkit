@@ -1,6 +1,7 @@
 import { openImporter, importEntries, parseBundle, relink, registerType, orderScenes } from "./import/importer.mjs";
 import { importPlaylist } from "./youtube/playlists.mjs";
 import { YouTubePicker, chooseAndPick } from "./youtube/picker.mjs";
+import { autoPickTracks } from "./youtube/tracks.mjs";
 import { setupYouTubePlayback } from "./youtube/player.mjs";
 import { DEFAULT_MODEL as GEMINI_DEFAULT_MODEL } from "./youtube/gemini.mjs";
 import { DEFAULT_STYLE as IMAGE_DEFAULT_STYLE } from "./images/prompts.mjs";
@@ -42,6 +43,14 @@ Hooks.once("init", () => {
     config: true,
     type: String,
     default: ""
+  });
+  game.settings.register(MODULE_ID, "youtubeAutoPick", {
+    name: "FVTK.Settings.YouTubeAutoPick.Name",
+    hint: "FVTK.Settings.YouTubeAutoPick.Hint",
+    scope: "client",
+    config: true,
+    type: Boolean,
+    default: true
   });
   game.settings.register(MODULE_ID, "geminiModel", {
     name: "FVTK.Settings.GeminiModel.Name",
@@ -105,7 +114,7 @@ Hooks.once("ready", async () => {
     log,
     system: null,
     importer: { open: openImporter, importEntries, parseBundle, relink, registerType, orderScenes },
-    youtube: { pick: playlist => new YouTubePicker(playlist).render({ force: true }), choose: chooseAndPick }
+    youtube: { pick: playlist => new YouTubePicker(playlist).render({ force: true }), choose: chooseAndPick, autoPick: autoPickTracks }
   };
   game.modules.get(MODULE_ID).api = api;
 

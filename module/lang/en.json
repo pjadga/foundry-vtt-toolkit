@@ -79,5 +79,12 @@
   "FVTK.Images.AllDone": "All generated.",
   "FVTK.Images.SkipAll": "Import without images",
   "FVTK.Images.Upload": "Upload {count} and import",
-  "FVTK.Images.WillGenerate": "{count} scene images will be generated with {provider} for you to review."
+  "FVTK.Images.WillGenerate": "{count} scene images will be generated with {provider} for you to review.",
+  "FVTK.Settings.YouTubeAutoPick.Name": "Pick YouTube tracks during import",
+  "FVTK.Settings.YouTubeAutoPick.Hint": "After a NotebookLM import, fill every imported playlist that has no YouTube tracks yet with the top search result for each track line (about 2 searches, 200 quota units, per line). Change any pick later in the YouTube track picker.",
+  "FVTK.YouTube.AutoPicking": "Picking YouTube tracks for {count} track lines…",
+  "FVTK.YouTube.AutoPickingRow": "{name}: {line}",
+  "FVTK.YouTube.AutoPicked": "YouTube tracks picked: {summary}. Open a playlist's YouTube tracks button to change any.",
+  "FVTK.YouTube.AutoPickQuota": "YouTube's daily search quota ran out; picked so far: {summary}. Run the YouTube track picker tomorrow for the rest.",
+  "FVTK.YouTube.AutoPickNoKey": "{count} playlists have no YouTube tracks. Add a YouTube Data API key in settings to have them picked during import."
 }
