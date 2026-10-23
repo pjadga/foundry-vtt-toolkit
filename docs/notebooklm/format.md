@@ -41,6 +41,24 @@ Markdown body. Refer to other entries as [[Exact Name]].
 | `playlist` | Playlist (tracks are picked from YouTube afterwards) | NotebookLM / Playlists (Playlists) |
 | `npc` and `item` (other systems) | Not yet; listed as skipped | |
 
+### Fields the toolkit reads
+
+Any other `key: value` line is kept and shown on the journal or sheet. These drive automation:
+
+| Type | Fields |
+| --- | --- |
+| all | `type`, `name`, `tags`, `replaces` (see above), `image` / `map` (scene background) |
+| `journal` | anything; the Campaign Overview's `antagonist`, `plot_twists`, `ending`, `sessions` are shown as a list |
+| `thread` | `hook`, `midpoint_choice`, `success_outcome`, `failure_outcome`, `connection_to_main`, `linked_threads` |
+| `location` | `district`, `controlled_by`, `danger_level`, `notable_features`, `secrets`, `npcs` (placed as hidden tokens on its scene), `visual` (image prompt) |
+| `scene` | `session` (numbering), `location` (image fallback), `npcs_present` (hidden tokens), `soundtrack` (the playlist that plays when the scene is activated), `objective`, `complications`, `best_outcome`, `worst_outcome`, `visual` (image prompt) |
+| `npc` (Cyberpunk RED) | `role`, `tier`, `stats`, `skills`, `gear`, `appearance`, `voice_and_mannerisms`, the rest as GM-only notes |
+| `item` (Cyberpunk RED) | `category`, `price`, `damage`, `rate_of_fire`, `range_or_melee`, `sp`, `penalty`, `effect`, `humanity_loss`, `story_item`, `too_strong_flag` |
+| `playlist` | `mood`, `tracks` (one numbered line each) |
+
+The prompt kit, [cyberpunk-red-prompts.md](cyberpunk-red-prompts.md), asks NotebookLM for exactly
+these.
+
 ### Playlists and YouTube tracks
 
 A `playlist` entry becomes a sequential Foundry playlist whose description holds its `mood` and
