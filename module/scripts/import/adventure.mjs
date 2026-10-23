@@ -38,10 +38,10 @@ async function campaignPack() {
  * work when the adventure is imported into another world. Images stay where they are (paths in the
  * user data folder), so that world must be on the same server, or the images copied with it.
  * @param {string} name
+ * @param {ReturnType<typeof campaignDocuments>} [docs] What to pack; the whole campaign by default.
  * @returns {Promise<Adventure>}
  */
-export async function packAdventure(name) {
-  const docs = campaignDocuments();
+export async function packAdventure(name, docs = campaignDocuments()) {
   const pack = await campaignPack();
   const story = docs.scenes.filter(s => s.flags[MODULE_ID]?.type === "scene").sort((a, b) => a.sort - b.sort);
   const counts = Object.fromEntries(Object.entries(docs).map(([k, v]) => [k, v.length]));
@@ -61,28 +61,71 @@ export async function packAdventure(name) {
   return Adventure.create(data, { pack: pack.collection });
 }
 
-/** Ask for a name, then pack the campaign. GM only. */
+/** Whether an adventure holds every one of these documents. */
+function holdsAll(adventure, docs) {
+  // An adventure's contents are Sets of documents, not collections keyed by id.
+  return Object.entries(docs).every(([field, list]) => {
+    const ids = new Set([...(adventure[field] ?? [])].map(d => d.id));
+    return list.every(d => ids.has(d.id));
+  });
+}
+
+/**
+ * Remove the campaign from the world, e.g. after packing it, to start a new one: its scenes,
+ * actors, items, journals, playlists (stopped first) and NotebookLM folders. Image files stay.
+ * @param {ReturnType<typeof campaignDocuments>} [docs]
+ */
+export async function clearCampaign(docs = campaignDocuments()) {
+  for (const playlist of docs.playlists) if (playlist.playing) await playlist.stopAll();
+  const classes = { scenes: Scene, actors: Actor, items: Item, journal: JournalEntry, playlists: Playlist };
+  for (const [field, cls] of Object.entries(classes)) {
+    const ids = docs[field].map(d => d.id).filter(id => game[CONTENTS[field]].has(id));
+    if (ids.length) await cls.deleteDocuments(ids);
+  }
+  // Deepest first, so no folder is deleted before its subfolders.
+  const folders = docs.folders.filter(f => game.folders.has(f.id)).sort((a, b) => b.ancestors.length - a.ancestors.length);
+  if (folders.length) await Folder.deleteDocuments(folders.map(f => f.id));
+}
+
+/** Ask for a name, then pack the campaign, and optionally clear it from the world. GM only. */
 export async function openPacker() {
   if (!game.user.isGM) return;
   const docs = campaignDocuments();
   const total = Object.entries(docs).filter(([k]) => k !== "folders").reduce((n, [, v]) => n + v.length, 0);
   if (!total) return ui.notifications.warn(t("Nothing"));
   const counts = Object.fromEntries(Object.entries(docs).map(([k, v]) => [k, v.length]));
-  const name = await foundry.applications.api.DialogV2.prompt({
+  const input = await foundry.applications.api.DialogV2.prompt({
     window: { title: t("Title") },
     position: { width: 480 },
     content: `<div class="fvtk"><p>${escape(t("Description", counts))}</p><p>${escape(t("Hint"))}</p>
-      <label>${escape(t("Name"))} <input type="text" name="name" value="${escape(game.world.title)}" required></label></div>`,
-    ok: { label: t("Pack"), icon: "fa-solid fa-box-archive", callback: (event, button) => button.form.elements.name.value.trim() },
+      <label>${escape(t("Name"))} <input type="text" name="name" value="${escape(game.world.title)}" required></label>
+      <label><input type="checkbox" name="clear"> ${escape(t("Clear"))}</label></div>`,
+    ok: {
+      label: t("Pack"),
+      icon: "fa-solid fa-box-archive",
+      callback: (event, button) => ({ name: button.form.elements.name.value.trim(), clear: button.form.elements.clear.checked })
+    },
     rejectClose: false
   });
-  if (!name) return;
+  if (!input?.name) return;
+  let adventure;
   try {
-    const adventure = await packAdventure(name);
+    adventure = await packAdventure(input.name, docs);
     ui.notifications.info(t("Done", { name: adventure.name, pack: adventure.compendium?.metadata.label ?? PACK_NAME }));
-    return adventure;
   } catch (err) {
     console.error(`${MODULE_ID} | Packing the campaign failed`, err);
-    ui.notifications.error(t("Failed", { message: err.message }));
+    return ui.notifications.error(t("Failed", { message: err.message }));
   }
+  if (!input.clear) return adventure;
+  // Only clear what the adventure demonstrably holds, and only after the GM confirms.
+  if (!holdsAll(adventure, docs)) return ui.notifications.error(t("ClearIncomplete"));
+  const confirmed = await foundry.applications.api.DialogV2.confirm({
+    window: { title: t("ClearTitle") },
+    content: `<div class="fvtk"><p>${escape(t("ClearConfirm", { ...counts, name: adventure.name }))}</p></div>`,
+    rejectClose: false
+  });
+  if (!confirmed) return adventure;
+  await clearCampaign(docs);
+  ui.notifications.info(t("Cleared", { name: adventure.name }));
+  return adventure;
 }

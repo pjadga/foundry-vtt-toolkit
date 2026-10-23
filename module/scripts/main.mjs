@@ -2,7 +2,7 @@ import { openImporter, importEntries, parseBundle, relink, registerType, orderSc
 import { importPlaylist } from "./youtube/playlists.mjs";
 import { YouTubePicker, chooseAndPick } from "./youtube/picker.mjs";
 import { autoPickTracks } from "./youtube/tracks.mjs";
-import { openPacker, packAdventure } from "./import/adventure.mjs";
+import { openPacker, packAdventure, clearCampaign } from "./import/adventure.mjs";
 import { setupYouTubePlayback } from "./youtube/player.mjs";
 import { DEFAULT_MODEL as GEMINI_DEFAULT_MODEL } from "./youtube/gemini.mjs";
 import { DEFAULT_STYLE as IMAGE_DEFAULT_STYLE } from "./images/prompts.mjs";
@@ -114,7 +114,7 @@ Hooks.once("ready", async () => {
     id: MODULE_ID,
     log,
     system: null,
-    importer: { open: openImporter, importEntries, parseBundle, relink, registerType, orderScenes, pack: openPacker, packAdventure },
+    importer: { open: openImporter, importEntries, parseBundle, relink, registerType, orderScenes, pack: openPacker, packAdventure, clearCampaign },
     youtube: { pick: playlist => new YouTubePicker(playlist).render({ force: true }), choose: chooseAndPick, autoPick: autoPickTracks }
   };
   game.modules.get(MODULE_ID).api = api;

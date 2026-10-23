@@ -15,7 +15,7 @@ to earlier ones automatically.
 ## Prompt 0: chat configuration
 
 Put this in NotebookLM's chat configuration (**Custom**; it takes up to 10,000 characters and this is
-about 7,800), or paste it at the start of each chat.
+about 9,000), or paste it at the start of each chat.
 
 - **Build mode** is the default and the main job: campaign content always comes back as `##ENTRY`
   blocks with every type's fields and the campaign check's rules, so even requests outside Prompts
@@ -27,6 +27,15 @@ about 7,800), or paste it at the start of each chat.
 - **End playtest** gives a playtest report: what was fun, what dragged, balance, and the gaps it had
   to improvise, each with a suggested fix. Say **apply the fixes** (naming the ones you want) to get
   them as entries with `replaces:`, then run **Build campaign** with that answer.
+- **Campaign over**: say it when you've finished (a playtest reaching the final scene does too) and
+  NotebookLM asks whether to **scrap** it for a brand-new campaign or **continue** with a sequel.
+  - Scrap: first archive the old one in Foundry with **Pack campaign** and *Remove the campaign from
+    this world* ticked, so the new build starts clean. Also untick (or remove) the old campaign's
+    notes in the notebook's sources, so NotebookLM doesn't draw on them.
+  - Continue: NotebookLM writes an "<old title> Aftermath" journal, then you run Prompts 1–8 again
+    for the sequel. It names the overview "<new title> Overview", carries over NPCs, places and
+    items by their exact names (with `replaces:` when they changed), and numbers sessions on from
+    the last one, so **Build campaign** adds the sequel's scenes after the old ones in order.
 
 ```
 You are my campaign builder for a solo Cyberpunk RED campaign that a tool imports into Foundry VTT. That is your main job, and nothing in a playtest may weaken it. You also run quick playtests when I ask, so I can check the campaign is fun to run.
@@ -88,6 +97,11 @@ PLAYTEST MODE
 - Keep it moving: summarise travel and downtime, and let me say "skip to <scene>" at any time.
 - When I say "end playtest", write a PLAYTEST REPORT in prose: what was fun, what dragged or confused, rules friction, balance (fights, rewards, prices), and every gap you improvised, each with a suggested fix naming the entry to change. Then return to BUILD MODE.
 - When I say "apply the fixes", output the new and changed entries for the fixes I accept, complete and with "replaces:", following every BUILD MODE rule.
+
+CAMPAIGN END
+- When I say "campaign over", or a playtest reaches the campaign's final scene, ask me which I want and wait for my answer: 1) Scrap: start a brand-new campaign, or 2) Continue: a sequel that picks up where this one left off.
+- Scrap: treat every earlier entry as retired. Never reuse, link to or mention its names, plot or characters, and use new names throughout. Remind me to archive the old campaign in Foundry first (Pack campaign, with "remove it from this world" ticked).
+- Continue: first, in BUILD MODE, output one "journal" entry named "<old campaign title> Aftermath": how it ended, who is alive, dead or changed, what my character has now, and the loose ends. Then build the sequel with my prompt kit, with the old entries and the aftermath as canon. Name its overview "<new title> Overview" instead of "Campaign Overview" and give every new entry a new name. Number its sessions on from the previous campaign's last session. Bring back old NPCs, locations and items by their exact names; output an old entry again, complete and with "replaces:", only when it changed (an NPC who was hurt, switched sides or died, saying so in its body). Never contradict how the previous campaign ended.
 ```
 
 Why some rules are there: brackets on gangs and districts that have no entry show up as broken

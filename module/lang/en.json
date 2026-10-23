@@ -119,5 +119,10 @@
   "FVTK.Images.Slow": "Pollinations' free tier makes one image every 45 seconds, so the rest take about {minutes} min.",
   "FVTK.Images.UploadFailed": "Could not upload {name}: {message}",
   "FVTK.Import.Summary.Kept": "Already imported and kept as they were: {count} (build with Replace ticked to update them).",
-  "FVTK.Images.LeftOut": "Left out (tick to generate)"
+  "FVTK.Images.LeftOut": "Left out (tick to generate)",
+  "FVTK.Adventure.Clear": "Remove the campaign from this world after packing it (to start a new campaign)",
+  "FVTK.Adventure.ClearTitle": "Remove the campaign from this world?",
+  "FVTK.Adventure.ClearConfirm": "This deletes {scenes} scenes, {actors} actors, {items} items, {journal} journals, {playlists} playlists and {folders} folders from this world. They are saved in the adventure {name}; Import Adventure there brings them back. Image files are kept.",
+  "FVTK.Adventure.ClearIncomplete": "The adventure doesn't hold everything in the campaign, so nothing was removed from the world.",
+  "FVTK.Adventure.Cleared": "The campaign is now only in the adventure {name}. The world is ready for a new Build campaign."
 }

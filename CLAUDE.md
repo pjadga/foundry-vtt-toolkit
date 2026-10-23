@@ -22,7 +22,9 @@ Macros and a module for FoundryVTT v13. See `README.md` for layout and release s
 `openImporter` is the Build campaign flow: preview with `campaignCheck` (`check.mjs`, pure, tested)
 → image review → `importEntries` → auto-pick tracks → summary. `adventure.mjs` packs every
 NotebookLM-flagged document, and everything in the NotebookLM folders, into an Adventure in the world
-pack `world.notebooklm-campaigns` (Compendium sidebar button, `api.importer.pack`).
+pack `world.notebooklm-campaigns` (Compendium sidebar button, `api.importer.pack`); with *Remove the
+campaign from this world* ticked, `clearCampaign` deletes it afterwards, only if the adventure holds
+every document (an Adventure's contents are Sets of documents, not id-keyed collections).
 
 `module/scripts/import/parser.mjs` is pure (no Foundry globals) so it stays testable; Foundry calls live in
 `importer.mjs`. Format and supported types: `docs/notebooklm/format.md`. Journals, locations and threads

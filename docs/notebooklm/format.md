@@ -240,6 +240,18 @@ use **Import Adventure**. Documents keep their ids, so `[[links]]`, tokens and j
 work. Images are not copied: they stay at their paths in the user data folder, so the other world
 must be on the same server, or you copy the image folder along with it.
 
+**Starting over or continuing.** When a campaign ends, NotebookLM asks whether to scrap it or
+continue with a sequel (prompt kit, Prompt 0).
+
+- **Scrap:** tick *Remove the campaign from this world* when you pack. After packing, the toolkit
+  checks that the adventure holds every document, asks you to confirm, then deletes the campaign's
+  scenes, actors, items, journals, playlists and NotebookLM folders, so the next **Build campaign**
+  starts clean. Image files are kept. **Import Adventure** on the packed adventure brings it all back.
+- **Continue:** don't remove anything; build the sequel into the same world. Returning NPCs, places
+  and items match by name (changed ones come with `replaces:`), and the sequel's sessions are
+  numbered on from the old campaign's, so its scenes are numbered after the old ones. Packing
+  first is still a good backup.
+
 ### Cyberpunk RED items
 
 The closest core compendium item of the same type is copied as a template (same matching as NPC
