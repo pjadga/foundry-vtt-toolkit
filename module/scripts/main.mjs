@@ -10,6 +10,7 @@ import { DEFAULT_ASSISTANT_MODEL } from "./assistant/gemini.mjs";
 import { setupYouTubePlayback } from "./youtube/player.mjs";
 import { DEFAULT_MODEL as GEMINI_DEFAULT_MODEL } from "./youtube/gemini.mjs";
 import { DEFAULT_STYLE as IMAGE_DEFAULT_STYLE } from "./images/prompts.mjs";
+import { DEFAULT_GEMINI_IMAGE_MODEL as GEMINI_IMAGE_DEFAULT_MODEL } from "./images/generate.mjs";
 
 const MODULE_ID = "foundry-vtt-toolkit";
 
@@ -123,9 +124,19 @@ Hooks.once("init", () => {
     choices: {
       none: "FVTK.Settings.ImageProvider.None",
       pollinations: "FVTK.Settings.ImageProvider.Pollinations",
-      cloudflare: "FVTK.Settings.ImageProvider.Cloudflare"
+      cloudflare: "FVTK.Settings.ImageProvider.Cloudflare",
+      gemini: "FVTK.Settings.ImageProvider.Gemini"
     },
     default: "pollinations"
+  });
+  // Gemini image model, with the Gemini API key above. Image models need billing on the key.
+  game.settings.register(MODULE_ID, "geminiImageModel", {
+    name: "FVTK.Settings.GeminiImageModel.Name",
+    hint: "FVTK.Settings.GeminiImageModel.Hint",
+    scope: "client",
+    config: true,
+    type: String,
+    default: GEMINI_IMAGE_DEFAULT_MODEL
   });
   game.settings.register(MODULE_ID, "imageStyle", {
     name: "FVTK.Settings.ImageStyle.Name",

@@ -46,7 +46,7 @@ it. One run:
 1. checks the campaign for gaps (broken links, unused NPCs and items, unvisited locations, scenes
    missing fields) and gives you a fix prompt to paste back into NotebookLM;
 2. generates scene images for locations and scenes that have none, free (Pollinations, or your own
-   Cloudflare Worker), for you to review;
+   Cloudflare Worker) or with Gemini on a key with billing, for you to review;
 3. imports journals, locations and story threads, and in a Cyberpunk RED world real weapons, armor,
    cyberware and gear, and NPCs as mook actors with role, stats, skills and gear;
 4. builds Foundry scenes in campaign order, each with hidden NPC tokens, a journal pin and its
@@ -58,7 +58,9 @@ it. One run:
 
 **GM Assistant** (Journal sidebar, or `/gm <question>` in chat) is a Gemini chat inside Foundry with
 the whole campaign as context. Its answers link to your journals and actors. Any new NPCs, places or
-fixes it writes go straight to Build campaign with one click.
+fixes it writes go straight to Build campaign with one click. Ask it to draw an NPC or a place and
+it writes the prompt from the campaign, draws it with the scene image generator, and can make it
+the actor's portrait and token or the scene's background.
 
 **Pack campaign** in the Compendium sidebar then packs the whole campaign into one Foundry Adventure
 (world compendium *NotebookLM Campaigns*) that another world on the same server can import.

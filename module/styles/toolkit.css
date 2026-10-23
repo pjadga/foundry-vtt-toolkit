@@ -306,6 +306,31 @@
   margin: 0.25rem 0;
 }
 
+/* Images the GM Assistant drew. */
+.fvtk-assistant-send {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.fvtk-assistant-image {
+  display: block;
+  max-width: 100%;
+  max-height: 24rem;
+  margin: 0 auto;
+  border: none;
+  border-radius: 4px;
+}
+.fvtk-assistant-prompt {
+  margin-top: 0.25rem;
+  font-size: var(--font-size-12, 12px);
+}
+.fvtk-assistant-prompt summary {
+  cursor: pointer;
+  opacity: 0.85;
+}
+.fvtk-assistant-chat .fvtk-assistant-use {
+  margin-top: 0.25rem;
+
 /* Combat narration in chat. */
 .fvtk-narration .fvtk-narration-text {
   font-style: italic;

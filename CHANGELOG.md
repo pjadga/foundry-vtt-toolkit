@@ -30,8 +30,10 @@ music and a GM Assistant.
 - **Scene setup:** hidden tokens for the NPCs present, a pin that opens the journal, and the scene's
   `soundtrack` playlist. Re-imports update only what the toolkit placed.
 - **Scene images:** free generation for scenes without an image, through Pollinations (no account)
-  or your own Cloudflare Workers AI Worker (FLUX.1 schnell). A review window lets you regenerate,
-  edit prompts and leave images out, and an optional setting keeps everything without review.
+  or your own Cloudflare Workers AI Worker (FLUX.1 schnell), or Gemini's *Nano Banana* models on
+  an API key with billing (a key without billing gets a clear message instead). A review window
+  lets you regenerate, edit prompts and leave images out, and an optional setting keeps everything
+  without review.
 
 ### Music
 
@@ -47,6 +49,9 @@ music and a GM Assistant.
 - **GM Assistant** (Journal sidebar, or `/gm <question>` in chat): a Gemini chat with the whole
   campaign as context. Answers link to campaign documents, and new content comes as entries with a
   **Build campaign** button.
+- **Pictures:** "Draw a portrait of Rook", or the **Image** button. Gemini writes the prompt from
+  the campaign and the scene image generator draws it. Pictures can be saved, or set as an actor's
+  portrait and token or a scene's background.
 - **Sources:** a Foundry folder of rulebooks and notes, synced to Gemini File Search. Answers search
   them and cite what they used, with PDF page numbers.
 

@@ -205,8 +205,8 @@ if it has none; for a scene, its location's visual and its opening), followed by
 style** setting. Ask NotebookLM for a `visual:` line on every location (prompt kit, Prompt 3); it
 gives far better images than the description.
 
-Pick the generator in **Configure Settings → Foundry VTT Toolkit → Scene image generator**. Both are
-free; the settings are per browser.
+Pick the generator in **Configure Settings → Foundry VTT Toolkit → Scene image generator**.
+Pollinations and Cloudflare are free; Gemini is paid. The settings are per browser.
 
 - **Pollinations** (default): no account or key. Free use is slow: one image every 45 seconds per
   internet connection (a campaign's 18 images take about 15 minutes; the window says how long is
@@ -222,6 +222,16 @@ free; the settings are per browser.
   3. **Settings → Variables and secrets → Add**, type **Secret**, name `TOKEN`, any long random value.
   4. In the toolkit settings set the generator to Cloudflare, **Cloudflare Worker URL** to the
      Worker's `https://….workers.dev` address and **Cloudflare Worker token** to the same value.
+- **Gemini**: Google's Gemini image models (sold as *Nano Banana*) with your **Gemini API key**.
+  The best images of the three, in 16:9, with no visible watermark (Google adds an invisible SynthID
+  mark). Image models have **no free tier**: the key's Google Cloud project needs billing turned on
+  (Google AI Studio → **Billing**), and each image, regenerations included, costs a few cents
+  (about $0.03 at 1K with the default model, October 2026). A key without billing gets a message
+  saying so, not an image; switch to Pollinations or Cloudflare to carry on for free. The
+  **Gemini image model** setting picks the model: `gemini-3.1-flash-lite-image` (Nano Banana 2 Lite,
+  the default: fastest and cheapest), `gemini-nano-banana-2.1` (Nano Banana 2.1) or
+  `gemini-3-pro-image` (Nano Banana Pro, slower, about $0.13 an image). Your prompts go to Google
+  under the Gemini API terms.
 
 With **Keep generated images without review** on, the window only shows progress: everything that
 generated is uploaded and the import carries on by itself.
@@ -272,6 +282,17 @@ Google's free tier.
   entry** (in the window or on the chat message) opens Build campaign with the entries filled in.
   You see the usual preview and campaign check before anything is imported.
 - **Whisper to GM chat** posts a window answer to the chat log; **Copy** copies it.
+- **Pictures:** ask for one ("Draw a portrait of Rook", "Paint the docks at dawn", "image: the
+  vault door") or type a description and press **Image**. Gemini first writes the image prompt from
+  what the campaign says (an NPC's appearance, a location's visual), then the **Scene image
+  generator** draws it: Pollinations, Cloudflare or Gemini as set (Gemini when scene images are
+  Off; it needs billing, see above). Portraits are square, places 16:9. The picture shows in the
+  window with its prompt. **Save** uploads it to the scene image folder (portraits in its
+  `portraits/` subfolder). When the picture is of an actor or scene in the world (named in the
+  request, the prompt's subject, or linked in the answer before it), buttons offer **Portrait and
+  token: <actor>** (the actor's portrait, its prototype token and its tokens already on scenes) and
+  **Background: <scene>**; each saves first and asks before replacing anything. With `/gm draw …`
+  the picture is saved straight away and whispered with the same buttons.
 - **Model:** *GM Assistant model* in the settings, `gemini-flash-lite-latest` by default (a few
   seconds an answer). Another model gets 30 seconds before the lite one answers instead, and is
   skipped for 10 minutes after being busy or slow.
