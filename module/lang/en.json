@@ -98,5 +98,16 @@
   "FVTK.Import.Summary.Skipped": "Skipped: {count} (the list is in the browser console, F12).",
   "FVTK.Import.Summary.Issues": "Campaign check gaps: {count}. Build again with NotebookLM's fixes to close them.",
   "FVTK.Import.Summary.Activate": "Activate {name}",
-  "FVTK.Import.Summary.Close": "Close"
+  "FVTK.Import.Summary.Close": "Close",
+  "FVTK.Adventure.Button": "Pack campaign",
+  "FVTK.Adventure.Title": "Pack the NotebookLM campaign",
+  "FVTK.Adventure.PackLabel": "NotebookLM Campaigns",
+  "FVTK.Adventure.Caption": "Built from NotebookLM in {world}",
+  "FVTK.Adventure.Description": "{scenes} scenes, {actors} actors, {items} items, {journal} journals, {playlists} playlists and {folders} folders.",
+  "FVTK.Adventure.Hint": "Packs everything a Build campaign made, and anything you added to its NotebookLM folders, into one adventure in the world compendium NotebookLM Campaigns, replacing an adventure of the same name. Import it into another world on this server to play the campaign there. Images are not copied: they stay in this world's folder.",
+  "FVTK.Adventure.Name": "Adventure name",
+  "FVTK.Adventure.Pack": "Pack",
+  "FVTK.Adventure.Nothing": "There is no NotebookLM campaign in this world to pack.",
+  "FVTK.Adventure.Done": "Packed {name} into {pack}.",
+  "FVTK.Adventure.Failed": "Packing failed: {message}"
 }

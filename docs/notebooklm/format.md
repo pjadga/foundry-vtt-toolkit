@@ -217,6 +217,20 @@ free; the settings are per browser.
 With **Keep generated images without review** on, the window only shows progress: everything that
 generated is uploaded and the import carries on by itself.
 
+### Packing the campaign as an Adventure
+
+**Pack campaign** in the Compendium sidebar (GM only) packs everything a build made (documents
+flagged as NotebookLM imports) and anything you put in its NotebookLM folders: scenes with their
+tokens and pins, actors, items, journals, playlists with their YouTube tracks, and the folders. They
+go into one Adventure in the world compendium *NotebookLM Campaigns*, which the toolkit creates the
+first time. Packing again under the same name replaces that adventure. The adventure's cover is the
+first story scene, and its overview lists the scenes in order.
+
+To play the campaign in another world, export or move that compendium there (or into a module) and
+use **Import Adventure**. Documents keep their ids, so `[[links]]`, tokens and journal pins still
+work. Images are not copied: they stay at their paths in the user data folder, so the other world
+must be on the same server, or you copy the image folder along with it.
+
 ### Cyberpunk RED items
 
 The closest core compendium item of the same type is copied as a template (same matching as NPC

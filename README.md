@@ -53,6 +53,9 @@ it. One run:
    playlist controls. Nothing is downloaded;
 6. offers to activate the first scene.
 
+**Pack campaign** in the Compendium sidebar then packs the whole campaign into one Foundry Adventure
+(world compendium *NotebookLM Campaigns*) that another world on the same server can import.
+
 Details: [docs/notebooklm/format.md](docs/notebooklm/format.md).
 
 ## Releasing

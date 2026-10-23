@@ -2,6 +2,7 @@ import { openImporter, importEntries, parseBundle, relink, registerType, orderSc
 import { importPlaylist } from "./youtube/playlists.mjs";
 import { YouTubePicker, chooseAndPick } from "./youtube/picker.mjs";
 import { autoPickTracks } from "./youtube/tracks.mjs";
+import { openPacker, packAdventure } from "./import/adventure.mjs";
 import { setupYouTubePlayback } from "./youtube/player.mjs";
 import { DEFAULT_MODEL as GEMINI_DEFAULT_MODEL } from "./youtube/gemini.mjs";
 import { DEFAULT_STYLE as IMAGE_DEFAULT_STYLE } from "./images/prompts.mjs";
@@ -113,7 +114,7 @@ Hooks.once("ready", async () => {
     id: MODULE_ID,
     log,
     system: null,
-    importer: { open: openImporter, importEntries, parseBundle, relink, registerType, orderScenes },
+    importer: { open: openImporter, importEntries, parseBundle, relink, registerType, orderScenes, pack: openPacker, packAdventure },
     youtube: { pick: playlist => new YouTubePicker(playlist).render({ force: true }), choose: chooseAndPick, autoPick: autoPickTracks }
   };
   game.modules.get(MODULE_ID).api = api;
@@ -148,6 +149,7 @@ function addHeaderButton(html, className, icon, label, onClick) {
 
 Hooks.on("renderJournalDirectory", (app, html) => addHeaderButton(html, "fvtk-import", "fa-solid fa-file-import", "FVTK.Import.Button", () => openImporter()));
 Hooks.on("renderPlaylistDirectory", (app, html) => addHeaderButton(html, "fvtk-youtube", "fa-brands fa-youtube", "FVTK.YouTube.Button", () => chooseAndPick()));
+Hooks.on("renderCompendiumDirectory", (app, html) => addHeaderButton(html, "fvtk-pack", "fa-solid fa-box-archive", "FVTK.Adventure.Button", () => openPacker()));
 
 function log(...args) {
   if (game.settings.get(MODULE_ID, "debug")) console.log(`${MODULE_ID} |`, ...args);
