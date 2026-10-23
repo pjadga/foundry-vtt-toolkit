@@ -198,3 +198,88 @@
   overflow-y: auto;
   font-size: var(--font-size-12, 12px);
 }
+
+/* GM Assistant: the conversation scrolls between the context bar and the question box. */
+.fvtk-gm-assistant .window-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.fvtk-assistant-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: var(--font-size-12, 12px);
+  opacity: 0.85;
+}
+.fvtk-assistant-bar span {
+  flex: 1;
+}
+.fvtk-assistant-bar button,
+.fvtk-assistant-actions button,
+.fvtk-assistant-form button {
+  flex: 0 0 auto;
+  width: auto;
+}
+.fvtk-assistant-log {
+  flex: 1;
+  overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.fvtk-assistant-msg {
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid var(--color-border-light-2, #555);
+}
+.fvtk-assistant-msg.user {
+  align-self: flex-end;
+  max-width: 85%;
+  background: rgba(255, 100, 0, 0.12);
+}
+.fvtk-assistant-msg.model {
+  background: rgba(0, 0, 0, 0.2);
+}
+.fvtk-assistant-text pre,
+.fvtk-assistant-chat pre {
+  white-space: pre-wrap;
+  font-size: var(--font-size-12, 12px);
+  max-height: 20rem;
+  overflow-y: auto;
+}
+.fvtk-assistant-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+}
+.fvtk-assistant-actions small {
+  margin-left: auto;
+  opacity: 0.6;
+}
+.fvtk-assistant-empty {
+  opacity: 0.75;
+  font-style: italic;
+}
+.fvtk-assistant-status {
+  color: var(--color-level-error, #c33);
+  margin: 0;
+}
+.fvtk-assistant-form {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-end;
+}
+.fvtk-assistant-form textarea {
+  flex: 1;
+  resize: vertical;
+}
+.fvtk-assistant-q {
+  font-style: italic;
+  opacity: 0.8;
+}

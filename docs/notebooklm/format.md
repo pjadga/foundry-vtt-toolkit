@@ -252,6 +252,36 @@ continue with a sequel (prompt kit, Prompt 0).
   numbered on from the old campaign's, so its scenes are numbered after the old ones. Packing
   first is still a good backup.
 
+### GM Assistant
+
+**GM Assistant** in the Journal sidebar (GM only) is a Gemini chat inside Foundry that knows the
+campaign. It uses your Gemini API key from the settings (the same one as the YouTube picker), on
+Google's free tier.
+
+- **What it knows:** every NotebookLM journal, thread, location and scene (with their GM secrets),
+  the NPCs (notes and gear), items, playlists and the story scenes in order. The window shows how
+  much that is. It's sent with every question, so the assistant always sees the world as it is now,
+  including anything you've imported or edited since the last question. It doesn't have your
+  NotebookLM sources, so it doesn't know the rulebooks: for a rule it gives the usual convention
+  and names the rule to check.
+- **Asking:** type in the window (Enter sends, Shift+Enter for a new line), or type
+  `/gm <question>` in the chat box. Chat answers are whispered to the GMs only. Both share one
+  conversation, so follow-up questions work; **New chat** starts over, and so does reloading.
+- **Answers:** short Markdown, with campaign names as links to their documents.
+- **New content:** ask for an NPC, location, scene, item or fix and the answer comes as `##ENTRY`
+  blocks in the same format as the prompt kit, changes with `replaces:`. **Build campaign with this
+  entry** (in the window or on the chat message) opens Build campaign with the entries filled in.
+  You see the usual preview and campaign check before anything is imported.
+- **Whisper to GM chat** posts a window answer to the chat log; **Copy** copies it.
+- **Model:** *GM Assistant model* in the settings, `gemini-flash-lite-latest` by default (a few
+  seconds an answer). Another model gets 30 seconds before the lite one answers instead, and is
+  skipped for 10 minutes after being busy or slow.
+
+The campaign, GM secrets included, and your questions are sent to Google's Gemini API with each
+question. NotebookLM is still the better place to write the campaign, since it draws on all your
+sources. The assistant is for quick questions, ideas and small additions while you prepare or
+play.
+
 ### Cyberpunk RED items
 
 The closest core compendium item of the same type is copied as a template (same matching as NPC

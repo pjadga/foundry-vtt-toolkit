@@ -52,7 +52,7 @@ const isSupported = type => !!documentNameFor(type);
  * name -> uuid across journals, actors, items and playlists, matched loosely (see normalizeName).
  * NotebookLM imports win over other documents with the same name.
  */
-function worldLookup() {
+export function worldLookup() {
   const index = new Map();
   const docs = [...game.actors, ...game.items, ...game.journal, ...game.playlists];
   const isImport = d => d.flags[MODULE_ID]?.source === "notebooklm";
@@ -536,8 +536,11 @@ function previewHTML({ entries, warnings }, images = [], jobs = [], issues = nul
   return `<div class="fvtk fvtk-import-preview"><p>${escape(found + summary)}</p>${checkHTML(issues)}${generate}<ul>${rows.join("")}</ul>${warn}</div>`;
 }
 
-/** Paste dialog → preview → import. GM only. */
-export async function openImporter() {
+/**
+ * Paste dialog → preview → import. GM only.
+ * @param {{text?: string}} [options] text: entries to start with, e.g. from the GM Assistant.
+ */
+export async function openImporter({ text: initial = "" } = {}) {
   if (!game.user.isGM) return ui.notifications.warn(game.i18n.localize("FVTK.Import.GMOnly"));
   const { DialogV2 } = foundry.applications.api;
 
@@ -546,7 +549,7 @@ export async function openImporter() {
     position: { width: 640 },
     content: `<div class="fvtk">
       <p>${game.i18n.localize("FVTK.Import.Instructions")}</p>
-      <textarea name="text" rows="18" placeholder="##ENTRY&#10;type: journal&#10;name: ..."></textarea>
+      <textarea name="text" rows="18" placeholder="##ENTRY&#10;type: journal&#10;name: ...">${escape(initial)}</textarea>
       <label>${game.i18n.localize("FVTK.Import.File")} <input type="file" name="file" accept=".md,.txt,text/markdown,text/plain"></label>
       <label>${game.i18n.localize("FVTK.Import.ImageFolder")}
         <file-picker name="imageFolder" type="folder" value="${escape(game.settings.get(MODULE_ID, "imageFolder"))}"></file-picker></label>
@@ -585,7 +588,7 @@ export async function openImporter() {
     position: { width: 620 },
     content: previewHTML(parsed, images, jobs, issues, input.overwrite),
     render: onPreviewRender,
-    yes: { label: game.i18n.format("FVTK.Import.Confirm", { count: importable }) },
+    yes: { label: importable === 1 ? game.i18n.localize("FVTK.Import.ConfirmOne") : game.i18n.format("FVTK.Import.Confirm", { count: importable }) },
     rejectClose: false
   });
   if (!confirmed) return;

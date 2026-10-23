@@ -53,6 +53,10 @@ it. One run:
    playlist controls. Nothing is downloaded;
 6. offers to activate the first scene.
 
+**GM Assistant** (Journal sidebar, or `/gm <question>` in chat) is a Gemini chat inside Foundry with
+the whole campaign as context. Its answers link to your journals and actors. Any new NPCs, places or
+fixes it writes go straight to Build campaign with one click.
+
 **Pack campaign** in the Compendium sidebar then packs the whole campaign into one Foundry Adventure
 (world compendium *NotebookLM Campaigns*) that another world on the same server can import.
 

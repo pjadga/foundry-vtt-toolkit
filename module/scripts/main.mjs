@@ -3,6 +3,8 @@ import { importPlaylist } from "./youtube/playlists.mjs";
 import { YouTubePicker, chooseAndPick } from "./youtube/picker.mjs";
 import { autoPickTracks } from "./youtube/tracks.mjs";
 import { openPacker, packAdventure, clearCampaign } from "./import/adventure.mjs";
+import { openAssistant, setupAssistant, ask as askAssistant } from "./assistant/assistant.mjs";
+import { DEFAULT_ASSISTANT_MODEL } from "./assistant/gemini.mjs";
 import { setupYouTubePlayback } from "./youtube/player.mjs";
 import { DEFAULT_MODEL as GEMINI_DEFAULT_MODEL } from "./youtube/gemini.mjs";
 import { DEFAULT_STYLE as IMAGE_DEFAULT_STYLE } from "./images/prompts.mjs";
@@ -52,6 +54,15 @@ Hooks.once("init", () => {
     config: true,
     type: Boolean,
     default: true
+  });
+  // The GM Assistant (Journal sidebar, or /gm in chat) uses the same Gemini key.
+  game.settings.register(MODULE_ID, "assistantModel", {
+    name: "FVTK.Settings.AssistantModel.Name",
+    hint: "FVTK.Settings.AssistantModel.Hint",
+    scope: "client",
+    config: true,
+    type: String,
+    default: DEFAULT_ASSISTANT_MODEL
   });
   game.settings.register(MODULE_ID, "geminiModel", {
     name: "FVTK.Settings.GeminiModel.Name",
@@ -115,12 +126,14 @@ Hooks.once("ready", async () => {
     log,
     system: null,
     importer: { open: openImporter, importEntries, parseBundle, relink, registerType, orderScenes, pack: openPacker, packAdventure, clearCampaign },
-    youtube: { pick: playlist => new YouTubePicker(playlist).render({ force: true }), choose: chooseAndPick, autoPick: autoPickTracks }
+    youtube: { pick: playlist => new YouTubePicker(playlist).render({ force: true }), choose: chooseAndPick, autoPick: autoPickTracks },
+    assistant: { open: openAssistant, ask: askAssistant }
   };
   game.modules.get(MODULE_ID).api = api;
 
   registerType("playlist", { label: "Playlists (pick YouTube tracks afterwards)", documentName: "Playlist", folder: "Playlists", order: 5, import: importPlaylist });
   setupYouTubePlayback();
+  setupAssistant();
 
   const path = SYSTEM_MODULES[game.system.id];
   if (path) {
@@ -148,6 +161,7 @@ function addHeaderButton(html, className, icon, label, onClick) {
 }
 
 Hooks.on("renderJournalDirectory", (app, html) => addHeaderButton(html, "fvtk-import", "fa-solid fa-file-import", "FVTK.Import.Button", () => openImporter()));
+Hooks.on("renderJournalDirectory", (app, html) => addHeaderButton(html, "fvtk-assistant", "fa-solid fa-robot", "FVTK.Assistant.Button", () => openAssistant()));
 Hooks.on("renderPlaylistDirectory", (app, html) => addHeaderButton(html, "fvtk-youtube", "fa-brands fa-youtube", "FVTK.YouTube.Button", () => chooseAndPick()));
 Hooks.on("renderCompendiumDirectory", (app, html) => addHeaderButton(html, "fvtk-pack", "fa-solid fa-box-archive", "FVTK.Adventure.Button", () => openPacker()));
 

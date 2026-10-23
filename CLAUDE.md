@@ -48,6 +48,17 @@ become Foundry playlists (`youtube/playlists.mjs`, registered in `main.mjs`).
 after the confirm step and adds the uploaded paths to the folder's images before `importEntries`.
 Gemini and OpenAI image APIs need billing, so they are not used.
 
+## GM Assistant
+
+`module/scripts/assistant/`: `context.mjs` (pure, tested: `ENTRY_RULES`, a verbatim copy of Prompt 0's
+format, fields and consistency rules that `tests/assistant.test.mjs` checks against the prompt kit,
+so edit both together; `contextText`; `systemPrompt`; `entriesIn`), `gemini.mjs` (chat call,
+lite model by default, other models 30 s then lite), `assistant.mjs` (`campaignContext` from
+`campaignDocuments`, one shared conversation, ApplicationV2 window, `/gm` via the `chatMessage` hook,
+Build button via `renderChatMessageHTML`). Answers render through `resolveLinks` outside code blocks;
+brackets inside code blocks are escaped so Foundry's inline-roll enricher doesn't read `[[Name]]`.
+`openImporter({ text })` starts Build campaign with entries filled in.
+
 ## YouTube playback
 
 `module/scripts/youtube/`: `youtube.mjs` (pure helpers incl. `fallbackQueries`, tested), `search.mjs`
