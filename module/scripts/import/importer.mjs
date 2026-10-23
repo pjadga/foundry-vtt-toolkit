@@ -1,4 +1,7 @@
 import { parseBundle, resolveLinks, toMarkdown, normalizeName, findImage, findLinks, progressionKey, stripNumber, numberInOrder } from "./parser.mjs";
+import { imagePrompt, imagesNeeded, DEFAULT_STYLE } from "../images/prompts.mjs";
+import { PROVIDERS } from "../images/generate.mjs";
+import { generateSceneImages } from "../images/review.mjs";
 
 const MODULE_ID = "foundry-vtt-toolkit";
 const ROOT_FOLDER = "NotebookLM";
@@ -365,18 +368,25 @@ export async function relink() {
 
 const escape = s => foundry.utils.escapeHTML(String(s));
 
-function previewHTML({ entries, warnings }, images = []) {
+function previewHTML({ entries, warnings }, images = [], jobs = []) {
   const srcFor = sceneImages(entries, images);
+  const generating = new Set(jobs.map(j => j.entry));
+  const generatedLocations = new Set(jobs.filter(j => j.entry.type === "location").map(j => normalizeName(j.entry.name)));
   const rows = entries.map(e => {
     let status = destinationFor(e.type) ?? "skipped (not supported yet)";
     if (e.type in SCENE_TYPES) {
       const src = srcFor.get(e);
-      status += src ? ` + scene (${src.split("/").pop()})` : e.type === "scene" ? " (no image, so no scene)" : "";
+      const fromLocation = e.type === "scene" && findLinks(e.fields.location ?? "").some(n => generatedLocations.has(normalizeName(n)));
+      if (src) status += ` + scene (${src.split("/").pop()})`;
+      else if (generating.has(e)) status += " + scene (image will be generated)";
+      else if (fromLocation) status += " + scene (location's generated image)";
+      else if (e.type === "scene") status += " (no image, so no scene)";
     }
     return `<li><strong>${escape(e.name)}</strong> <em>${escape(e.type)}</em> → ${escape(status)}${e.links.length ? `<br><small>links: ${e.links.map(escape).join(", ")}</small>` : ""}</li>`;
   });
   const warn = warnings.length ? `<p><strong>Warnings</strong></p><ul>${warnings.map(w => `<li>${escape(w)}</li>`).join("")}</ul>` : "";
-  return `<div class="fvtk fvtk-import-preview"><p>${entries.length} entr${entries.length === 1 ? "y" : "ies"} found.</p><ul>${rows.join("")}</ul>${warn}</div>`;
+  const generate = jobs.length ? `<p>${escape(game.i18n.format("FVTK.Images.WillGenerate", { count: jobs.length, provider: game.settings.get(MODULE_ID, "imageProvider") }))}</p>` : "";
+  return `<div class="fvtk fvtk-import-preview"><p>${entries.length} entr${entries.length === 1 ? "y" : "ies"} found.</p>${generate}<ul>${rows.join("")}</ul>${warn}</div>`;
 }
 
 /** Paste dialog → preview → import. GM only. */
@@ -409,23 +419,32 @@ export async function openImporter() {
   // A chosen file wins over pasted text.
   const text = input.file ? await input.file.text() : input.text;
   if (!text.trim()) return;
-  await game.settings.set(MODULE_ID, "imageFolder", input.imageFolder);
-  const images = await listImages(input.imageFolder);
+  // Generated images need somewhere to go, so default to a folder in the world.
+  const folder = input.imageFolder || `worlds/${game.world.id}/assets/notebooklm`;
+  await game.settings.set(MODULE_ID, "imageFolder", folder);
+  // The default folder may not exist yet, which is fine.
+  let images = await listImages(folder, { quiet: !input.imageFolder });
 
   const parsed = parseBundle(text);
   const importable = parsed.entries.filter(e => isSupported(e.type)).length;
+  const jobs = imageJobs(parsed.entries, images);
   if (!importable) {
-    return DialogV2.prompt({ window: { title: game.i18n.localize("FVTK.Import.Title") }, content: previewHTML(parsed, images), rejectClose: false });
+    return DialogV2.prompt({ window: { title: game.i18n.localize("FVTK.Import.Title") }, content: previewHTML(parsed, images, jobs), rejectClose: false });
   }
 
   const confirmed = await DialogV2.confirm({
     window: { title: game.i18n.localize("FVTK.Import.Title") },
     position: { width: 560 },
-    content: previewHTML(parsed, images),
+    content: previewHTML(parsed, images, jobs),
     yes: { label: game.i18n.format("FVTK.Import.Confirm", { count: importable }) },
     rejectClose: false
   });
   if (!confirmed) return;
+
+  if (jobs.length) {
+    const generated = await generateSceneImages(jobs, imageSettings(folder));
+    images = [...images, ...generated.paths];
+  }
 
   const report = await importEntries(parsed.entries, { overwrite: input.overwrite, images });
   const { scenes } = report;
@@ -435,13 +454,40 @@ export async function openImporter() {
   return report;
 }
 
+/** The image generation settings, or null when generation is off. */
+function imageSettings(folder) {
+  const provider = game.settings.get(MODULE_ID, "imageProvider");
+  if (!PROVIDERS.includes(provider)) return null;
+  return {
+    provider,
+    folder,
+    url: game.settings.get(MODULE_ID, "cloudflareWorkerUrl").trim(),
+    token: game.settings.get(MODULE_ID, "cloudflareWorkerToken").trim(),
+    autoApprove: game.settings.get(MODULE_ID, "imageAutoApprove")
+  };
+}
+
+/**
+ * Images to generate for an import: locations and scenes with no image in the folder, no existing
+ * scene, and (for scenes) no location image to reuse. Empty when generation is off.
+ */
+export function imageJobs(entries, images) {
+  if (!imageSettings("")) return [];
+  const style = game.settings.get(MODULE_ID, "imageStyle").trim() || DEFAULT_STYLE;
+  const srcFor = sceneImages(entries, images);
+  const sceneExists = e => game.scenes.some(s => s.flags[MODULE_ID]?.source === "notebooklm" && normalizeName(sceneBaseName(s)) === normalizeName(e.replaces ?? e.name));
+  const candidates = entries.filter(e => e.type in SCENE_TYPES);
+  return imagesNeeded(candidates, e => srcFor.has(e) || sceneExists(e)).map(({ entry, location }) => ({ entry, prompt: imagePrompt(entry, { style, location }) }));
+}
+
 /** Image paths in a folder of the user data directory (a FilePicker "data" path); [] if none or unreadable. */
-async function listImages(folder) {
+async function listImages(folder, { quiet = false } = {}) {
   if (!folder) return [];
   try {
     const { files } = await foundry.applications.apps.FilePicker.implementation.browse("data", folder);
     return files;
   } catch (err) {
+    if (quiet) return [];
     ui.notifications.warn(game.i18n.format("FVTK.Import.ImageFolderError", { folder }));
     console.warn(`${MODULE_ID} | Could not browse ${folder}`, err);
     return [];

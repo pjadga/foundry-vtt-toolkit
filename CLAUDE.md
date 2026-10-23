@@ -28,6 +28,16 @@ also become Foundry scenes when an image matches (`findImage` in the parser, `im
 importer; images come from the dialog's image folder via `FilePicker.browse`). `playlist` entries
 become Foundry playlists (`youtube/playlists.mjs`, registered in `main.mjs`).
 
+## Scene images
+
+`module/scripts/images/`: `prompts.mjs` (pure, tested: prompt from `visual:`, file names that
+`findImage` matches, `imagesNeeded`), `generate.mjs` (Pollinations, no key, about one request per
+15 s, returns about 1015×580 with a watermark; or Cloudflare Workers AI through the GM's own Worker,
+`docs/images/cloudflare-worker.js`, because Cloudflare's API sends no CORS headers), `review.mjs`
+(ApplicationV2 review window that uploads kept images with `FilePicker.upload`). `openImporter` runs it
+after the confirm step and adds the uploaded paths to the folder's images before `importEntries`.
+Gemini and OpenAI image APIs need billing, so they are not used.
+
 ## YouTube playback
 
 `module/scripts/youtube/`: `youtube.mjs` (pure helpers incl. `fallbackQueries`, tested), `search.mjs`

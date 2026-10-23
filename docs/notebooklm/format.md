@@ -122,9 +122,10 @@ Items are imported before NPCs, so an NPC whose gear names an item in the same i
 
 ### Scenes
 
-NotebookLM can't make images, so put yours in a folder under Foundry's user data (e.g.
-`worlds/<world>/assets/<campaign>/`) and choose it as the **Scene image folder** in the import
-dialog (remembered for next time). An image belongs to the location or scene whose name matches its
+NotebookLM can't make images. Either let the toolkit generate them (see **Generated scene images**
+below) or put yours in a folder under Foundry's user data (e.g. `worlds/<world>/assets/<campaign>/`)
+and choose it as the **Scene image folder** in the import dialog (remembered for next time; with no
+folder chosen it is `worlds/<world>/assets/notebooklm`). An image belongs to the location or scene whose name matches its
 file name, ignoring case, punctuation, apostrophes and a leading "The": `the-overlook.jpg` → *The
 Overlook*, `dr-chens-free-clinic.webp` → *Dr. Chen's Free Clinic*. An `image:` (or `map:`) line in an
 entry overrides that: a file name in the folder, or a full path or URL.
@@ -144,6 +145,41 @@ Scenes are gridless, sized to the image, kept out of the player navigation bar, 
 the entry's journal. An existing scene is skipped unless the entry is being replaced; then it is
 updated in place, so its tokens, walls and drawings survive. A scene is still created for a location
 whose journal already existed.
+
+#### Generated scene images
+
+Locations and scenes that have no image in the folder and no existing scene get an image generated
+after you confirm the import, except a scene with no `visual:` line whose `[[location]]` is in the
+same import: it uses the location's image. The
+preview says how many. A **Scene images** window shows each one as it arrives with its prompt: edit
+the prompt and **Regenerate** anything you don't like, untick what should stay without a scene, then
+**Upload and import**. The images are saved to the scene image folder under the entry's name
+(`neon-noodle-bar.jpg`), so the next import finds them instead of generating again. **Import without
+images** carries on with none.
+
+The prompt is the entry's `visual:` line (a location's opening description and `notable_features`
+if it has none; for a scene, its location's visual and its opening), followed by the **Scene image
+style** setting. Ask NotebookLM for a `visual:` line on every location (prompt kit, Prompt 3); it
+gives far better images than the description.
+
+Pick the generator in **Configure Settings → Foundry VTT Toolkit → Scene image generator**. Both are
+free; the settings are per browser.
+
+- **Pollinations** (default): no account or key. Free use is slow (one image every 15 seconds or
+  so), about 1015×580, from a basic model, with a small "pollinations.ai" mark in the corner.
+- **Cloudflare Workers AI**: FLUX.1 schnell, much better images and no watermark, on Cloudflare's
+  free daily allowance (enough for dozens of images a day). Images are square. It needs a free
+  Cloudflare account and a small Worker you deploy once:
+  1. Cloudflare dashboard → **Workers & Pages** → **Create** → **Worker**, name it (e.g.
+     `fvtk-images`), **Deploy**, then **Edit code**, replace the code with
+     [`docs/images/cloudflare-worker.js`](../images/cloudflare-worker.js) and **Deploy**.
+  2. The Worker's **Settings → Bindings → Add → Workers AI**, variable name `AI`.
+  3. **Settings → Variables and secrets → Add**, type **Secret**, name `TOKEN`, any long random value.
+  4. In the toolkit settings set the generator to Cloudflare, **Cloudflare Worker URL** to the
+     Worker's `https://….workers.dev` address and **Cloudflare Worker token** to the same value.
+
+With **Keep generated images without review** on, the window only shows progress: everything that
+generated is uploaded and the import carries on by itself.
 
 ### Cyberpunk RED items
 

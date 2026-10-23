@@ -108,3 +108,66 @@
   opacity: 0.8;
   margin-top: 0.25rem;
 }
+
+/* Scene image review: a grid of cards, each image over its prompt; the footer stays put. */
+.fvtk-image-review .window-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.fvtk-img-grid {
+  flex: 1;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.fvtk-img-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border: 1px solid var(--color-border-light-2, #555);
+  border-radius: 4px;
+}
+.fvtk-img-card.excluded {
+  opacity: 0.5;
+}
+.fvtk-img-name small {
+  display: block;
+  opacity: 0.7;
+}
+.fvtk-img-card img,
+.fvtk-img-placeholder {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 2px;
+}
+.fvtk-img-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0.5rem;
+  background: rgba(0, 0, 0, 0.25);
+}
+.fvtk-img-card textarea {
+  resize: vertical;
+  font-size: var(--font-size-12, 12px);
+}
+.fvtk-img-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.fvtk-img-footer span {
+  flex: 1;
+}
+.fvtk-img-footer button {
+  flex: 0 0 auto;
+  width: auto;
+}

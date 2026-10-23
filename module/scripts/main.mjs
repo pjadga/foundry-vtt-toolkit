@@ -3,6 +3,7 @@ import { importPlaylist } from "./youtube/playlists.mjs";
 import { YouTubePicker, chooseAndPick } from "./youtube/picker.mjs";
 import { setupYouTubePlayback } from "./youtube/player.mjs";
 import { DEFAULT_MODEL as GEMINI_DEFAULT_MODEL } from "./youtube/gemini.mjs";
+import { DEFAULT_STYLE as IMAGE_DEFAULT_STYLE } from "./images/prompts.mjs";
 
 const MODULE_ID = "foundry-vtt-toolkit";
 
@@ -49,6 +50,52 @@ Hooks.once("init", () => {
     config: true,
     type: String,
     default: GEMINI_DEFAULT_MODEL
+  });
+  // Scene images for locations and scenes that have none, generated during a NotebookLM import.
+  game.settings.register(MODULE_ID, "imageProvider", {
+    name: "FVTK.Settings.ImageProvider.Name",
+    hint: "FVTK.Settings.ImageProvider.Hint",
+    scope: "client",
+    config: true,
+    type: String,
+    choices: {
+      none: "FVTK.Settings.ImageProvider.None",
+      pollinations: "FVTK.Settings.ImageProvider.Pollinations",
+      cloudflare: "FVTK.Settings.ImageProvider.Cloudflare"
+    },
+    default: "pollinations"
+  });
+  game.settings.register(MODULE_ID, "imageStyle", {
+    name: "FVTK.Settings.ImageStyle.Name",
+    hint: "FVTK.Settings.ImageStyle.Hint",
+    scope: "client",
+    config: true,
+    type: String,
+    default: IMAGE_DEFAULT_STYLE
+  });
+  game.settings.register(MODULE_ID, "imageAutoApprove", {
+    name: "FVTK.Settings.ImageAutoApprove.Name",
+    hint: "FVTK.Settings.ImageAutoApprove.Hint",
+    scope: "client",
+    config: true,
+    type: Boolean,
+    default: false
+  });
+  game.settings.register(MODULE_ID, "cloudflareWorkerUrl", {
+    name: "FVTK.Settings.CloudflareUrl.Name",
+    hint: "FVTK.Settings.CloudflareUrl.Hint",
+    scope: "client",
+    config: true,
+    type: String,
+    default: ""
+  });
+  game.settings.register(MODULE_ID, "cloudflareWorkerToken", {
+    name: "FVTK.Settings.CloudflareToken.Name",
+    hint: "FVTK.Settings.CloudflareToken.Hint",
+    scope: "client",
+    config: true,
+    type: String,
+    default: ""
   });
 });
 
