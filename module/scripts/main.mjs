@@ -5,6 +5,7 @@ import { autoPickTracks } from "./youtube/tracks.mjs";
 import { openPacker, packAdventure, clearCampaign } from "./import/adventure.mjs";
 import { openAssistant, setupAssistant, ask as askAssistant } from "./assistant/assistant.mjs";
 import { openSources, syncSources } from "./assistant/sources-sync.mjs";
+import { setupNarration } from "./narration/narration.mjs";
 import { DEFAULT_ASSISTANT_MODEL } from "./assistant/gemini.mjs";
 import { setupYouTubePlayback } from "./youtube/player.mjs";
 import { DEFAULT_MODEL as GEMINI_DEFAULT_MODEL } from "./youtube/gemini.mjs";
@@ -65,6 +66,42 @@ Hooks.once("init", () => {
     config: true,
     type: String,
     default: DEFAULT_ASSISTANT_MODEL
+  });
+  // Gemini narrates attacks in chat. Only the active GM's browser (which has the key) writes it.
+  game.settings.register(MODULE_ID, "combatNarration", {
+    name: "FVTK.Settings.CombatNarration.Name",
+    hint: "FVTK.Settings.CombatNarration.Hint",
+    scope: "client",
+    config: true,
+    type: String,
+    choices: {
+      auto: "FVTK.Settings.CombatNarration.Auto",
+      review: "FVTK.Settings.CombatNarration.Review",
+      off: "FVTK.Settings.CombatNarration.Off"
+    },
+    default: "auto"
+  });
+  // Cyberpunk RED: resolve attacks by the rules (range DV or Evasion) and post the result.
+  game.settings.register(MODULE_ID, "combatResolution", {
+    name: "FVTK.Settings.CombatResolution.Name",
+    hint: "FVTK.Settings.CombatResolution.Hint",
+    scope: "client",
+    config: true,
+    type: Boolean,
+    default: true
+  });
+  game.settings.register(MODULE_ID, "combatApplyDamage", {
+    name: "FVTK.Settings.CombatApplyDamage.Name",
+    hint: "FVTK.Settings.CombatApplyDamage.Hint",
+    scope: "client",
+    config: true,
+    type: String,
+    choices: {
+      npcs: "FVTK.Settings.CombatApplyDamage.Npcs",
+      all: "FVTK.Settings.CombatApplyDamage.All",
+      off: "FVTK.Settings.CombatApplyDamage.Off"
+    },
+    default: "npcs"
   });
   // The assistant's source library: a folder of the GM's files, synced to Gemini File Search.
   game.settings.register(MODULE_ID, "sourcesFolder", { scope: "client", config: false, type: String, default: "" });
@@ -149,6 +186,7 @@ Hooks.once("ready", async () => {
   registerType("playlist", { label: "Playlists (pick YouTube tracks afterwards)", documentName: "Playlist", folder: "Playlists", order: 5, import: importPlaylist });
   setupYouTubePlayback();
   setupAssistant();
+  setupNarration();
 
   const path = SYSTEM_MODULES[game.system.id];
   if (path) {

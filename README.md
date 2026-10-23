@@ -3,6 +3,9 @@
 Macros and a module for FoundryVTT **v13**. Targets system-agnostic use plus D&D 5e,
 Sword World 2.5 and Cyberpunk RED.
 
+**Documentation:** the [user guide](docs/user-guide.md) covers features, screenshots,
+troubleshooting and known issues. Release notes are in [CHANGELOG.md](CHANGELOG.md).
+
 ## Layout
 
 | Path | What it is |

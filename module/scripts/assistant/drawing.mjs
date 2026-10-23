@@ -36,6 +36,17 @@ export function guessKind(text) {
   return null;
 }
 
+/** The JSON shape of Gemini's answer to imagePlanRequest (askGemini's `schema`). */
+export const IMAGE_PLAN_SCHEMA = {
+  type: "OBJECT",
+  properties: {
+    prompt: { type: "STRING" },
+    subject: { type: "STRING" },
+    kind: { type: "STRING", enum: ["portrait", "scene"] }
+  },
+  required: ["prompt", "subject", "kind"]
+};
+
 /** Aspect ratio for an image: square for portraits (it doubles as a token), 16:9 for scenes. */
 export const aspectFor = kind => (kind === "portrait" ? "1:1" : "16:9");
 

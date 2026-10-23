@@ -120,6 +120,9 @@
   overflow-y: auto;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  /* Cards keep their own height instead of stretching to fill the window. */
+  align-content: start;
+  align-items: start;
   gap: 0.5rem;
   list-style: none;
   margin: 0;
@@ -244,6 +247,12 @@
 .fvtk-assistant-msg.model {
   background: rgba(0, 0, 0, 0.2);
 }
+/* Foundry styles code as nowrap inline-block; entries in answers keep their line breaks. */
+.fvtk-assistant-text pre code,
+.fvtk-assistant-chat pre code {
+  display: block;
+  white-space: pre-wrap;
+}
 .fvtk-assistant-text pre,
 .fvtk-assistant-chat pre {
   white-space: pre-wrap;
@@ -321,4 +330,52 @@
 }
 .fvtk-assistant-chat .fvtk-assistant-use {
   margin-top: 0.25rem;
+
+/* Combat narration in chat. */
+.fvtk-narration .fvtk-narration-text {
+  font-style: italic;
+}
+.fvtk-narration .fvtk-narration-line {
+  margin: 0.25rem 0 0;
+}
+.fvtk-narration-review {
+  display: flex;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+}
+.fvtk-narration-review button {
+  flex: 1;
+  font-size: var(--font-size-12, 12px);
+}
+
+/* Attack resolution cards. */
+.fvtk-resolution {
+  border-left: 3px solid var(--color-border-light-2, #777);
+  padding-left: 0.5rem;
+}
+.fvtk-resolution.hit,
+.fvtk-resolution.done {
+  border-left-color: var(--color-level-success, #3c9d3c);
+}
+.fvtk-resolution.miss {
+  border-left-color: var(--color-level-error, #c33);
+}
+.fvtk-resolution .hint {
+  margin: 0.25rem 0 0;
+  font-size: var(--font-size-12, 12px);
+  opacity: 0.85;
+}
+.fvtk-resolution-buttons {
+  display: flex;
+  gap: 0.25rem;
+  margin-top: 0.4rem;
+}
+.fvtk-resolution-buttons button {
+  flex: 1;
+  font-size: var(--font-size-12, 12px);
+}
+.fvtk-applied {
+  font-size: var(--font-size-12, 12px);
+  font-style: italic;
+  opacity: 0.8;
 }

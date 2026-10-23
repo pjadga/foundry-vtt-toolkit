@@ -63,7 +63,7 @@ Build button via `renderChatMessageHTML`). Answers render through `resolveLinks`
 brackets inside code blocks are escaped so Foundry's inline-roll enricher doesn't read `[[Name]]`.
 `openImporter({ text })` starts Build campaign with entries filled in.
 Images: `drawing.mjs` (pure, tested: `imageRequest` spots "draw a portrait of …", `imagePlanRequest` /
-`parseImagePlan` have Gemini chat write a JSON `{prompt, subject, kind}`, `imageTargets` picks actors or
+`parseImagePlan` have Gemini chat write `{prompt, subject, kind}` (`IMAGE_PLAN_SCHEMA`, askGemini's `schema`), `imageTargets` picks actors or
 scenes from the subject, the request and the previous answer's links). `draw` in `assistant.mjs`
 generates with the scene image provider (`imageSettings` from the importer; Gemini when that is Off),
 1:1 for portraits, 16:9 for scenes; `saveImage` uploads to the Build campaign image folder
@@ -78,6 +78,25 @@ Sources: `sources.mjs` (pure, tested: `classify`, `syncPlan`, `citations` from `
 `path` in the folder and `fingerprint`, so the store is the sync record; the store is found by
 display name per world). `askGemini` adds `tools: [{file_search: {file_search_store_names}}]`, which
 works with `system_instruction` on `generateContent`.
+
+## Combat narration
+
+`module/scripts/narration/`: `rules.mjs` (pure, tested: `rangeDV`, `shouldDodge`, `hits` with the
+defender winning ties, `criticalInjury`, `damageEffect`), `prompt.mjs` (pure, tested: the outcome-aware
+prompt, `chatLog`, `previousLines`, `repeatsEarlier`, `parseNarration`), `narration.mjs` (hooks). Every
+roller's client stamps `game.user.targets` onto roll messages in `preCreateChatMessage`, since Foundry
+doesn't record them. Only the active GM's client resolves and narrates, because it has the Gemini key.
+Cyberpunk RED gotchas:
+- Rolls lose their CPR state when they go to chat (`CPRRoll#toJSON` empties options), so attacks are
+  recognised by roll class (`CPRAttackRoll` and subclasses, `CPRDamageRoll`, `CPRSkillRoll`).
+- An attack's real total (d10 plus stat and skill) is only in the card's `.d10-number-div`; the
+  message roll's total is the d10 alone.
+- Damage cards carry each target's Apply Damage data on their `[data-action="applyDamage"]`
+  buttons; `actor._applyDamage` is called with them and the dialog's defaults.
+- DV tables are RollTables in the compendium named by the system's `dvRollTableCompendium` setting.
+
+State lives in the Combat card's `flags.foundry-vtt-toolkit.resolution` (status hit, miss,
+awaiting, unresolved or done), and everything runs through one queue, in roll order.
 
 ## YouTube playback
 
