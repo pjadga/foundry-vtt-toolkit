@@ -131,5 +131,38 @@ importer therefore builds the full actor itself and uses the base `Actor.create`
 
 ## Verifying changes
 
-`npm test` runs the NotebookLM parser tests (`tests/parser.test.mjs`, no Foundry needed). JSON files must parse (`jq . module/module.json module/lang/en.json`) and `.mjs`
-files should pass `node --check`. Real verification means loading the module in a Foundry v13 world.
+`npm test` runs every pure test in `tests/*.test.mjs` with `node --test` (no Foundry needed). JSON files
+must parse (`module/module.json`, `module/lang/en.json`) and `.mjs` files should pass `node --check`.
+Real verification means loading the module in a Foundry v13 world.
+
+**This repository is public.** Never commit server addresses, SSH key names, logins, API keys, or the
+user's email. Server-specific details live in `docs/handoff.local.md`, which is git-ignored and kept on
+each machine by hand.
+
+## Testing in the cpr-test world
+
+- **`cpr-test` is a sandbox** (the user's test world for this toolkit, running Cyberpunk RED 0.93-dev
+  on Foundry v13). Changing its settings, client settings and test data is fine without asking.
+- **Ask first** before touching any other world, the server's other Foundry install, or restarting
+  servers. Never type passwords or API keys: the user enters keys in the browser, and they are
+  client settings that stay in that browser.
+- **Deploy** by packing `module/` and extracting it over the module folder on the server, then
+  reload the Foundry page (F5). There is no build step:
+  `tar -czf fvtk.tgz -C module .`, copy it with `scp`, then
+  `tar -xzf fvtk.tgz -C <Data>/modules/foundry-vtt-toolkit` over `ssh`.
+  The host, user, key and paths are in `docs/handoff.local.md`. Module styles are bundled by Foundry,
+  so CSS changes also need a reload.
+- **Test documents** get a `QA ` name prefix (plus a `qa-` folder for files) and are deleted
+  afterwards. Delete your own test chat messages too, and restore any actor you damaged. Leave the
+  user's own rolls and documents alone.
+- **Rolling like a player in Cyberpunk RED:** `item.createRoll("attack" | "damage" | "skill", actor)`,
+  `await roll.roll()`, set `roll.entityData = { actor: actor.id, token: token.id }` (otherwise the card
+  has no speaker), then `CPRChat.RenderRollCard(roll)`. `CPRChat` comes from
+  `/systems/cyberpunk-red-core/modules/chat/cpr-chat.js`.
+- **Browser gotchas:**
+  - Sound only plays after a real click on the page, which a scripted call doesn't count as.
+  - A reload can land on the join screen; rejoin as described in `docs/handoff.local.md`.
+  - Pollinations allows one image per 45 s per IP address, shared with any other use from the
+    same network.
+- **Gemini and YouTube keys** belong to the user. Don't print them, and keep testing light on their
+  daily quotas.

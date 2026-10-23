@@ -2,3 +2,5 @@ node_modules/
 dist/
 *.zip
 .DS_Store
+# Server-specific notes kept per machine (see CLAUDE.md)
+*.local.md
