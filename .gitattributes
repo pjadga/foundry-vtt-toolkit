@@ -1,0 +1,16 @@
+# Text files use LF line endings in every checkout, whatever core.autocrlf says, so a deploy from a
+# Windows clone puts the same bytes on the server as the repository holds.
+* text=auto eol=lf
+
+# Binary files are never converted.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.wav binary
+*.mp3 binary
+*.ogg binary
+*.pdf binary
+*.zip binary
+*.tgz binary

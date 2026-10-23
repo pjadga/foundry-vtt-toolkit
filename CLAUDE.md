@@ -165,6 +165,20 @@ each machine by hand.
   `tar -xzf fvtk.tgz -C <Data>/modules/foundry-vtt-toolkit` over `ssh`.
   The host, user, key and paths are in `docs/handoff.local.md`. Module styles are bundled by Foundry,
   so CSS changes also need a reload.
+- **Deploying from Windows:** `.gitattributes` keeps text files LF in every checkout, so a deploy
+  from a Windows clone matches the repository byte for byte. Compare deployed files with
+  `git hash-object`, not checksums of a CRLF working tree. If a clone made before `.gitattributes`
+  still has CRLF files, refresh it once with `git rm -r --cached -q . && git reset --hard -q`, on a
+  clean tree.
+- **Windows PowerShell and `ssh`:**
+  - PowerShell 5.1 drops the inner quotes from arguments it passes to `ssh`, so a quoted remote
+    command arrives broken.
+  - Piping a script into `ssh` puts a byte-order mark in front of it, so bash fails on the first
+    line.
+  - Write the remote commands to a file and redirect it through `cmd`:
+    `cmd /c "ssh -i <key> <user>@<host> bash -s < script.sh"`, which passes the bytes unchanged.
+  - Git Bash works on the work machine; on the home machine it fails with fork errors, so use
+    PowerShell there.
 - **Test documents** get a `QA ` name prefix (plus a `qa-` folder for files) and are deleted
   afterwards. Delete your own test chat messages too, and restore any actor you damaged. Leave the
   user's own rolls and documents alone.
