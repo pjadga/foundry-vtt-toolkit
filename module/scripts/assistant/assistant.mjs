@@ -101,7 +101,12 @@ export async function ask(question) {
  */
 export async function renderAnswer(markdown) {
   const lookup = worldLookup();
-  const linked = String(markdown).split(/(```[\s\S]*?(?:```|$))/).map((part, i) => (i % 2 ? part : resolveLinks(part, lookup))).join("");
+  const fences = /(```[\s\S]*?(?:```|$))/;
+  // Gemini sometimes writes entries without a code block; give them one, so they show as written
+  // instead of as Markdown (##ENTRY as a heading, field_names in italics).
+  const wrap = block => `\n\`\`\`\n${block}\n\`\`\`\n`;
+  const fenced = String(markdown).split(fences).map((part, i) => (i % 2 ? part : part.replace(/^##ENTRY[ \t]*$[\s\S]*?^##END[ \t]*$/gm, wrap))).join("");
+  const linked = fenced.split(fences).map((part, i) => (i % 2 ? part : resolveLinks(part, lookup))).join("");
   const converter = new showdown.Converter(CONST.SHOWDOWN_OPTIONS);
   const html = converter.makeHtml(linked).replace(/<code[^>]*>[\s\S]*?<\/code>/g, code => code.replace(/\[/g, "&#91;").replace(/\]/g, "&#93;"));
   return foundry.applications.ux.TextEditor.implementation.enrichHTML(html);

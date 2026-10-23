@@ -489,7 +489,8 @@ function checkHTML(issues) {
   if (!issues.length) return `<p class="fvtk-check ok"><i class="fa-solid fa-circle-check"></i> ${escape(game.i18n.localize("FVTK.Import.CheckOk"))}</p>`;
   const shown = issues.slice(0, SHOWN_ISSUES).map(i => `<li>${i.entry ? `<strong>${escape(i.entry)}</strong>: ` : ""}${escape(i.problem)}</li>`);
   if (issues.length > SHOWN_ISSUES) shown.push(`<li>${escape(game.i18n.format("FVTK.Import.CheckMore", { count: issues.length - SHOWN_ISSUES }))}</li>`);
-  return `<details class="fvtk-check"><summary>${escape(game.i18n.format("FVTK.Import.CheckIssues", { count: issues.length }))}</summary>
+  const title = issues.length === 1 ? game.i18n.localize("FVTK.Import.CheckIssuesOne") : game.i18n.format("FVTK.Import.CheckIssues", { count: issues.length });
+  return `<details class="fvtk-check"><summary>${escape(title)}</summary>
     <ul>${shown.join("")}</ul>
     <p>${escape(game.i18n.localize("FVTK.Import.CheckFix"))}</p>
     <textarea readonly rows="6" class="fvtk-fix-prompt">${escape(fixPrompt(issues))}</textarea>

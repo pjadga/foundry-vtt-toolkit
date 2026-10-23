@@ -67,6 +67,25 @@ Sources: `sources.mjs` (pure, tested: `classify`, `syncPlan`, `citations` from `
 display name per world). `askGemini` adds `tools: [{file_search: {file_search_store_names}}]`, which
 works with `system_instruction` on `generateContent`.
 
+## Combat narration
+
+`module/scripts/narration/`: `rules.mjs` (pure, tested: `rangeDV`, `shouldDodge`, `hits` with the
+defender winning ties, `criticalInjury`, `damageEffect`), `prompt.mjs` (pure, tested: the outcome-aware
+prompt, `chatLog`, `previousLines`, `repeatsEarlier`, `parseNarration`), `narration.mjs` (hooks). Every
+roller's client stamps `game.user.targets` onto roll messages in `preCreateChatMessage`, since Foundry
+doesn't record them. Only the active GM's client resolves and narrates, because it has the Gemini key.
+Cyberpunk RED gotchas:
+- Rolls lose their CPR state when they go to chat (`CPRRoll#toJSON` empties options), so attacks are
+  recognised by roll class (`CPRAttackRoll` and subclasses, `CPRDamageRoll`, `CPRSkillRoll`).
+- An attack's real total (d10 plus stat and skill) is only in the card's `.d10-number-div`; the
+  message roll's total is the d10 alone.
+- Damage cards carry each target's Apply Damage data on their `[data-action="applyDamage"]`
+  buttons; `actor._applyDamage` is called with them and the dialog's defaults.
+- DV tables are RollTables in the compendium named by the system's `dvRollTableCompendium` setting.
+
+State lives in the Combat card's `flags.foundry-vtt-toolkit.resolution` (status hit, miss,
+awaiting, unresolved or done), and everything runs through one queue, in roll order.
+
 ## YouTube playback
 
 `module/scripts/youtube/`: `youtube.mjs` (pure helpers incl. `fallbackQueries`, tested), `search.mjs`
