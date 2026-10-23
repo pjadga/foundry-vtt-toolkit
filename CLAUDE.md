@@ -30,8 +30,11 @@ become Foundry playlists (`youtube/playlists.mjs`, registered in `main.mjs`).
 
 ## YouTube playback
 
-`module/scripts/youtube/`: `youtube.mjs` (pure helpers, tested), `search.mjs` (Data API v3 with the GM's
-client-scoped key, oEmbed fallback), `picker.mjs` (ApplicationV2 track picker), `player.mjs` (playback).
+`module/scripts/youtube/`: `youtube.mjs` (pure helpers incl. `fallbackQueries`, tested), `search.mjs`
+(Data API v3 with the GM's client-scoped key, oEmbed fallback), `gemini.mjs` (optional Gemini search
+suggestions, client-scoped key, model setting default `gemini-flash-lite-latest`, busy models skipped for 10 min; pure prompt/parse parts
+tested), `picker.mjs` (ApplicationV2 track picker; Gemini output is only ever used as YouTube search
+terms, never shown or saved unchecked), `player.mjs` (playback).
 A YouTube track is a PlaylistSound with `path` = `assets/silence.wav`, `repeat: true` and the video in
 `flags.foundry-vtt-toolkit.youtube`; every client plays it in a visible ≥200×200 embedded player (YouTube
 policy: don't hide or shrink it). Shared timing: `startedAt` (server ms) while playing, `pausedAt` (s)

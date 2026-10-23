@@ -2,6 +2,7 @@ import { openImporter, importEntries, parseBundle, relink, registerType, orderSc
 import { importPlaylist } from "./youtube/playlists.mjs";
 import { YouTubePicker, chooseAndPick } from "./youtube/picker.mjs";
 import { setupYouTubePlayback } from "./youtube/player.mjs";
+import { DEFAULT_MODEL as GEMINI_DEFAULT_MODEL } from "./youtube/gemini.mjs";
 
 const MODULE_ID = "foundry-vtt-toolkit";
 
@@ -31,6 +32,23 @@ Hooks.once("init", () => {
     config: true,
     type: String,
     default: ""
+  });
+  // Optional: Gemini turns track descriptions into searches that find something on YouTube.
+  game.settings.register(MODULE_ID, "geminiApiKey", {
+    name: "FVTK.Settings.GeminiKey.Name",
+    hint: "FVTK.Settings.GeminiKey.Hint",
+    scope: "client",
+    config: true,
+    type: String,
+    default: ""
+  });
+  game.settings.register(MODULE_ID, "geminiModel", {
+    name: "FVTK.Settings.GeminiModel.Name",
+    hint: "FVTK.Settings.GeminiModel.Hint",
+    scope: "client",
+    config: true,
+    type: String,
+    default: GEMINI_DEFAULT_MODEL
   });
 });
 

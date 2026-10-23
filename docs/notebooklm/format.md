@@ -48,16 +48,46 @@ body. Its `tracks:` lines (numbered or bulleted, one per line) are kept for the 
 replacing a playlist keeps the tracks already picked.
 
 **Picking tracks.** In the Playlists sidebar, **YouTube tracks** (GM only) opens a window with one
-row per track line. Each row searches YouTube with the official Data API v3 (the line without its
-bpm, plus "instrumental"; edit the search freely) and lists embeddable videos with channel and
-length. Click one to pick it, open it on YouTube to listen first, or paste a link. **Save** replaces
-the playlist's YouTube tracks with the picks, in row order. Nothing is downloaded.
+row per track line. Each row searches YouTube with the official Data API v3 and lists embeddable
+videos with channel, length and the search that found them. Click one to pick it, open it on YouTube
+to listen first, or paste a link. **Save** replaces the playlist's YouTube tracks with the picks, in
+row order. Nothing is downloaded.
+
+YouTube matches the words in video titles, so a long NotebookLM description often finds nothing.
+How a row is searched:
+
+- **Without Gemini:** short searches cut from the description first, its genre and mood words
+  ("darksynth epic orchestral synth instrumental"), then just its genres ("darksynth orchestral
+  instrumental"), and the full description last. Up to 3 YouTube searches a row.
+- **With a Gemini key** (optional): Gemini reads the description and the playlist's mood and
+  suggests up to 3 real tracks and 3 short searches. Each suggestion is looked up on YouTube, and
+  only real, embeddable videos are shown, labelled "Gemini pick" or "Gemini search". Up to 5
+  YouTube searches a row. Gemini is also told what the playlist's other rows already have, so it
+  suggests different songs and artists, and to match each line's energy and tempo.
+- **Gemini models and failures:** the model setting defaults to `gemini-flash-lite-latest`, which
+  answers in about a second (the full Flash model was often overloaded). If the chosen model is
+  busy or gives no answer within 15 seconds, the lite model is tried, and the busy model is skipped
+  for 10 minutes. If Gemini still fails, the row uses the plain searches and says why.
+- Searches only return videos in YouTube's **Music** category that run at least two minutes, and
+  drop reaction, review, tutorial, karaoke and lyric videos, which keeps out sound effects, talk and
+  most vocal tracks. A playlist avoids picking the same video, or two uploads of the same suggested
+  song, for different rows.
+- Gemini can still suggest a track with vocals or a poor fit; each row shows its alternatives.
+- A search you type yourself always runs first. A row stops once it has about 6 videos. A track
+  picked by hand (or already saved) is kept when you search again; otherwise the top result is
+  picked.
+
+**Gemini key.** Get a free key at aistudio.google.com (Get API key) and paste it into Configure
+Settings → Foundry VTT Toolkit → Gemini API key. Like the YouTube key it stays in your browser. The
+model setting defaults to `gemini-flash-lite-latest`, Google's alias for its current Flash-Lite model; change
+it only if Google retires that name. Track descriptions and playlist moods are sent to Gemini.
 
 **API key.** Searching needs a YouTube Data API key: in Google Cloud Console create a project,
 enable *YouTube Data API v3*, create an API key and restrict it to *YouTube Data API v3* and your
 Foundry site (HTTP referrer). Put it in Configure Settings → Foundry VTT Toolkit. It is a client
 setting, so it stays in your browser and is never sent to players. A search costs about 101 of the
-free 10,000 daily units, so a few full playlists a day. Pasted links work without a key.
+free 10,000 daily units; a row uses up to 3 searches (5 with Gemini), so a six-track playlist uses
+about 1,800–3,000 units. Pasted links work without a key.
 
 **Playback.** Each track is a normal playlist sound (a silent placeholder file that loops) with the
 video in its flags, so Foundry's play, pause, stop, next, volume and sync all work as usual. Every

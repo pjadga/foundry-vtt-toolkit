@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { videoIdFrom, trackLines, searchQuery, isoSeconds, formatSeconds, expectedPosition } from "../module/scripts/youtube/youtube.mjs";
+import { videoIdFrom, trackLines, searchQuery, fallbackQueries, isLikelyTrack, isoSeconds, formatSeconds, expectedPosition } from "../module/scripts/youtube/youtube.mjs";
 
 test("videoIdFrom reads ids from the usual link shapes", () => {
   const id = "dQw4w9WgXcQ";
@@ -19,6 +19,28 @@ test("trackLines strips numbering and bullets", () => {
 test("searchQuery drops the tempo and asks for instrumental", () => {
   assert.equal(searchQuery("Ambient industrial drone with distorted electric cello, dark, 68 bpm"), "Ambient industrial drone with distorted electric cello dark instrumental");
   assert.equal(searchQuery("Instrumental noir jazz (slow)"), "Instrumental noir jazz slow");
+});
+
+test("fallbackQueries cuts a description down to searchable words", () => {
+  assert.deepEqual(fallbackQueries("High-energy darksynth with roaring distorted saws and epic orchestral synth brass, driving, 140 bpm"), [
+    "High-energy darksynth with roaring distorted saws and epic orchestral synth brass driving instrumental",
+    "darksynth epic orchestral synth instrumental",
+    "darksynth orchestral instrumental"
+  ]);
+  assert.deepEqual(fallbackQueries("Melancholic sax-synth noir jazz with distant city traffic samples, slow, 70 bpm").slice(1), ["melancholic noir jazz instrumental", "noir jazz instrumental"]);
+  // No known words: fall back to the first few words.
+  assert.deepEqual(fallbackQueries("Rain on tin roofs at midnight"), ["Rain on tin roofs at midnight instrumental", "rain on tin instrumental"]);
+  // Duplicates are dropped.
+  assert.deepEqual(fallbackQueries("synthwave"), ["synthwave instrumental"]);
+});
+
+test("isLikelyTrack drops reactions, reviews, tutorials and lyric videos", () => {
+  for (const title of ["Oneohtrix Point Never - Replica REACTION/REVIEW", "Producer reacts to Perturbator", "How To Make Darksynth (Tutorial)", "Kavinsky - Nightcall (Lyrics)", "Song Lyric Video", "Karaoke version"]) {
+    assert.equal(isLikelyTrack(title), false, title);
+  }
+  for (const title of ["Perturbator - \"Future Club\" [Dangerous Days Premiere - 2014]", "REZZ - Edge", "1 Hour Dark Techno / EBM / Industrial Mix", "Gesaffelstein - PURSUIT (Official Video)"]) {
+    assert.equal(isLikelyTrack(title), true, title);
+  }
 });
 
 test("durations", () => {

@@ -1,4 +1,4 @@
-import { isoSeconds } from "./youtube.mjs";
+import { isoSeconds, isLikelyTrack } from "./youtube.mjs";
 
 const API = "https://www.googleapis.com/youtube/v3";
 
@@ -37,15 +37,20 @@ export async function oEmbed(id) {
   return { id, title: data.title ?? id, channel: data.author_name ?? "", thumb: data.thumbnail_url ?? "", duration: 0 };
 }
 
+const MUSIC_CATEGORY = "10";
+// Shorter videos are almost always sound effects, stingers or clips, not tracks.
+const MIN_SECONDS = 120;
+
 /**
- * Search YouTube with the official Data API v3 for embeddable videos. Costs 101 quota units
- * (search plus details) of the free 10,000 a day.
+ * Search YouTube with the official Data API v3 for embeddable videos in the Music category that run
+ * at least two minutes. Costs 101 quota units (search plus details) of the free 10,000 a day.
  * @param {string} query
  * @param {string} key The GM's YouTube Data API key.
  * @param {number} [max=5]
  */
 export async function searchVideos(query, key, max = 5) {
-  const data = await call("search", { part: "id", type: "video", videoEmbeddable: "true", maxResults: String(max), q: query, key });
+  // Ask for a few extra (same quota cost) to make up for the ones the length filter drops.
+  const data = await call("search", { part: "id", type: "video", videoEmbeddable: "true", videoCategoryId: MUSIC_CATEGORY, maxResults: String(max + 3), q: query, key });
   const ids = (data.items ?? []).map(i => i.id?.videoId).filter(Boolean);
-  return videoDetails(ids, key);
+  return (await videoDetails(ids, key)).filter(v => v.duration >= MIN_SECONDS && isLikelyTrack(v.title)).slice(0, max);
 }

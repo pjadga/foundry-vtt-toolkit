@@ -50,6 +50,44 @@ export function searchQuery(line) {
   return /\binstrumental\b/i.test(words) ? words : `${words} instrumental`;
 }
 
+// Words people actually put in music video titles; used to cut a description down to a search.
+const GENRE_WORDS = [
+  "synthwave", "darksynth", "darkwave", "retrowave", "outrun", "cyberpunk", "industrial", "ambient", "drone", "techno",
+  "electro", "electronic", "edm", "dubstep", "trance", "house", "idm", "downtempo", "trip-hop", "lofi", "lo-fi", "low-fi",
+  "chillwave", "vaporwave", "jazz", "noir", "blues", "metal", "rock", "punk", "orchestral", "cinematic", "soundtrack",
+  "score", "trailer", "piano", "cello", "sax", "saxophone", "guitar", "synth", "bass", "percussion", "drums", "choir"
+];
+const MOOD_WORDS = ["dark", "epic", "aggressive", "melancholic", "sad", "tense", "suspense", "stealth", "chill", "relaxing", "battle", "combat", "boss", "action", "emotional", "heroic", "calm", "eerie", "horror"];
+const KNOWN = new Set([...GENRE_WORDS, ...MOOD_WORDS]);
+
+/**
+ * Searches to try in order for a track line, from the full description down to its key words,
+ * since YouTube matches title words and long descriptions often find nothing:
+ * 1. the description (searchQuery); 2. its genre and mood words; 3. its first genre words.
+ * "High-energy darksynth with roaring distorted saws and epic orchestral synth brass" ->
+ * [..., "darksynth epic orchestral synth instrumental", "darksynth orchestral instrumental"]
+ * @returns {string[]} Distinct queries, longest first.
+ */
+export function fallbackQueries(line) {
+  const full = searchQuery(line);
+  const words = full.toLowerCase().replace(/[^\p{L}\p{N}\s-]/gu, " ").split(/\s+/).filter(Boolean);
+  const known = [...new Set(words.filter(w => KNOWN.has(w) && w !== "instrumental"))];
+  const genres = known.filter(w => GENRE_WORDS.includes(w));
+  const queries = [full];
+  if (known.length) queries.push(`${known.slice(0, 5).join(" ")} instrumental`);
+  if (genres.length) queries.push(`${genres.slice(0, 2).join(" ")} instrumental`);
+  else queries.push(`${words.filter(w => w !== "instrumental").slice(0, 3).join(" ")} instrumental`);
+  return [...new Set(queries.map(q => q.trim()))].filter(q => q !== "instrumental");
+}
+
+// Titles of videos that are about a track rather than the track, or that mean it has vocals.
+const NOT_A_TRACK = /\b(reaction|reacts?|reacting|review|tutorial|lesson|how to|explained|breakdown|analysis|karaoke|lyrics?|lyric video|sing along|podcast|interview)\b/i;
+
+/** False for reaction, review, tutorial, lyric and similar videos. */
+export function isLikelyTrack(title) {
+  return !NOT_A_TRACK.test(String(title ?? ""));
+}
+
 /** ISO 8601 duration from the YouTube API ("PT1H2M3S") -> seconds. */
 export function isoSeconds(iso) {
   const m = String(iso ?? "").match(/^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$/);
