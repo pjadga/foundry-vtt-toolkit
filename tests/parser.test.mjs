@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import { parseBundle, resolveLinks, toMarkdown, clean, normalizeName, findImage, progressionKey, stripNumber, numberInOrder } from "../module/scripts/import/parser.mjs";
+import { parseBundle, resolveLinks, toMarkdown, clean, normalizeName, findImage, progressionKey, stripNumber, numberInOrder, fieldLine } from "../module/scripts/import/parser.mjs";
 
 const sample = fs.readFileSync(new URL("../docs/notebooklm/examples/campaign-overview.txt", import.meta.url), "utf8");
 
@@ -123,4 +123,43 @@ test("resolveLinks links known names and bolds unknown ones", () => {
 test("toMarkdown lists fields then body", () => {
   const md = toMarkdown({ tags: ["t"], fields: { central_conflict: "x" }, body: "Body" });
   assert.equal(md, "*Tags: t*\n\n- **Central conflict:** x\n\n---\n\nBody");
+});
+
+test("fieldLine accepts bold and bulleted field lines", () => {
+  assert.deepEqual(fieldLine("name: Rook"), ["name", "Rook"]);
+  assert.deepEqual(fieldLine("**name:** Rook"), ["name", "Rook"]);
+  assert.deepEqual(fieldLine("**Danger Level**: 3"), ["danger_level", "3"]);
+  assert.deepEqual(fieldLine("- type: npc"), ["type", "npc"]);
+  assert.deepEqual(fieldLine("* **npcs_present:** [[Rook]]"), ["npcs_present", "[[Rook]]"]);
+  assert.deepEqual(fieldLine("role: **Solo**"), ["role", "Solo"]);
+  // Bulleted lines that are content, not fields.
+  assert.equal(fieldLine("- Darksynth: heavy bass, 120 bpm"), null);
+  assert.equal(fieldLine("- mood: grim", "tracks"), null);
+  assert.deepEqual(fieldLine("- name: Street", "tracks"), ["name", "Street"]);
+  assert.equal(fieldLine("1. Dark synthwave: slow"), null);
+});
+
+test("parseBundle reads entries with formatted field lines", () => {
+  const { entries } = parseBundle(`##ENTRY
+**type:** npc
+**name:** Rook
+- role: Solo
+- **gear:** [[Heavy Pistol]]
+##BODY
+Guard.
+##END
+
+##ENTRY
+- type: playlist
+- name: Street
+- tracks:
+- Darksynth: heavy bass
+- Lo-fi chill beat
+##BODY
+Music.
+##END`);
+  assert.equal(entries.length, 2);
+  assert.deepEqual([entries[0].type, entries[0].name, entries[0].fields.role, entries[0].fields.gear], ["npc", "Rook", "Solo", "[[Heavy Pistol]]"]);
+  assert.equal(entries[1].name, "Street");
+  assert.equal(entries[1].fields.tracks, "\n- Darksynth: heavy bass\n- Lo-fi chill beat");
 });

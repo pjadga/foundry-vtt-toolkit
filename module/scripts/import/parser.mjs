@@ -22,6 +22,30 @@ export function clean(raw) {
 }
 
 /**
+ * A field line as [key, value], or null when the line isn't one. Tolerates the formatting NotebookLM
+ * sometimes adds despite the instructions: bold keys (`**name:** X`, `**name**: X`), bullets
+ * (`- name: X`) and a bold value. Tracks are often a bulleted list too, so a bulleted line without a
+ * bold key only counts as a field when its key looks like one (lowercase_with_underscores), and
+ * inside a tracks list only for the entry fields (type, name, ...).
+ * @param {string} line
+ * @param {string|null} [last] The field the previous lines belong to.
+ * @returns {[string, string]|null}
+ */
+export function fieldLine(line, last = null) {
+  let text = line.trim();
+  const bullet = /^[-*•+]\s+/.test(text);
+  if (bullet) text = text.replace(/^[-*•+]\s+/, "");
+  const unbolded = text.replace(/^(\*\*|__)([A-Za-z][\w -]*?)(:?)\1(:?)/, "$2$3$4");
+  const bold = unbolded !== text;
+  const m = unbolded.match(/^([A-Za-z][\w -]*?):[ \t]*(.*)$/);
+  if (!m) return null;
+  const key = m[1].trim().toLowerCase().replace(/[ -]+/g, "_");
+  if (bullet && !bold && (!/^[a-z][a-z0-9_]*$/.test(m[1].trim()) || (last === "tracks" && !META_KEYS.has(key)))) return null;
+  const value = m[2].trim().replace(/^(\*\*|__)(.*)\1$/, "$2").trim();
+  return [key, value];
+}
+
+/**
  * Key for matching names loosely, so [[Vance "Hard-Line" Miller"]] (a stray quote NotebookLM
  * produced) still finds Vance "Hard-Line" Miller. Case, quotes, punctuation and a leading "The"
  * are ignored; apostrophes are dropped rather than splitting words ("Chen's" -> "chens").
@@ -128,10 +152,10 @@ export function parseBundle(raw) {
     let last = null;
     for (const line of head.split("\n")) {
       if (!line.trim()) continue;
-      const m = line.match(/^([A-Za-z][\w -]*?):[ \t]*(.*)$/);
-      if (m) {
-        last = m[1].trim().toLowerCase().replace(/[ -]+/g, "_");
-        fields[last] = m[2].trim();
+      const field = fieldLine(line, last);
+      if (field) {
+        [last] = field;
+        fields[last] = field[1];
       } else if (last) {
         fields[last] += `\n${line.trim()}`; // continuation of a multi-line value
       }

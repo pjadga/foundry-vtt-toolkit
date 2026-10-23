@@ -39,6 +39,10 @@ Markdown body. Refer to other entries as [[Exact Name]].
 - Paste the text, or choose the `.md`/`.txt` file NotebookLM exports. Cleaned automatically: code
   fences, citations like `[1, 2-4]`, backslash escapes (`\#\#ENTRY`, `\[\[Name\]\]`), trailing spaces
   and HTML entities. If the line breaks were lost the importer says so; copy again from the code block.
+- Field lines with bold keys (`**name:** Rook`, `**Danger Level**: 3`), bullets (`- type: npc`) or a
+  bold value are read as plain fields. A bulleted line counts as a field only when its key looks
+  like one (`npcs_present`, not `Darksynth`), and inside a `tracks:` list only for `type`, `name`,
+  `tags`, `replaces`, `image` and `map`, so bulleted track lines with colons stay tracks.
 - If an entry appears twice (NotebookLM repeats revised entries), the later copy is used.
 - `replaces: <name>` (from the consistency-check prompt) replaces that existing document, keeping its
   id so links to it survive, even when "Replace ... that already exist" is not ticked. The entry's

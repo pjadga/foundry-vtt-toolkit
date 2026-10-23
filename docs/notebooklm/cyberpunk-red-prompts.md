@@ -29,11 +29,22 @@ tags: <comma-separated>
 ##END
 
 Rules:
-- Refer to other entries by their exact name in double brackets, e.g. [[Dex Morrow]], and spell names exactly the same way every time.
+- Field lines are plain "key: value": no bold, bullets, numbering or blank lines between them. Field values go on one line; lists inside a field are comma-separated, except "tracks", which is one numbered line per track.
+- Use [[double brackets]] only for names that have (or will get) their own entry in this campaign, plus core rulebook items in an NPC's "gear" field. Write gangs, corporations, districts and other names in plain text unless I ask for an entry for them.
+- Spell every bracketed name exactly as its own entry does, every time. Never put numbers in front of names. When you revise an entry, keep its name, or add "replaces: <old name>" if the name must change.
+- Put the word "Epilogue" or "Prologue" in the name or tags of a scene that has no session.
+- "visual" lines describe only what an illustrator would paint: setting, lighting, weather, colours, action. No text, signs with words, logos or named people.
+- If an answer would be too long, stop after a complete ##END and wait for me to say "continue". Never cut an entry in half, and don't repeat entries from earlier answers unless I ask you to change them.
 - Never invent game rules. If a number is needed, use Cyberpunk RED conventions (eddies as "eb", SP for armor, Humanity Loss for cyberware, DV for difficulty).
-- Field values go on one line. Lists inside a field are comma-separated, except "tracks", which is one numbered line per track.
 - Draw on my sources for tone and setting; invent anything that isn't in them.
 ```
+
+Why these rules: brackets on gangs and districts that have no entry show up as broken links in the
+campaign check; a scene with no session needs "Epilogue" or "Prologue" to be placed last or first;
+long answers that stop mid-entry import with a "missing ##END" warning; and a renamed or numbered
+entry breaks `[[links]]` and scene numbering. If the instruction is too long for NotebookLM's chat
+settings, paste it at the start of the chat instead. (The importer also copes with bold or
+bulleted field lines and citation markers, in case NotebookLM slips.)
 
 ## Prompt 1: campaign concept
 
