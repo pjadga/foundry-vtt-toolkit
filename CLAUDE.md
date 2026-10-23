@@ -129,6 +129,19 @@ importer therefore builds the full actor itself and uses the base `Actor.create`
 - D&D 5e 5.3.x supports v13 and v14.
 - `npm run link` symlinks `module/` into a Foundry Data folder for development (set `FOUNDRY_DATA`).
 
+## Working across machines and the cloud
+
+The user works from a work machine, a home machine and cloud sessions, with GitHub keeping them in
+step. Pull before starting and push before finishing.
+
+- **Cloud sessions** make code changes on a branch, run `npm test`, and push the branch. They can't
+  deploy or test in Foundry (no SSH key, no browser in the user's world), so they stop there and
+  say which branch is ready for a local session.
+- **Local sessions** (on whichever machine the user is at) pull that branch, run `npm test`, deploy
+  it to cpr-test, and test it live. They merge into `main` and push only with the user's OK.
+- Point-in-time state (what's open, what's deployed) goes in `docs/handoff.md`; update it when that
+  changes.
+
 ## Verifying changes
 
 `npm test` runs every pure test in `tests/*.test.mjs` with `node --test` (no Foundry needed). JSON files
