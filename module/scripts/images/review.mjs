@@ -1,4 +1,4 @@
-import { generateImage } from "./generate.mjs";
+import { generateImage, POLLINATIONS_GAP_MS } from "./generate.mjs";
 import { imageFileName } from "./prompts.mjs";
 
 const MODULE_ID = "foundry-vtt-toolkit";
@@ -53,7 +53,7 @@ class ImageReview extends foundry.applications.api.ApplicationV2 {
       .map((job, i) => {
         const picture = job.url
           ? `<img src="${job.url}" alt="">`
-          : `<div class="fvtk-img-placeholder">${escape(job.status === "error" ? t("Failed", { message: job.error }) : t(job.status === "generating" ? "Generating" : "Queued"))}</div>`;
+          : `<div class="fvtk-img-placeholder">${escape(job.status === "error" ? t("Failed", { message: job.error }) : t(job.status === "generating" ? "Generating" : job.include ? "Queued" : "LeftOut"))}</div>`;
         return `<li class="fvtk-img-card${job.include ? "" : " excluded"}" data-job="${i}">
           <div class="fvtk-img-name"><label><input type="checkbox" name="include-${i}" ${job.include ? "checked" : ""}> ${escape(job.entry.name)}</label>
             <small>${escape(job.file)}</small></div>
@@ -64,11 +64,18 @@ class ImageReview extends foundry.applications.api.ApplicationV2 {
       })
       .join("");
     const ready = this.jobs.filter(j => j.include && j.blob).length;
-    const pending = this.jobs.filter(j => j.status === "queued" || j.status === "generating").length;
-    return `<p class="hint">${t("Hint", { provider: this.settings.provider })}</p>
+    // An unticked image that hasn't started isn't generated, so it isn't waited for either.
+    const pending = this.jobs.filter(j => (j.status === "queued" && j.include) || j.status === "generating").length;
+    const done = this.jobs.filter(j => j.status === "done").length;
+    const failed = this.jobs.filter(j => j.status === "error").length;
+    let progress = pending ? t("Progress", { done, total: this.jobs.length }) : t(failed ? "Finished" : "AllDone", { failed });
+    if (pending && failed) progress += ` ${t("FailedCount", { failed })}`;
+    // Pollinations' free tier makes one image every 45 seconds, so say how long the wait is.
+    const slow = this.settings.provider === "pollinations" && pending > 1 ? ` ${t("Slow", { minutes: Math.ceil((pending * POLLINATIONS_GAP_MS) / 60_000) })}` : "";
+    return `<p class="hint">${t("Hint", { provider: this.settings.provider })}${slow}</p>
       <ul class="fvtk-img-grid">${cards}</ul>
       <footer class="fvtk-img-footer">
-        <span>${pending ? t("Progress", { done: this.jobs.length - pending, total: this.jobs.length }) : t("AllDone")}</span>
+        <span>${progress}</span>
         <button type="button" data-action="skipAll">${t("SkipAll")}</button>
         <button type="button" data-action="finish" ${ready ? "" : "disabled"}><i class="fa-solid fa-upload"></i> ${t("Upload", { count: ready })}</button>
       </footer>`;
@@ -76,9 +83,29 @@ class ImageReview extends foundry.applications.api.ApplicationV2 {
 
   _replaceHTML(result, content) {
     const scroll = content.querySelector(".fvtk-img-grid")?.scrollTop ?? 0;
+    // Re-rendering replaces the inputs, so put the cursor back where the GM was typing.
+    const active = content.contains(document.activeElement) ? document.activeElement : null;
+    const focus = active?.name ? { name: active.name, start: active.selectionStart, end: active.selectionEnd, top: active.scrollTop } : null;
     content.innerHTML = result;
     const grid = content.querySelector(".fvtk-img-grid");
     if (grid) grid.scrollTop = scroll;
+    const again = focus && content.querySelector(`[name="${focus.name}"]`);
+    if (again) {
+      again.focus({ preventScroll: true });
+      if (typeof focus.start === "number") again.setSelectionRange?.(focus.start, focus.end);
+      again.scrollTop = focus.top;
+    }
+  }
+
+  _onRender(context, options) {
+    super._onRender?.(context, options);
+    // Unticking a card updates the upload count straight away.
+    this.element.querySelectorAll('input[type="checkbox"][name^="include-"]').forEach(box =>
+      box.addEventListener("change", async () => {
+        await this.#refresh();
+        this.#run(); // ticking one back on queues it again
+      })
+    );
   }
 
   _onFirstRender(context, options) {
@@ -108,7 +135,7 @@ class ImageReview extends foundry.applications.api.ApplicationV2 {
     this.#running = true;
     try {
       let job;
-      while (!this.#done && (job = this.jobs.find(j => j.status === "queued"))) {
+      while (!this.#done && (job = this.jobs.find(j => j.status === "queued" && j.include))) {
         job.status = "generating";
         await this.#refresh();
         try {
@@ -127,7 +154,7 @@ class ImageReview extends foundry.applications.api.ApplicationV2 {
     } finally {
       this.#running = false;
     }
-    if (!this.#done && this.settings.autoApprove && this.jobs.every(j => j.status === "done" || j.status === "error")) this.#finish();
+    if (!this.#done && this.settings.autoApprove && this.jobs.every(j => j.status === "done" || j.status === "error" || !j.include)) this.#finish();
   }
 
   static #onRegenerate(event, target) {
@@ -161,9 +188,12 @@ class ImageReview extends foundry.applications.api.ApplicationV2 {
         const name = job.file.replace(/\.\w+$/, `.${EXTENSIONS[job.blob.type] ?? "jpg"}`);
         try {
           const result = await FP.upload("data", this.settings.folder, new File([job.blob], name, { type: job.blob.type }), {}, { notify: false });
-          paths.push(result?.path ?? `${this.settings.folder}/${name}`);
+          // upload() reports a failure as a falsy result or one without a path, not by throwing.
+          if (!result?.path) throw new Error(result?.message || "the server did not accept the file");
+          paths.push(result.path);
         } catch (err) {
           console.error(`${MODULE_ID} | Upload failed for ${name}`, err);
+          ui.notifications.error(t("UploadFailed", { name, message: err.message }));
           skipped.push(job.entry.name);
         }
       }

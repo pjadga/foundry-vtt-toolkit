@@ -1,21 +1,46 @@
 /**
  * Free image generation for scene backgrounds.
  *
- * - pollinations: image.pollinations.ai, no account or key. Anonymous use is rate-limited (about one
- *   image every 15 seconds) and adds a small watermark.
+ * - pollinations: image.pollinations.ai, no account or key. Anonymous use is limited to one image
+ *   every 45 seconds per IP address (answered with 402 FREE_LIMIT) and adds a small watermark.
  * - cloudflare: Cloudflare Workers AI (FLUX.1 schnell) through the GM's own Worker
  *   (docs/images/cloudflare-worker.js), on Cloudflare's free daily allowance. Better quality, no
  *   watermark; images are square.
  */
 
 const POLLINATIONS = "https://image.pollinations.ai/prompt/";
-const POLLINATIONS_GAP_MS = 16_000;
+export const POLLINATIONS_GAP_MS = 46_000;
 const TIMEOUT_MS = 90_000;
 const MAX_TRIES = 3;
+// Rate-limit answers are retried longer: they only mean "wait".
+const MAX_LIMITED_TRIES = 5;
 export const SIZE = { width: 1344, height: 768 };
 
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 let nextPollinationsAt = 0;
+
+/** A readable message from an error response body (JSON `error.message` or `message`, else text). */
+export function errorMessage(text) {
+  try {
+    const data = JSON.parse(text);
+    const message = data?.error?.message ?? data?.message ?? (typeof data?.error === "string" ? data.error : null);
+    if (message) return String(message);
+  } catch {
+    // Not JSON.
+  }
+  return String(text ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 200);
+}
+
+/**
+ * Whether an error response is worth retrying, and after how many seconds. A rate limit (429, or
+ * Pollinations' 402 "Free limit reached: 1 image every 45 seconds") waits as long as it says.
+ * @returns {{retry: boolean, limited: boolean, seconds: number}}
+ */
+export function retryAfter(status, text, header) {
+  const limited = status === 429 || (status === 402 && /limit/i.test(text));
+  const seconds = Number(header) || Number(String(text).match(/every (\d+) seconds/i)?.[1]) || 20;
+  return { retry: limited || status >= 500, limited, seconds: seconds + 2 };
+}
 
 async function fetchImage(url, options = {}) {
   for (let attempt = 1; ; attempt++) {
@@ -32,10 +57,10 @@ async function fetchImage(url, options = {}) {
       clearTimeout(timer);
     }
     if (response.ok && response.headers.get("content-type")?.startsWith("image/")) return response.blob();
-    const retryable = response.status === 429 || response.status >= 500;
-    if (!retryable || attempt >= MAX_TRIES) throw new Error(`${response.status} ${(await response.text().catch(() => "")).slice(0, 120) || response.statusText}`);
-    const after = Number(response.headers.get("retry-after"));
-    await wait((Number.isFinite(after) && after > 0 ? after : 20) * 1000);
+    const text = await response.text().catch(() => "");
+    const { retry, limited, seconds } = retryAfter(response.status, text, response.headers.get("retry-after"));
+    if (!retry || attempt >= (limited ? MAX_LIMITED_TRIES : MAX_TRIES)) throw new Error(`${response.status}: ${errorMessage(text) || response.statusText}`);
+    await wait(seconds * 1000);
   }
 }
 

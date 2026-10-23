@@ -188,3 +188,13 @@
   width: 100%;
   font-size: var(--font-size-12, 12px);
 }
+
+/* Build summary: the skipped list folds away. */
+.fvtk-summary details summary {
+  cursor: pointer;
+}
+.fvtk-summary details ul {
+  max-height: 14rem;
+  overflow-y: auto;
+  font-size: var(--font-size-12, 12px);
+}

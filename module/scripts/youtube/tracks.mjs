@@ -30,11 +30,13 @@ export class TrackSearch {
    * @param {Playlist} playlist
    * @param {object[]} rows See trackRow; searching fills in results, chosen, status and note.
    * @param {{enough: number, plain: number, gemini: number}} [limits]
+   * @param {{titles: string[], ids: Set<string>}} [taken] Tracks other playlists already use, to avoid.
    */
-  constructor(playlist, rows, limits = LIMITS.picker) {
+  constructor(playlist, rows, limits = LIMITS.picker, taken = { titles: [], ids: new Set() }) {
     this.playlist = playlist;
     this.rows = rows;
     this.limits = limits;
+    this.taken = taken;
   }
 
   get apiKey() {
@@ -77,7 +79,8 @@ export class TrackSearch {
         const model = game.settings.get(MODULE_ID, "geminiModel").trim();
         // Tell Gemini what the playlist's other rows already have, so it suggests something else.
         const others = this.rows.filter(r => r !== row);
-        const avoid = [...others.flatMap(r => r.suggested ?? []), ...others.map(r => r.chosen?.title).filter(Boolean)];
+        // This playlist's own rows first: buildPrompt keeps only the first few.
+        const avoid = [...others.flatMap(r => r.suggested ?? []), ...others.map(r => r.chosen?.title).filter(Boolean), ...this.taken.titles];
         const s = await suggestSearches(row.line || typed, { name: this.playlist.name, mood }, this.geminiKey, model, avoid);
         plan.push(...s.tracks.map(tr => ({ query: tr.query, max: 2, gemini: "track" })), ...s.queries.map(query => ({ query, max: 4, gemini: "search" })));
         row.suggested = s.tracks.map(tr => `${tr.artist} – ${tr.title}`);
@@ -138,7 +141,7 @@ export class TrackSearch {
       // Prefer a video no other row has picked, and not another upload of a song another row picked
       // through the same Gemini suggestion, so the playlist doesn't repeat itself.
       const others = this.rows.filter(r => r !== row && r.chosen).map(r => r.chosen);
-      const ids = new Set(others.map(v => v.id));
+      const ids = new Set([...this.taken.ids, ...others.map(v => v.id)]);
       const songs = new Set(others.filter(v => v.gemini === "track").map(v => v.via.toLowerCase()));
       const fresh = v => !ids.has(v.id) && !(v.gemini === "track" && songs.has(v.via.toLowerCase()));
       row.chosen = row.results.find(fresh) ?? row.results.find(v => !ids.has(v.id)) ?? row.results[0] ?? row.chosen;
@@ -197,11 +200,17 @@ export async function autoPickTracks(playlists = playlistsToFill()) {
   const lines = playlists.reduce((n, p) => n + p.flags[MODULE_ID].tracks.length, 0);
   const progress = ui.notifications.info(t("AutoPicking", { count: lines }), { progress: true });
   let done = 0;
+  // Shared across the playlists, so Street and Tension don't end up with the same songs.
+  const taken = { titles: [], ids: new Set() };
   for (const playlist of playlists) {
     const rows = playlist.flags[MODULE_ID].tracks.map(trackRow);
-    const search = new TrackSearch(playlist, rows, LIMITS.auto);
+    const search = new TrackSearch(playlist, rows, LIMITS.auto, taken);
     for (const row of rows) {
       await search.search(row);
+      if (row.chosen) {
+        taken.ids.add(row.chosen.id);
+        taken.titles.push(row.chosen.title, ...(row.suggested ?? []));
+      }
       progress?.update?.({ pct: ++done / lines, message: t("AutoPickingRow", { name: playlist.name, line: row.line }) });
       if (search.quotaExceeded) break;
     }

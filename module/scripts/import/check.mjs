@@ -2,18 +2,26 @@
  * Campaign check: the gaps a NotebookLM bundle leaves for running the campaign in Foundry, and a
  * prompt that asks NotebookLM to fix them. No Foundry globals, so it can be tested with `node --test`.
  */
-import { normalizeName, findLinks } from "./parser.mjs";
+import { normalizeName, findLinks, progressionKey } from "./parser.mjs";
 
-const IS_BOOKEND = /\b(epilogue|prologue|aftermath)\b/i;
+// An NPC's gear links name rulebook items, which the system importer finds in its compendium.
+const LOOKED_UP_ELSEWHERE = { npc: ["gear"] };
+
+/** An entry's links outside the fields whose links are looked up elsewhere. */
+function ownLinks(e) {
+  const skip = LOOKED_UP_ELSEWHERE[e.type] ?? [];
+  if (!skip.some(k => e.fields[k])) return e.links;
+  return findLinks([...Object.entries(e.fields).filter(([k]) => !skip.includes(k)).map(([, v]) => v), e.body].join("\n"));
+}
 
 /**
  * @param {object[]} entries From parseBundle.
- * @param {{known?: (name: string) => boolean, linkedElsewhere?: (name: string) => boolean}} [world]
- *   known: a document of that name already exists; linkedElsewhere: something already in the world
- *   links to it.
+ * @param {{known?: (name: string) => boolean, linkedElsewhere?: (name: string) => string[]}} [world]
+ *   known: a document of that name already exists; linkedElsewhere: the entry types (scene, thread,
+ *   npc, ...) of documents already in the world, and not in this bundle, that link to it.
  * @returns {{entry: string|null, problem: string}[]}
  */
-export function campaignCheck(entries, { known = () => false, linkedElsewhere = () => false } = {}) {
+export function campaignCheck(entries, { known = () => false, linkedElsewhere = () => [] } = {}) {
   const issues = [];
   const add = (entry, problem) => issues.push({ entry, problem });
   const names = new Set(entries.map(e => normalizeName(e.name)));
@@ -33,7 +41,7 @@ export function campaignCheck(entries, { known = () => false, linkedElsewhere = 
   // Broken links, once per missing name.
   const broken = new Map();
   for (const e of entries) {
-    for (const link of e.links) {
+    for (const link of ownLinks(e)) {
       const key = normalizeName(link);
       if (names.has(key) || known(link) || broken.has(key)) continue;
       broken.set(key, { link, by: e.name });
@@ -44,16 +52,19 @@ export function campaignCheck(entries, { known = () => false, linkedElsewhere = 
   // Only judge connections when the bundle has the story to connect to.
   const story = entries.some(e => e.type === "scene" || e.type === "thread");
   for (const e of entries) {
-    const linked = from(e).length > 0 || linkedElsewhere(e.name);
+    const elsewhere = linkedElsewhere(e.name);
+    const linked = from(e).length > 0 || elsewhere.length > 0;
     if (story && e.type === "npc" && !linked) add(e.name, "NPC is in no scene, location or thread");
     if (story && e.type === "item" && !linked) add(e.name, "item is never used: no NPC carries it and no scene or thread mentions it");
-    if (story && e.type === "location" && !from(e).some(o => o.type === "scene" || o.type === "thread") && !linkedElsewhere(e.name)) {
+    const visits = type => type === "scene" || type === "thread";
+    if (story && e.type === "location" && !from(e).some(o => visits(o.type)) && !elsewhere.some(visits)) {
       add(e.name, "location is never visited by a scene or thread");
     }
     if (e.type === "location" && !field(e, "visual")) add(e.name, "location has no visual: line for its scene image");
     if (e.type === "scene") {
       const missing = ["location", "npcs_present", "soundtrack", "visual"].filter(k => !field(e, k));
-      if (!field(e, "session") && !IS_BOOKEND.test(`${e.name} ${e.tags.join(" ")}`)) missing.unshift("session");
+      // progressionKey also places a scene from "Session 3" in its text, or an epilogue or prologue.
+      if (progressionKey(e) === null && !/\b(epilogue|prologue)\b/i.test(e.name)) missing.unshift("session");
       if (missing.length) add(e.name, `scene has no ${missing.join(", ")} field${missing.length > 1 ? "s" : ""}`);
       for (const name of findLinks(field(e, "location"))) {
         const target = entries.find(o => normalizeName(o.name) === normalizeName(name));

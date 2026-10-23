@@ -49,12 +49,12 @@ const destinationFor = type => JOURNAL_TYPES[type] ?? HANDLERS[type]?.label;
 const isSupported = type => !!documentNameFor(type);
 
 /**
- * name -> uuid across journals, actors and items, matched loosely (see normalizeName). NotebookLM imports
- * win over other documents with the same name.
+ * name -> uuid across journals, actors, items and playlists, matched loosely (see normalizeName).
+ * NotebookLM imports win over other documents with the same name.
  */
 function worldLookup() {
   const index = new Map();
-  const docs = [...game.actors, ...game.items, ...game.journal];
+  const docs = [...game.actors, ...game.items, ...game.journal, ...game.playlists];
   const isImport = d => d.flags[MODULE_ID]?.source === "notebooklm";
   for (const d of [...docs.filter(d => !isImport(d)), ...docs.filter(isImport)]) index.set(normalizeName(d.name), d.uuid);
   return name => index.get(normalizeName(name)) ?? null;
@@ -217,16 +217,19 @@ export function sceneImages(entries, images) {
 async function importScenes(plan, images) {
   const result = { created: [], updated: [], skipped: [] };
   const srcFor = sceneImages(plan.map(p => p.entry), images);
-  const root = srcFor.size ? await ensureFolder(ROOT_FOLDER, "Scene") : null;
+  const findFolder = (name, parent) => game.folders.find(f => f.type === "Scene" && f.name === name && (f.folder?.id ?? null) === (parent?.id ?? null));
   for (const { entry, id, replace } of plan) {
-    const src = srcFor.get(entry);
+    // Look for the entry's scene first: one that exists keeps its own background when no image is
+    // given this time, and still gets set up.
+    const sceneFolder = findFolder(SCENE_TYPES[entry.type], findFolder(ROOT_FOLDER, null));
+    const sameName = name => sceneFolder && game.scenes.find(s => s.folder?.id === sceneFolder.id && normalizeName(sceneBaseName(s)) === normalizeName(name));
+    const existing = (entry.replaces && sameName(entry.replaces)) || sameName(entry.name) || null;
+    const src = srcFor.get(entry) ?? existing?.background.src;
     if (!src) {
       if (entry.type === "scene") result.skipped.push(`${entry.name} (no image)`);
       continue;
     }
-    const folder = await ensureFolder(SCENE_TYPES[entry.type], "Scene", root);
-    const sameName = name => game.scenes.find(s => s.folder?.id === folder.id && normalizeName(sceneBaseName(s)) === normalizeName(name));
-    const existing = (entry.replaces && sameName(entry.replaces)) || sameName(entry.name);
+    const folder = sceneFolder ?? (await ensureFolder(SCENE_TYPES[entry.type], "Scene", await ensureFolder(ROOT_FOLDER, "Scene")));
     if (existing && !replace) {
       // A scene from before scene setup existed still gets its tokens, pin and soundtrack, once.
       if (existing.flags[MODULE_ID]?.source === "notebooklm" && !existing.flags[MODULE_ID]?.setup) {
@@ -449,23 +452,40 @@ const escape = s => foundry.utils.escapeHTML(String(s));
  */
 function checkBundle(entries) {
   const inWorld = worldLookup();
-  const playlists = new Set(game.playlists.map(p => normalizeName(p.name)));
-  const linked = new Set();
+  // Earlier copies of this bundle's own entries are being re-imported, so they don't count.
+  const inBundle = new Set(entries.map(e => normalizeName(e.name)));
+  const linked = new Map();
   for (const doc of [...game.journal, ...game.actors, ...game.items]) {
     const flags = doc.flags[MODULE_ID];
+    if (inBundle.has(normalizeName(doc.name))) continue;
     const raw = flags?.raw ?? flags?.notes?.raw;
     const text = typeof raw === "string" ? raw : [raw?.public, raw?.secret].join("\n");
-    for (const name of findLinks(text ?? "")) if (normalizeName(name) !== normalizeName(doc.name)) linked.add(normalizeName(name));
+    const type = flags?.type ?? doc.documentName.toLowerCase();
+    for (const name of findLinks(text ?? "")) {
+      const key = normalizeName(name);
+      if (key === normalizeName(doc.name)) continue;
+      if (!linked.has(key)) linked.set(key, []);
+      linked.get(key).push(type);
+    }
   }
   return campaignCheck(entries, {
-    known: name => !!inWorld(name) || playlists.has(normalizeName(name)),
-    linkedElsewhere: name => linked.has(normalizeName(name))
+    known: name => !!inWorld(name),
+    linkedElsewhere: name => linked.get(normalizeName(name)) ?? []
   });
+}
+
+/** The earlier NotebookLM import an entry would replace (or be kept instead of), if any. */
+function existingFor(e) {
+  const documentName = documentNameFor(e.type);
+  if (!documentName) return null;
+  const match = name => game.collections.get(documentName).find(d => d.flags[MODULE_ID]?.source === "notebooklm" && d.flags[MODULE_ID]?.type === e.type && normalizeName(d.name) === normalizeName(name));
+  return (e.replaces && match(e.replaces)) || match(e.name) || null;
 }
 
 const SHOWN_ISSUES = 12;
 
 function checkHTML(issues) {
+  if (!issues) return "";
   if (!issues.length) return `<p class="fvtk-check ok"><i class="fa-solid fa-circle-check"></i> ${escape(game.i18n.localize("FVTK.Import.CheckOk"))}</p>`;
   const shown = issues.slice(0, SHOWN_ISSUES).map(i => `<li>${i.entry ? `<strong>${escape(i.entry)}</strong>: ` : ""}${escape(i.problem)}</li>`);
   if (issues.length > SHOWN_ISSUES) shown.push(`<li>${escape(game.i18n.format("FVTK.Import.CheckMore", { count: issues.length - SHOWN_ISSUES }))}</li>`);
@@ -486,12 +506,19 @@ function onPreviewRender(event, dialog) {
   });
 }
 
-function previewHTML({ entries, warnings }, images = [], jobs = [], issues = []) {
+function previewHTML({ entries, warnings }, images = [], jobs = [], issues = null, overwrite = false) {
   const srcFor = sceneImages(entries, images);
+  const counts = { added: 0, replaced: 0, kept: 0 };
   const generating = new Set(jobs.map(j => j.entry));
   const generatedLocations = new Set(jobs.filter(j => j.entry.type === "location").map(j => normalizeName(j.entry.name)));
   const rows = entries.map(e => {
     let status = destinationFor(e.type) ?? "skipped (not supported yet)";
+    if (isSupported(e.type)) {
+      const replacing = overwrite || !!e.replaces;
+      const kind = !existingFor(e) ? "added" : replacing ? "replaced" : "kept";
+      counts[kind]++;
+      if (kind !== "added") status += ` (${game.i18n.localize(`FVTK.Import.Exists.${kind}`)})`;
+    }
     if (e.type in SCENE_TYPES) {
       const src = srcFor.get(e);
       const fromLocation = e.type === "scene" && findLinks(e.fields.location ?? "").some(n => generatedLocations.has(normalizeName(n)));
@@ -504,7 +531,9 @@ function previewHTML({ entries, warnings }, images = [], jobs = [], issues = [])
   });
   const warn = warnings.length ? `<p><strong>Warnings</strong></p><ul>${warnings.map(w => `<li>${escape(w)}</li>`).join("")}</ul>` : "";
   const generate = jobs.length ? `<p>${escape(game.i18n.format("FVTK.Images.WillGenerate", { count: jobs.length, provider: game.settings.get(MODULE_ID, "imageProvider") }))}</p>` : "";
-  return `<div class="fvtk fvtk-import-preview"><p>${entries.length} entr${entries.length === 1 ? "y" : "ies"} found.</p>${checkHTML(issues)}${generate}<ul>${rows.join("")}</ul>${warn}</div>`;
+  const found = `${entries.length} entr${entries.length === 1 ? "y" : "ies"} found.`;
+  const summary = counts.replaced || counts.kept ? ` ${game.i18n.format("FVTK.Import.Counts", counts)}` : "";
+  return `<div class="fvtk fvtk-import-preview"><p>${escape(found + summary)}</p>${checkHTML(issues)}${generate}<ul>${rows.join("")}</ul>${warn}</div>`;
 }
 
 /** Paste dialog → preview → import. GM only. */
@@ -536,7 +565,7 @@ export async function openImporter() {
   if (!input) return;
   // A chosen file wins over pasted text.
   const text = input.file ? await input.file.text() : input.text;
-  if (!text.trim()) return;
+  if (!text.trim()) return ui.notifications.warn(game.i18n.localize("FVTK.Import.Empty"));
   // Generated images need somewhere to go, so default to a folder in the world.
   const folder = input.imageFolder || `worlds/${game.world.id}/assets/notebooklm`;
   await game.settings.set(MODULE_ID, "imageFolder", folder);
@@ -545,16 +574,16 @@ export async function openImporter() {
 
   const parsed = parseBundle(text);
   const importable = parsed.entries.filter(e => isSupported(e.type)).length;
-  const jobs = imageJobs(parsed.entries, images);
   if (!importable) {
-    return DialogV2.prompt({ window: { title: game.i18n.localize("FVTK.Import.Title") }, content: previewHTML(parsed, images, jobs), rejectClose: false });
+    return DialogV2.prompt({ window: { title: game.i18n.localize("FVTK.Import.Title") }, content: previewHTML(parsed, images), rejectClose: false });
   }
+  const jobs = imageJobs(parsed.entries, images);
   const issues = checkBundle(parsed.entries);
 
   const confirmed = await DialogV2.confirm({
     window: { title: game.i18n.localize("FVTK.Import.Title") },
     position: { width: 620 },
-    content: previewHTML(parsed, images, jobs, issues),
+    content: previewHTML(parsed, images, jobs, issues, input.overwrite),
     render: onPreviewRender,
     yes: { label: game.i18n.format("FVTK.Import.Confirm", { count: importable }) },
     rejectClose: false
@@ -571,30 +600,39 @@ export async function openImporter() {
   if (skipped.length) console.info(`${MODULE_ID} | Skipped:`, skipped);
   report.tracks = await autoPick();
   report.issues = issues;
-  await showSummary(report);
+  await showSummary(report, parsed.entries);
   return report;
 }
 
-/** What the import built, with a button to start the first story scene. */
-async function showSummary(report) {
+/** What the import built, what it skipped and why, and a button to start its first story scene. */
+async function showSummary(report, entries) {
   const { scenes, tracks } = report;
   const f = (key, data) => escape(game.i18n.format(`FVTK.Import.Summary.${key}`, data));
-  const skipped = report.skipped.length + scenes.skipped.length;
+  // Entries kept because they were imported before are only counted; the rest are listed.
+  const isKept = s => / \((scene )?already exists\)$/.test(s);
+  const all = [...report.skipped, ...scenes.skipped];
+  const kept = report.skipped.filter(isKept).length;
+  const skipped = all.filter(s => !isKept(s));
+  const sceneCount = scenes.created.length + scenes.updated.length;
   const lines = [
     f("Documents", { created: report.created.length, updated: report.updated.length, relinked: report.relinked.length }),
-    f("Scenes", { count: scenes.created.length + scenes.updated.length }),
+    sceneCount ? f("Scenes", { count: sceneCount }) : null,
+    kept ? f("Kept", { count: kept }) : null,
     tracks?.filled.length ? f("Tracks", { summary: tracks.filled.map(t => `${t.name} ${t.count}/${t.of}`).join(", ") }) : null,
-    skipped ? f("Skipped", { count: skipped }) : null,
     report.issues.length ? f("Issues", { count: report.issues.length }) : null
   ].filter(Boolean);
+  const skippedHTML = skipped.length ? `<details><summary>${f("Skipped", { count: skipped.length })}</summary><ul>${skipped.map(s => `<li>${escape(s)}</li>`).join("")}</ul></details>` : "";
+  // Offer this build's first story scene; the world may hold other campaigns' scenes too.
   const isStory = s => s.flags[MODULE_ID]?.source === "notebooklm" && s.flags[MODULE_ID]?.type === "scene";
-  const first = game.scenes.filter(isStory).sort((a, b) => a.sort - b.sort)[0];
+  const built = new Set(entries.filter(e => e.type === "scene").map(e => normalizeName(e.name)));
+  const ours = game.scenes.filter(s => isStory(s) && built.has(normalizeName(sceneBaseName(s))));
+  const first = (ours.length ? ours : game.scenes.filter(isStory)).sort((a, b) => a.sort - b.sort)[0];
   const buttons = [{ action: "close", label: game.i18n.localize("FVTK.Import.Summary.Close"), default: !first }];
   if (first) buttons.unshift({ action: "activate", label: game.i18n.format("FVTK.Import.Summary.Activate", { name: first.name }), icon: "fa-solid fa-play", default: true });
   const choice = await foundry.applications.api.DialogV2.wait({
     window: { title: game.i18n.localize("FVTK.Import.Summary.Title") },
     position: { width: 520 },
-    content: `<div class="fvtk"><ul>${lines.map(l => `<li>${l}</li>`).join("")}</ul></div>`,
+    content: `<div class="fvtk fvtk-summary"><ul>${lines.map(l => `<li>${l}</li>`).join("")}</ul>${skippedHTML}</div>`,
     buttons,
     rejectClose: false
   });

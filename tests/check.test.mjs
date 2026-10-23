@@ -95,10 +95,13 @@ test("campaignCheck finds the gaps", () => {
 
 test("campaignCheck uses what the world already has", () => {
   const entries = parseBundle(bundle).entries;
-  const issues = campaignCheck(entries, { known: name => name === "Ghost Gang", linkedElsewhere: name => name === "Loner" });
+  const elsewhere = { loner: ["journal"], "empty lot": ["journal"] };
+  const issues = campaignCheck(entries, { known: name => name === "Ghost Gang", linkedElsewhere: name => elsewhere[name.toLowerCase()] ?? [] });
   const text = issues.map(i => `${i.entry}: ${i.problem}`);
   assert.ok(!text.some(t => t.includes("Ghost Gang")));
   assert.ok(!text.some(t => t.startsWith("Loner:")));
+  // A journal mentioning a location doesn't count as visiting it.
+  assert.ok(text.includes("Empty Lot: location is never visited by a scene or thread"));
 });
 
 test("campaignCheck skips connection checks without a story", () => {
@@ -116,4 +119,41 @@ test("fixPrompt lists the issues and asks for replaces:", () => {
   const prompt = fixPrompt([{ entry: "Loner", problem: "NPC is in no scene, location or thread" }]);
   assert.ok(prompt.includes('- "Loner": NPC is in no scene, location or thread.'));
   assert.ok(prompt.includes("replaces: <its current name>"));
+});
+
+test("campaignCheck: rulebook gear and epilogues are not gaps", () => {
+  const { entries } = parseBundle(`##ENTRY
+type: npc
+name: Rook
+gear: [[Heavy Pistol]], [[Kevlar]]
+notes: owes [[Nobody Known]]
+##BODY
+Guard.
+##END
+
+##ENTRY
+type: scene
+name: Quiet Bowl
+location: [[Somewhere]]
+npcs_present: [[Rook]]
+soundtrack: [[Street]]
+visual: Dawn.
+##BODY
+Epilogue: noodles after it is all over.
+##END
+
+##ENTRY
+type: scene
+name: Middle
+location: [[Somewhere]]
+npcs_present: [[Rook]]
+soundtrack: [[Street]]
+visual: Rain.
+##BODY
+This happens in Session 2.
+##END`);
+  const text = campaignCheck(entries, { known: n => n === "Somewhere" || n === "Street" }).map(i => `${i.entry}: ${i.problem}`);
+  assert.ok(!text.some(t => t.includes("Heavy Pistol") || t.includes("Kevlar")));
+  assert.ok(text.some(t => t.includes("[[Nobody Known]]")));
+  assert.ok(!text.some(t => t.includes("session")));
 });

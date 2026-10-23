@@ -39,8 +39,8 @@ become Foundry playlists (`youtube/playlists.mjs`, registered in `main.mjs`).
 ## Scene images
 
 `module/scripts/images/`: `prompts.mjs` (pure, tested: prompt from `visual:`, file names that
-`findImage` matches, `imagesNeeded`), `generate.mjs` (Pollinations, no key, about one request per
-15 s, returns about 1015×580 with a watermark; or Cloudflare Workers AI through the GM's own Worker,
+`findImage` matches, `imagesNeeded`), `generate.mjs` (Pollinations, no key, one request per 45 s per IP
+(402 FREE_LIMIT when sooner, retried), returns about 1015×580 with a watermark; or Cloudflare Workers AI through the GM's own Worker,
 `docs/images/cloudflare-worker.js`, because Cloudflare's API sends no CORS headers), `review.mjs`
 (ApplicationV2 review window that uploads kept images with `FilePicker.upload`). `openImporter` runs it
 after the confirm step and adds the uploaded paths to the folder's images before `importEntries`.

@@ -6,7 +6,9 @@ entries. NotebookLM is told to write them by the custom instruction in
 
 **What one build does:** preview with the campaign check (below) → generate missing scene images
 (review window) → import journals, items, NPCs and playlists → build, number and set up scenes →
-pick YouTube tracks → a summary with a button to activate the first scene.
+pick YouTube tracks → a summary of what was built and skipped, with a button to activate the
+build's first scene. The preview marks entries imported before: they are kept as they are unless
+**Replace** is ticked or the entry has `replaces:`.
 
 **Campaign check.** The preview lists gaps that would leave the campaign hard to run: `[[links]]`
 that match no entry or document, NPCs in no scene, location or thread, items no one uses, locations
@@ -180,7 +182,8 @@ Each scene the import creates or updates is also set up for play:
 - **Soundtrack:** a scene's `soundtrack:` playlist becomes the scene's playlist, so Foundry starts it
   when you activate the scene (YouTube tracks included).
 
-Names that match no actor or playlist are listed in the console's "Skipped" list after the import.
+Names that match no actor or playlist are listed under **Skipped or not found** in the summary
+that closes the build.
 
 #### Generated scene images
 
@@ -201,8 +204,10 @@ gives far better images than the description.
 Pick the generator in **Configure Settings → Foundry VTT Toolkit → Scene image generator**. Both are
 free; the settings are per browser.
 
-- **Pollinations** (default): no account or key. Free use is slow (one image every 15 seconds or
-  so), about 1015×580, from a basic model, with a small "pollinations.ai" mark in the corner.
+- **Pollinations** (default): no account or key. Free use is slow: one image every 45 seconds per
+  internet connection (a campaign's 18 images take about 15 minutes; the window says how long is
+  left, and a request turned away for coming too soon is retried). Images are about 1015×580, from
+  a basic model, with a small "pollinations.ai" mark in the corner.
 - **Cloudflare Workers AI**: FLUX.1 schnell, much better images and no watermark, on Cloudflare's
   free daily allowance (enough for dozens of images a day). Images are square. It needs a free
   Cloudflare account and a small Worker you deploy once:
