@@ -25,7 +25,9 @@ import as journals; system modules add other types with `api.importer.registerTy
 registers `item` and `npc`, see `systems/cpred.mjs`, with pure rules in `systems/cpred-items.mjs` and
 `systems/cpred-npc.mjs`; handler `order` makes items import before NPCs). Locations and scene entries
 also become Foundry scenes when an image matches (`findImage` in the parser, `importScenes` in the
-importer; images come from the dialog's image folder via `FilePicker.browse`). `playlist` entries
+importer; images come from the dialog's image folder via `FilePicker.browse`). `setupScene` then
+places hidden NPC tokens, a journal pin and the `soundtrack` playlist (pure layout in `setup.mjs`;
+what it placed is flagged `placed` so re-imports update only that). `playlist` entries
 become Foundry playlists (`youtube/playlists.mjs`, registered in `main.mjs`).
 
 ## Scene images
@@ -43,8 +45,10 @@ Gemini and OpenAI image APIs need billing, so they are not used.
 `module/scripts/youtube/`: `youtube.mjs` (pure helpers incl. `fallbackQueries`, tested), `search.mjs`
 (Data API v3 with the GM's client-scoped key, oEmbed fallback), `gemini.mjs` (optional Gemini search
 suggestions, client-scoped key, model setting default `gemini-flash-lite-latest`, busy models skipped for 10 min; pure prompt/parse parts
-tested), `picker.mjs` (ApplicationV2 track picker; Gemini output is only ever used as YouTube search
-terms, never shown or saved unchecked), `player.mjs` (playback).
+tested), `tracks.mjs` (`TrackSearch`: Gemini plan plus searches per row, shared by the picker and
+`autoPickTracks`, which `openImporter` runs after an import with a smaller search budget),
+`picker.mjs` (ApplicationV2 track picker; Gemini output is only ever used as YouTube search terms,
+never shown or saved unchecked), `player.mjs` (playback).
 A YouTube track is a PlaylistSound with `path` = `assets/silence.wav`, `repeat: true` and the video in
 `flags.foundry-vtt-toolkit.youtube`; every client plays it in a visible ≥200×200 embedded player (YouTube
 policy: don't hide or shrink it). Shared timing: `startedAt` (server ms) while playing, `pausedAt` (s)

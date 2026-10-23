@@ -3,6 +3,7 @@ import { imagePrompt, imagesNeeded, DEFAULT_STYLE } from "../images/prompts.mjs"
 import { PROVIDERS } from "../images/generate.mjs";
 import { generateSceneImages } from "../images/review.mjs";
 import { autoPickTracks, playlistsToFill } from "../youtube/tracks.mjs";
+import { namesIn, tokenPositions, notePosition } from "./setup.mjs";
 
 const MODULE_ID = "foundry-vtt-toolkit";
 const ROOT_FOLDER = "NotebookLM";
@@ -259,9 +260,74 @@ async function importScenes(plan, images) {
     } catch (err) {
       console.warn(`${MODULE_ID} | No thumbnail for ${scene.name}`, err);
     }
+    try {
+      const missing = await setupScene(scene, entry, game.journal.get(id));
+      result.skipped.push(...missing.map(name => `${entry.name}: no actor or playlist named ${name}`));
+    } catch (err) {
+      console.error(`${MODULE_ID} | Could not set up ${scene.name}`, err);
+      result.skipped.push(`${entry.name} (setup error: ${err.message})`);
+    }
     (existing ? result.updated : result.created).push(entry.name);
   }
   return result;
+}
+
+/** The document of that name in a collection, preferring NotebookLM imports. */
+function named(collection, name) {
+  const matches = collection.filter(d => normalizeName(d.name) === normalizeName(name));
+  return matches.find(d => d.flags[MODULE_ID]?.source === "notebooklm") ?? matches[0] ?? null;
+}
+
+/**
+ * Fill in an imported scene from its entry: hidden tokens for the NPCs it names (a scene's
+ * `npcs_present`, a location's `npcs`), a map pin that opens its journal, and its `soundtrack`
+ * playlist, which Foundry plays when the scene is activated. Tokens and the pin placed by an earlier
+ * import are kept or removed to match the entry; tokens the GM added are left alone, and an NPC who
+ * already has a token on the scene doesn't get another.
+ * @returns {Promise<string[]>} Names that matched no actor or playlist.
+ */
+async function setupScene(scene, entry, journal) {
+  const flags = { [MODULE_ID]: { placed: true } };
+  const placed = d => d.flags[MODULE_ID]?.placed;
+  const missing = [];
+  const { sceneX = 0, sceneY = 0 } = scene.dimensions ?? {};
+
+  const names = namesIn(entry.type === "scene" ? entry.fields.npcs_present : entry.fields.npcs);
+  const actors = [];
+  for (const name of names) {
+    const actor = named(game.actors, name);
+    if (actor && !actors.includes(actor)) actors.push(actor);
+    else if (!actor) missing.push(name);
+  }
+  const wanted = new Set(actors.map(a => a.id));
+  const stale = scene.tokens.filter(t => placed(t) && !wanted.has(t.actorId)).map(t => t.id);
+  if (stale.length) await scene.deleteEmbeddedDocuments("Token", stale);
+  const toPlace = actors.filter(a => !scene.tokens.some(t => t.actorId === a.id));
+  if (toPlace.length) {
+    const spots = tokenPositions(toPlace.length, { width: scene.width, height: scene.height, size: scene.grid.size });
+    const tokens = [];
+    for (const [i, actor] of toPlace.entries()) {
+      const token = await actor.getTokenDocument({ x: sceneX + spots[i].x, y: sceneY + spots[i].y, hidden: true, flags });
+      tokens.push(token.toObject());
+    }
+    await scene.createEmbeddedDocuments("Token", tokens);
+  }
+
+  if (journal) {
+    const pin = scene.notes.find(placed);
+    if (pin) {
+      if (pin.entryId !== journal.id || pin.text !== entry.name) await pin.update({ entryId: journal.id, text: entry.name });
+    } else {
+      const { x, y } = notePosition(scene);
+      await scene.createEmbeddedDocuments("Note", [{ entryId: journal.id, x: sceneX + x, y: sceneY + y, text: entry.name, texture: { src: "icons/svg/book.svg" }, iconSize: 48, flags }]);
+    }
+  }
+
+  const soundtrack = namesIn(entry.fields.soundtrack);
+  const playlist = soundtrack.map(name => named(game.playlists, name)).find(Boolean);
+  if (playlist && scene._source.playlist !== playlist.id) await scene.update({ playlist: playlist.id, playlistSound: null });
+  else if (soundtrack.length && !playlist) missing.push(...soundtrack);
+  return missing;
 }
 
 /** A scene's name without the progression number orderScenes gives it. */

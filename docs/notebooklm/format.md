@@ -154,6 +154,20 @@ the entry's journal. An existing scene is skipped unless the entry is being repl
 updated in place, so its tokens, walls and drawings survive. A scene is still created for a location
 whose journal already existed.
 
+Each scene the import creates or updates is also set up for play:
+
+- **NPC tokens:** every NPC named in a scene's `npcs_present` (a location's `npcs`), as `[[links]]`
+  or a comma-separated list, gets a **hidden** token from its actor, in a row across the lower
+  middle, ready to reveal. Actors from the same import count, and NotebookLM imports win over other
+  actors of the same name. An NPC who already has a token there isn't placed again; tokens a
+  previous import placed for NPCs no longer listed are removed. Tokens you added yourself are never
+  touched.
+- **Journal pin:** a book pin in the top-left corner opens the entry's journal.
+- **Soundtrack:** a scene's `soundtrack:` playlist becomes the scene's playlist, so Foundry starts it
+  when you activate the scene (YouTube tracks included).
+
+Names that match no actor or playlist are listed in the console's "Skipped" list after the import.
+
 #### Generated scene images
 
 Locations and scenes that have no image in the folder and no existing scene get an image generated
