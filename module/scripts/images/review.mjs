@@ -72,7 +72,9 @@ class ImageReview extends foundry.applications.api.ApplicationV2 {
     if (pending && failed) progress += ` ${t("FailedCount", { failed })}`;
     // Pollinations' free tier makes one image every 45 seconds, so say how long the wait is.
     const slow = this.settings.provider === "pollinations" && pending > 1 ? ` ${t("Slow", { minutes: Math.ceil((pending * POLLINATIONS_GAP_MS) / 60_000) })}` : "";
-    return `<p class="hint">${t("Hint", { provider: this.settings.provider })}${slow}</p>
+    // Gemini bills every image, regenerations included.
+    const cost = this.settings.provider === "gemini" ? ` ${t("GeminiCost")}` : "";
+    return `<p class="hint">${t("Hint", { provider: this.settings.provider })}${slow}${cost}</p>
       <ul class="fvtk-img-grid">${cards}</ul>
       <footer class="fvtk-img-footer">
         <span>${progress}</span>
@@ -221,7 +223,7 @@ class ImageReview extends foundry.applications.api.ApplicationV2 {
 /**
  * Generate, review and upload scene images.
  * @param {{entry: object, prompt: string}[]} jobs
- * @param {{provider: string, url?: string, token?: string, folder: string, autoApprove?: boolean}} options
+ * @param {{provider: string, url?: string, token?: string, key?: string, model?: string, folder: string, autoApprove?: boolean}} options
  * @returns {Promise<{paths: string[], skipped: string[]}>} Uploaded image paths and entries left without one.
  */
 export function generateSceneImages(jobs, options) {

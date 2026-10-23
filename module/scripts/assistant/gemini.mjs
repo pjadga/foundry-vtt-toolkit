@@ -53,18 +53,19 @@ async function generate(model, body, key, timeout) {
 /**
  * Ask Gemini, with the chosen model first and the lite model if that one is busy or slow. With
  * `stores`, Gemini searches those File Search stores and returns what it used in `grounding`.
- * @param {{system: string, history: {role: "user"|"model", text: string}[], stores?: string[]}} chat
+ * @param {{system: string, history: {role: "user"|"model", text: string}[], stores?: string[], json?: boolean}} chat
+ *   json: ask for a JSON answer.
  * @param {string} key
  * @param {string} [model]
  * @returns {Promise<{text: string, model: string, tokens: number|null, grounding: object|null}>}
  * @throws {GeminiError}
  */
-export async function askGemini({ system, history, stores = [] }, key, model = DEFAULT_ASSISTANT_MODEL) {
+export async function askGemini({ system, history, stores = [], json = false }, key, model = DEFAULT_ASSISTANT_MODEL) {
   const body = JSON.stringify({
     system_instruction: { parts: [{ text: system }] },
     contents: history.map(m => ({ role: m.role, parts: [{ text: m.text }] })),
     ...(stores.length ? { tools: [{ file_search: { file_search_store_names: stores } }] } : {}),
-    generationConfig: { temperature: 0.8 }
+    generationConfig: { temperature: 0.8, ...(json ? { responseMimeType: "application/json" } : {}) }
   });
   const wanted = [...new Set([model || DEFAULT_ASSISTANT_MODEL, FALLBACK_MODEL])];
   const models = wanted.filter(m => !(busyUntil.get(m) > Date.now()));

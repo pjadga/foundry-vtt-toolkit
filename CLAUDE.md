@@ -43,10 +43,14 @@ become Foundry playlists (`youtube/playlists.mjs`, registered in `main.mjs`).
 `module/scripts/images/`: `prompts.mjs` (pure, tested: prompt from `visual:`, file names that
 `findImage` matches, `imagesNeeded`), `generate.mjs` (Pollinations, no key, one request per 45 s per IP
 (402 FREE_LIMIT when sooner, retried), returns about 1015×580 with a watermark; or Cloudflare Workers AI through the GM's own Worker,
-`docs/images/cloudflare-worker.js`, because Cloudflare's API sends no CORS headers), `review.mjs`
+`docs/images/cloudflare-worker.js`, because Cloudflare's API sends no CORS headers; or Gemini
+`generateContent` with `responseModalities: ["IMAGE"]` and `imageConfig.aspectRatio`, image in
+`candidates[0].content.parts[].inlineData`, key in the `x-goog-api-key` header; pure, tested
+`geminiImageError` / `geminiImagePart`), `review.mjs`
 (ApplicationV2 review window that uploads kept images with `FilePicker.upload`). `openImporter` runs it
 after the confirm step and adds the uploaded paths to the folder's images before `importEntries`.
-Gemini and OpenAI image APIs need billing, so they are not used.
+Gemini image models have no free tier: a key without billing gets 429 with a `…FreeTier` quotaId and
+`limit: 0`, which `geminiImageError` reports as "needs billing" without retrying. OpenAI isn't used.
 
 ## GM Assistant
 
@@ -58,6 +62,14 @@ lite model by default, other models 30 s then lite), `assistant.mjs` (`campaignC
 Build button via `renderChatMessageHTML`). Answers render through `resolveLinks` outside code blocks;
 brackets inside code blocks are escaped so Foundry's inline-roll enricher doesn't read `[[Name]]`.
 `openImporter({ text })` starts Build campaign with entries filled in.
+Images: `drawing.mjs` (pure, tested: `imageRequest` spots "draw a portrait of …", `imagePlanRequest` /
+`parseImagePlan` have Gemini chat write a JSON `{prompt, subject, kind}`, `imageTargets` picks actors or
+scenes from the subject, the request and the previous answer's links). `draw` in `assistant.mjs`
+generates with the scene image provider (`imageSettings` from the importer; Gemini when that is Off),
+1:1 for portraits, 16:9 for scenes; `saveImage` uploads to the Build campaign image folder
+(portraits in `portraits/`, names get a time suffix so cached images don't show); `useImage` sets an
+actor's `img`, prototype token and placed tokens, or a scene's `background.src` and thumbnail. `/gm`
+saves at once, since chat needs a file.
 Sources: `sources.mjs` (pure, tested: `classify`, `syncPlan`, `citations` from `groundingMetadata`),
 `filesearch.mjs` (File Search REST from the browser, which CORS allows: resumable
 `uploadToFileSearchStore`, then poll the *document* until `STATE_ACTIVE`, because the returned

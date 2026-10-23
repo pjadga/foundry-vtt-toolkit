@@ -1,6 +1,6 @@
 import { parseBundle, resolveLinks, toMarkdown, normalizeName, findImage, findLinks, progressionKey, stripNumber, numberInOrder } from "./parser.mjs";
 import { imagePrompt, imagesNeeded, DEFAULT_STYLE } from "../images/prompts.mjs";
-import { PROVIDERS } from "../images/generate.mjs";
+import { PROVIDERS, DEFAULT_GEMINI_IMAGE_MODEL } from "../images/generate.mjs";
 import { generateSceneImages } from "../images/review.mjs";
 import { autoPickTracks, playlistsToFill } from "../youtube/tracks.mjs";
 import { namesIn, tokenPositions, notePosition } from "./setup.mjs";
@@ -530,7 +530,9 @@ function previewHTML({ entries, warnings }, images = [], jobs = [], issues = nul
     return `<li><strong>${escape(e.name)}</strong> <em>${escape(e.type)}</em> → ${escape(status)}${e.links.length ? `<br><small>links: ${e.links.map(escape).join(", ")}</small>` : ""}</li>`;
   });
   const warn = warnings.length ? `<p><strong>Warnings</strong></p><ul>${warnings.map(w => `<li>${escape(w)}</li>`).join("")}</ul>` : "";
-  const generate = jobs.length ? `<p>${escape(game.i18n.format("FVTK.Images.WillGenerate", { count: jobs.length, provider: game.settings.get(MODULE_ID, "imageProvider") }))}</p>` : "";
+  const provider = game.settings.get(MODULE_ID, "imageProvider");
+  const cost = provider === "gemini" ? ` ${game.i18n.localize("FVTK.Images.GeminiCost")}` : "";
+  const generate = jobs.length ? `<p>${escape(game.i18n.format("FVTK.Images.WillGenerate", { count: jobs.length, provider }) + cost)}</p>` : "";
   const found = `${entries.length} entr${entries.length === 1 ? "y" : "ies"} found.`;
   const summary = counts.replaced || counts.kept ? ` ${game.i18n.format("FVTK.Import.Counts", counts)}` : "";
   return `<div class="fvtk fvtk-import-preview"><p>${escape(found + summary)}</p>${checkHTML(issues)}${generate}<ul>${rows.join("")}</ul>${warn}</div>`;
@@ -658,7 +660,7 @@ async function autoPick() {
 }
 
 /** The image generation settings, or null when generation is off. */
-function imageSettings(folder) {
+export function imageSettings(folder) {
   const provider = game.settings.get(MODULE_ID, "imageProvider");
   if (!PROVIDERS.includes(provider)) return null;
   return {
@@ -666,6 +668,8 @@ function imageSettings(folder) {
     folder,
     url: game.settings.get(MODULE_ID, "cloudflareWorkerUrl").trim(),
     token: game.settings.get(MODULE_ID, "cloudflareWorkerToken").trim(),
+    key: provider === "gemini" ? game.settings.get(MODULE_ID, "geminiApiKey").trim() : "",
+    model: game.settings.get(MODULE_ID, "geminiImageModel").trim() || DEFAULT_GEMINI_IMAGE_MODEL,
     autoApprove: game.settings.get(MODULE_ID, "imageAutoApprove")
   };
 }
