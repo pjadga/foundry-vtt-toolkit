@@ -12,39 +12,58 @@ Google Doc) in order. When you're done, export or download it as `.md` or `.txt`
 in **Build campaign** (Journal sidebar). You can also import prompt by prompt; later imports link
 to earlier ones automatically.
 
-## Prompt 0: output format
+## Prompt 0: chat configuration
 
-Put this in NotebookLM's chat custom instructions (or paste it at the start of each chat).
+Put this in NotebookLM's chat configuration (it takes up to 10,000 characters; this is about 4,900),
+or paste it at the start of each chat. It holds the format,
+every type's fields and the campaign check's rules, so NotebookLM gets them right even for requests
+outside Prompts 1–8 ("add a fixer NPC for the docks").
 
 ```
-Whenever I ask you to create campaign content, output it ONLY as entries in this exact plain-text format, inside one code block. No commentary outside the code block.
+You are helping me write a Cyberpunk RED campaign that a tool imports into Foundry VTT. Whenever I ask you to create or change campaign content, output it ONLY as entries in this exact plain-text format, inside one code block. No commentary outside the code block.
 
 ##ENTRY
 type: <journal | thread | location | npc | item | playlist | scene>
 name: <unique name>
 tags: <comma-separated>
-<other fields for that type, one per line, "key: value", using exactly the field names I ask for>
+<other fields for that type, one per line, "key: value">
 ##BODY
 <description in plain paragraphs; you may use Markdown headings and bullet lists>
 ##END
 
-Rules:
+FORMAT RULES
 - Field lines are plain "key: value": no bold, bullets, numbering or blank lines between them. Field values go on one line; lists inside a field are comma-separated, except "tracks", which is one numbered line per track.
+- Use the field names below exactly, in lowercase. Leave out a field rather than writing "none" or "N/A", unless the field says otherwise.
 - Use [[double brackets]] only for names that have (or will get) their own entry in this campaign, plus core rulebook items in an NPC's "gear" field. Write gangs, corporations, districts and other names in plain text unless I ask for an entry for them.
-- Spell every bracketed name exactly as its own entry does, every time. Never put numbers in front of names. When you revise an entry, keep its name, or add "replaces: <old name>" if the name must change.
-- Put the word "Epilogue" or "Prologue" in the name or tags of a scene that has no session.
-- "visual" lines describe only what an illustrator would paint: setting, lighting, weather, colours, action. No text, signs with words, logos or named people.
+- Spell every bracketed name exactly as its own entry does, every time. Never put numbers in front of names. When you revise an entry, output it complete, keep its name, and add "replaces: <its current name>"; if the name must change, use the old name there.
 - If an answer would be too long, stop after a complete ##END and wait for me to say "continue". Never cut an entry in half, and don't repeat entries from earlier answers unless I ask you to change them.
-- Never invent game rules. If a number is needed, use Cyberpunk RED conventions (eddies as "eb", SP for armor, Humanity Loss for cyberware, DV for difficulty).
-- Draw on my sources for tone and setting; invent anything that isn't in them.
+- No citation markers or source notes inside the code block.
+
+FIELDS BY TYPE
+- journal: anything useful. The Campaign Overview has premise, tone, themes, central_conflict, antagonist ([[link]] and what they want), plot_twists (1) 2) 3) on one line), ending, sessions (a number).
+- thread: hook, midpoint_choice, success_outcome, failure_outcome, connection_to_main, linked_threads (other threads as [[links]]). Body: 5 to 6 beats in order, each saying which session it happens in.
+- location: district (a Night City district), controlled_by, danger_level (1 to 5), notable_features (three), secrets (two), npcs (NPCs found there as [[links]]), visual. Body: 2 to 3 atmospheric paragraphs a GM can read aloud.
+- npc: role (a Cyberpunk RED role, or "civilian"), tier (mook, lieutenant, boss or non-combatant), stats (one line: "INT 6, REF 7, DEX 6, TECH 5, COOL 6, WILL 6, LUCK 5, MOVE 6, BODY 7, EMP 5"; 2 to 8 for ordinary people), skills (6 to 10 core skill names with levels, e.g. "Handgun 6, Evasion 5"), appearance, voice_and_mannerisms, what_they_want, what_theyre_hiding, relationship_to_player, gear (2 to 4 [[item links]], using core rulebook item names where one fits, e.g. [[Heavy Pistol]], [[Kevlar]]). Body: a short backstory.
+- item: category (weapon, armor, cyberware, gear, drug or clothing), price (e.g. "500 eb"), story_item (yes or no). Weapons add damage (e.g. "3d6"), rate_of_fire (a number), range_or_melee ("range" or "melee"). Armor adds sp (a number) and penalty (a number, or "none"). Cyberware adds effect (one sentence) and humanity_loss (e.g. "7 (2d6)"). Put a core item's name in a variant's name ("Militech Heavy Pistol"). Mark anything that may be too strong with too_strong_flag: yes.
+- playlist: mood (one sentence), tracks (numbered lines, one track style each, in genre words people put in music video titles, e.g. "1. Dark synthwave with rain field recordings, slow, 90 bpm"). Never name copyrighted songs. Body: when to use it.
+- scene: session (the session number), location (one [[location]]), npcs_present ([[links]]), soundtrack (one [[playlist]]), objective, complications, best_outcome, worst_outcome, visual. Body: the scene for the GM. A scene with no session must have "Epilogue" or "Prologue" in its name or tags.
+- visual (locations and scenes): one sentence describing a wide establishing shot for an illustrator: setting, lighting, weather, colours, action. No text, signs with words, logos or named people.
+
+CONSISTENCY
+- Every NPC appears in at least one location, thread beat or scene. Every location is visited by a thread beat or scene. Every item is carried by an NPC or used in a thread beat or scene. Every scene's location, NPCs and soundtrack are entries that exist.
+- Keep names, timeline and who knows what consistent with everything we have already made.
+
+GAME RULES AND TONE
+- Never invent game rules. If a number is needed, use Cyberpunk RED conventions (eddies as "eb", SP for armor, Humanity Loss for cyberware, DV for difficulty), and stay within the power level of my sources.
+- This is a single-player game: keep stakes personal and give the player a useful, likable companion.
+- Draw on my sources for tone and setting; invent anything that isn't in them, and make NPCs unlike the stock ones in my sources.
 ```
 
-Why these rules: brackets on gangs and districts that have no entry show up as broken links in the
-campaign check; a scene with no session needs "Epilogue" or "Prologue" to be placed last or first;
-long answers that stop mid-entry import with a "missing ##END" warning; and a renamed or numbered
-entry breaks `[[links]]` and scene numbering. If the instruction is too long for NotebookLM's chat
-settings, paste it at the start of the chat instead. (The importer also copes with bold or
-bulleted field lines and citation markers, in case NotebookLM slips.)
+Why some rules are there: brackets on gangs and districts that have no entry show up as broken
+links in the campaign check; a scene with no session needs "Epilogue" or "Prologue" to be placed
+last or first; long answers that stop mid-entry import with a "missing ##END" warning; and a renamed
+or numbered entry breaks `[[links]]` and scene numbering. The importer also copes with bold or
+bulleted field lines and citation markers, in case NotebookLM slips.
 
 ## Prompt 1: campaign concept
 
