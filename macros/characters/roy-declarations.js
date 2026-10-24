@@ -41,17 +41,65 @@ const KINDS = {
   combat: {
     label: "Battle cry",
     icon: "fa-solid fa-khanda",
-    brief: "combat declaration: a grandiose battle cry, warning, named attack, shield interception or spell incantation, before or during a fight"
+    brief: "combat declaration: a grandiose battle cry, warning, named attack, shield interception or spell incantation, before or during a fight",
+    // Gemini gets one focus per request, so fresh lines don't all take the same shape.
+    focus: [
+      "a newly named mace attack, shouted in capitals",
+      "a finishing blow on a defeated foe",
+      "a critical hit as holy power surges through him",
+      "a warning or ultimatum to the enemy before the fight",
+      "taking a hit meant for an ally with [Cover I]",
+      "shrugging off a blow with his shield and armor",
+      "casting Cure Wounds on a wounded ally",
+      "casting Field Protection over the party",
+      "casting Banish on undead or daemons",
+      "invoking [Change Fate] after a bad roll",
+      "the Sacred Crusher, his right arm, straining with holy power",
+      "a short exchange with his mace, the Star of Retribution",
+      "quoting a volume and chapter of his grandfather Victor's Saga",
+      "quoting one of Dreven's sayings word for word",
+      "standing his ground while badly hurt",
+      "shouting encouragement to a named party member"
+    ]
   },
   greeting: {
     label: "Introduction",
     icon: "fa-solid fa-crown",
-    brief: "introduction or greeting: Roy presenting himself or his party, with dramatic self-titles"
+    brief: "introduction or greeting: Roy presenting himself or his party, with dramatic self-titles",
+    focus: [
+      "introducing himself with a string of self-titles",
+      "entering a tavern or the Adventurers' Guild",
+      "introducing a named party member",
+      "presenting the Slayer's Fellowship as a whole",
+      "greeting a frightened villager or child",
+      "greeting a noble or guildmaster with farm-boy manners",
+      "meeting a rival adventurer",
+      "explaining why he shakes hands with his left",
+      "introducing his mace, the Star of Retribution",
+      "mentioning his grandfather Victor's letter of recommendation",
+      "greeting the party at the start of a new day"
+    ]
   },
   victory: {
     label: "Victory & quirks",
     icon: "fa-solid fa-trophy",
-    brief: "victory pose or out-of-combat quirk: a post-fight pose, or one of his everyday chuunibyou habits"
+    brief: "victory pose or out-of-combat quirk: a post-fight pose, or one of his everyday chuunibyou habits",
+    focus: [
+      "a heroic victory pose with his feathered cap",
+      "thanking Dreven after the battle",
+      "checking that every companion is unhurt",
+      "praising a named party member",
+      "polishing or talking to his mace",
+      "calming the Sacred Crusher after the fight",
+      "writing tonight's chapter of his own saga",
+      "ordering juice in a tavern",
+      "his scar and what it taught him",
+      "a letter home to his farming parents",
+      "a campfire story from his grandfather's Saga",
+      "haggling with a merchant or blacksmith",
+      "sensing danger, or a trap, on the road",
+      "counting the loot with great ceremony"
+    ]
   }
 };
 
@@ -126,7 +174,7 @@ const BANK = {
     ["Kneels and presses the medallion of Dreven to his forehead.", "Hunter King, this victory is yours. \"One's actions prove one's truth.\""],
     ["Checks on each companion in turn, counting under his breath.", "Everyone is still standing. Good. That is the only victory that truly matters."],
     ["Polishes the Star of Retribution with a cloth, murmuring to it.", "You fought well today, my iron companion. Rest. Tomorrow there is more darkness to shatter."],
-    ["Grips his trembling right wrist.", "Calm yourself, Sacred Crusher. The battle is over. ...It still hungers. Truly, a cursed blessing."],
+    ["Grips his trembling right wrist.", "Calm yourself, Sacred Crusher. The battle is over. ...It still burns with holy retribution. Truly, the burden of the chosen."],
     ["Pulls out a small notebook and scribbles furiously.", "A note for the Saga: the beast fell to a GRAND SLAM OF DESTINY. Its size I shall record as roughly three times larger."],
     ["Orders at the tavern counter with great ceremony.", "Landlord! Your finest juice, chilled! A hero's thirst must be quenched with purity!"],
     ["Absently touches the pale scar beneath his collarbone.", "Armor can break. Shields can shatter. But a guardian's heart never yields."],
@@ -157,11 +205,20 @@ const BANK = {
 };
 
 const PROFILE = `Roy "Slayer" Belmont, an 18-year-old human fighter and priest of Dreven, the Magic Hunter King (Sword World 2.5, Alframe continent).
-- Dreven: a minor god who was a dhampir vampire hunter, hunted the Eternal Night and mapped Shallow Abysses (spatial rifts). Holy symbol: a spear piercing a dark circle. His sayings: "One's actions prove one's truth." "First move, then think. Before it's too late." "Ordinary measures do not work on Shallows. Be prepared. Be creative." "Do not be deceived by tranquility. Burn with determination and follow through!"
+- Dreven: a minor god of the First Sword, once a vampire hunter, who hunted the Eternal Night and mapped Shallow Abysses (spatial rifts). Holy symbol: a spear piercing a dark circle.
 - Looks: pink hair under a feather-trimmed cap, bright blue eyes, polished splint armor with wing motifs, a round shield, a heavy mace he calls the Star of Retribution, his grandfather's silver medallion of Dreven. A pale scar below his left collarbone from shielding village children from a wild boar when he was twelve.
 - Chuunibyou habits: calls his right arm "the Sacred Crusher" and grips his wrist to hold back its power; names every move in capitals (GRAND SLAM OF DESTINY!, ABYSS-SHATTERING STRIKE!, CELESTIAL METEOR CRUSH!, SACRED INTERCEPTION!); talks to his mace like a partner; quotes his grandfather Victor Belmont's hero stories as scripture, by volume and chapter; titles himself the SlayArm, the Shield of the Village, the Grandson of the Living Legend. Orders juice, not ale.
 - His heroism is genuine: a loyal frontline protector who throws himself in front of allies. His greatest fear is failing to protect one. His farming parents think adventuring is nonsense.
-- His divine magic looks like silver moonlight with crimson embers and spectral spears. Spells: Cure Wounds, Field Protection, Banish, Sanity, Abyss Ranger. Combat feats: [Cover I] (taking a hit for an ally), [Change Fate] (a reroll).`;
+- He fights like a retribution paladin: his power is holy, radiant and righteous, and his divine magic blazes as silver-white celestial light and spears of holy light. Spells: Cure Wounds, Field Protection, Banish, Sanity, Abyss Ranger. Combat feats: [Cover I] (taking a hit for an ally), [Change Fate] (a reroll).`;
+
+// Gemini's system instruction, which it weighs above the request itself.
+const TONE = "You write lines for Roy, a holy warrior. The tone is holy and righteous, like a retribution paladin: celestial wrath, radiant judgment, holy vanquishing light, divine retribution. Roy's own power, body, blood and weapons are always holy and radiant, never unholy, dark, shadowy, abyssal, cursed, demonic or corrupted. Darkness, the Abyss, Shallows, undead and daemons are only ever what he fights.";
+
+// Wording that makes Roy sound dark. A fresh line containing it is asked for again, then replaced from the bank.
+const OFF_TONE = /\b(unholy|cursed|demonic|profane|blasphemous|eldritch)\b|\b(dark|shadow|shadowy|abyssal|void|corrupt|corrupted|forbidden|sinister|infernal)\s+(energy|power|magic|might|fury|wrath|force|aura|blood|hunger|thirst|flames?|fire|strength)\b/i;
+
+// Only sent to Gemini when the focus is quoting Dreven, so other lines don't all quote him.
+const DREVEN_SAYINGS = `Dreven's sayings: "One's actions prove one's truth." "First move, then think. Before it's too late." "Ordinary measures do not work on Shallows. Be prepared. Be creative." "Do not be deceived by tranquility. Burn with determination and follow through!"`;
 
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
@@ -211,17 +268,39 @@ async function geminiLine(kind, key) {
   const party = Object.values(PARTY).filter(member => member.name)
     .map(member => `- ${member.name}: ${member.about}`).join("\n");
   const recent = store.json("recent", []);
-  const examples = linesFor(kind).sort(() => Math.random() - 0.5).slice(0, 4)
+  const focus = KINDS[kind].focus[Math.floor(Math.random() * KINDS[kind].focus.length)];
+  const quoting = /quoting|Saga/.test(focus);
+  const examples = linesFor(kind).filter(line => quoting || !/"|Volume|Saga/.test(line.say))
+    .sort(() => Math.random() - 0.5).slice(0, 4)
     .map(line => `- act: ${line.act} | say: ${line.say}`).join("\n");
   const prompt = [
-    `Write one new ${KINDS[kind].brief} for this tabletop RPG character.`,
+    `Write one new ${KINDS[kind].brief} for this tabletop RPG character. This time, focus on ${focus}.`,
     PROFILE,
+    focus.includes("Dreven's sayings") && DREVEN_SAYINGS,
     party && `His party, the Slayer's Fellowship:\n${party}`,
+    quoting
+      ? "Dreven's sayings are Dreven's; the Saga is his grandfather's own hero stories, so never credit one to the other."
+      : "Don't quote Dreven, scripture or Victor's Saga in this line.",
     `Style examples (write something different):\n${examples}`,
     recent.length && `Do not repeat these recent lines:\n${recent.map(say => `- ${say}`).join("\n")}`,
+    "If he names a move, invent a new name for it; don't reuse a move name from the profile, the examples or the recent lines. Vary the stage direction too, rather than having him raise his mace.",
     'Return JSON: "act" is a short stage direction in present tense, third person, without his name, under 20 words; "say" is what he says aloud, 1 to 3 sentences, under 60 words, without surrounding quotation marks. Over the top but sincere. Use only facts given here; invent no new companions.'
   ].filter(Boolean).join("\n\n");
 
+  // Ask twice at most: a line that makes Roy sound dark is sent back once, then the bank is used.
+  let offTone = null;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const retry = offTone ? `\n\nYour last line used "${offTone}". Rewrite it so everything about Roy is holy.` : "";
+    const line = await askGemini(prompt + retry, key);
+    offTone = `${line.act} ${line.say}`.match(OFF_TONE)?.[0] ?? null;
+    if (offTone) continue;
+    store.set("recent", JSON.stringify([`${line.act} ${line.say}`, ...recent].slice(0, 8)));
+    return line;
+  }
+  throw new Error(`its lines kept saying "${offTone}"`);
+}
+
+async function askGemini(prompt, key) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 20000);
   try {
@@ -230,9 +309,10 @@ async function geminiLine(kind, key) {
       headers: { "Content-Type": "application/json", "x-goog-api-key": key },
       signal: controller.signal,
       body: JSON.stringify({
+        systemInstruction: { parts: [{ text: TONE }] },
         contents: [{ role: "user", parts: [{ text: prompt }] }],
         generationConfig: {
-          temperature: 1.1,
+          temperature: 0.9,
           responseMimeType: "application/json",
           responseSchema: {
             type: "OBJECT",
@@ -249,7 +329,6 @@ async function geminiLine(kind, key) {
     const act = String(line.act ?? "").trim().slice(0, 200);
     const say = String(line.say ?? "").trim().replace(/^["“]|["”]$/g, "").slice(0, 500);
     if (!say) throw new Error("empty answer");
-    store.set("recent", JSON.stringify([say, ...recent].slice(0, 8)));
     return { act, say };
   } finally {
     clearTimeout(timer);
@@ -313,7 +392,7 @@ if (store.get("useGemini") === "1") {
       line = await geminiLine(kind, key);
     } catch (error) {
       const reason = error.name === "AbortError" ? "timed out" : error.message;
-      ui.notifications.warn(`Gemini didn't answer (${reason}), so Roy used a line from the bank.`);
+      ui.notifications.warn(`No fresh line from Gemini (${reason}), so Roy used a line from the bank.`);
     }
   }
 }
