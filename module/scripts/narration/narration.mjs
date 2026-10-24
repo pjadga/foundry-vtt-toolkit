@@ -105,9 +105,13 @@ const weaponOf = (actor, title) => actor?.items.find(i => i.type === "weapon" &&
 const skillLevel = (actor, name) => actor.items.find(i => i.type === "skill" && i.name === name)?.system.level ?? 0;
 const stat = (actor, name) => actor.system.stats?.[name]?.value ?? 0;
 
-/** The armor with the highest SP equipped at a location (Cyberpunk RED doesn't stack armor), or null. */
+/**
+ * The armor with the highest current SP (SP less ablation, as the system counts it) equipped at a
+ * location (Cyberpunk RED doesn't stack armor), or null.
+ */
 function armorOf(actor, location) {
-  const armors = (actor.getEquippedArmors?.(location) ?? []).map(a => ({ name: a.name, sp: Number(a.system?.[`${location}Location`]?.sp) || 0 }));
+  const current = loc => Math.max(0, (Number(loc?.sp) || 0) - (Number(loc?.ablation) || 0));
+  const armors = (actor.getEquippedArmors?.(location) ?? []).map(a => ({ name: a.name, sp: current(a.system?.[`${location}Location`]) }));
   return armors.sort((a, b) => b.sp - a.sp)[0] ?? null;
 }
 
