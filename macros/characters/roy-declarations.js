@@ -11,7 +11,8 @@
  *
  * Lines come from the bank below, shuffled so none repeats until the rest have been used. With a
  * Gemini API key saved in this browser (the key button in the menu), "Fresh line from Gemini" asks
- * Gemini for a new one instead and falls back to the bank if that fails. The key is kept only in
+ * Gemini for a new one instead, fitted to "What's happening?" if you fill it in, and falls back to the
+ * bank if that fails. The key is kept only in
  * this browser's localStorage for this Foundry site: never in the macro, the world or chat.
  *
  * Install in a game you don't host: docs/macros/roy-declarations.md.
@@ -268,6 +269,7 @@ async function geminiLine(kind, key) {
   const party = Object.values(PARTY).filter(member => member.name)
     .map(member => `- ${member.name}: ${member.about}`).join("\n");
   const recent = store.json("recent", []);
+  const situation = store.get("situation");
   const focus = KINDS[kind].focus[Math.floor(Math.random() * KINDS[kind].focus.length)];
   const quoting = /quoting|Saga/.test(focus);
   const examples = linesFor(kind).filter(line => quoting || !/"|Volume|Saga/.test(line.say))
@@ -278,6 +280,7 @@ async function geminiLine(kind, key) {
     PROFILE,
     focus.includes("Dreven's sayings") && DREVEN_SAYINGS,
     party && `His party, the Slayer's Fellowship:\n${party}`,
+    situation && `What is happening in the game right now, as his player describes it: ${situation}\nFit the line to this moment. If the focus above doesn't suit it, drop the focus.`,
     quoting
       ? "Dreven's sayings are Dreven's; the Saga is his grandfather's own hero stories, so never credit one to the other."
       : "Don't quote Dreven, scripture or Victor's Saga in this line.",
@@ -354,13 +357,22 @@ async function editKey() {
 async function chooseKind() {
   while (true) {
     const useGemini = store.get("useGemini") === "1";
+    const situation = store.get("situation") ?? "";
     const choice = await foundry.applications.api.DialogV2.wait({
       window: { title: `${ROY}: declarations`, icon: "fa-solid fa-shield-halved" },
       position: { width: 560 },
-      content: `<p>What does Roy declare?</p>
-        <label><input type="checkbox" name="gemini" ${useGemini ? "checked" : ""}> Fresh line from Gemini</label>
-        <p class="hint">Hotbar shortcuts: Shift-click for a battle cry, Ctrl-click for an introduction,
-          Alt-click for a victory pose or quirk.</p>`,
+      content: `<div class="roy-declarations">
+          <p>What does Roy declare?</p>
+          <label><input type="checkbox" name="gemini" ${useGemini ? "checked" : ""}> Fresh line from Gemini</label>
+          <div class="roy-situation">
+            <p><label>What's happening? (optional)
+              <input type="text" name="situation" maxlength="300" value="${esc(situation)}"
+                placeholder="e.g. holding a rope bridge against an ogre while Maeve casts"></label></p>
+            <p class="hint">Kept until you clear it, so the hotbar shortcuts use it too.</p>
+          </div>
+          <p class="hint">Hotbar shortcuts: Shift-click for a battle cry, Ctrl-click for an introduction,
+            Alt-click for a victory pose or quirk.</p>
+        </div>`,
       buttons: [
         ...Object.entries(KINDS).map(([action, kind]) => ({ action, label: kind.label, icon: kind.icon })),
         { action: "random", label: "Random", icon: "fa-solid fa-dice", default: true },
@@ -368,10 +380,22 @@ async function chooseKind() {
       ].map(button => ({
         ...button,
         callback: (event, element) => {
-          store.set("useGemini", element.form.elements.gemini.checked ? "1" : "0");
+          const { gemini, situation } = element.form.elements;
+          store.set("useGemini", gemini.checked ? "1" : "0");
+          store.set("situation", situation.value.trim() || null);
           return button.action;
         }
       })),
+      // Show the situation field only while the Gemini box is ticked. Dialogs drop <style> tags.
+      render: () => {
+        const root = document.querySelector(".roy-declarations");
+        const box = root?.querySelector("[name=gemini]");
+        const field = root?.querySelector(".roy-situation");
+        if (!box || !field) return;
+        const sync = () => { field.style.display = box.checked ? "" : "none"; };
+        box.addEventListener("change", sync);
+        sync();
+      },
       rejectClose: false
     });
     if (choice !== "key") return choice;

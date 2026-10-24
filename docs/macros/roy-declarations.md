@@ -54,7 +54,15 @@ site. It is never written into the macro, the world or chat, so the GM and other
 it, but it also has to be entered again in another browser. If there is no key, or Gemini fails
 or takes more than 20 seconds, Roy uses a built-in line and Foundry shows a short warning.
 
-The choice is remembered, so Shift-, Ctrl- and Alt-clicks also use Gemini while it is ticked.
+With the box ticked, a **What's happening?** field appears. Describe the moment (for example
+*goblins ambush us on a mountain pass at night; Keira is cornered*) and Gemini fits the line to it.
+It's optional, and kept until you clear it.
+
+The tick and the situation are both remembered, so Shift-, Ctrl- and Alt-clicks also use Gemini and
+the situation. Clear the field when the scene changes.
+
+Fresh lines keep Roy holy: if Gemini calls his power unholy, cursed or dark, the macro asks once
+more, then uses a built-in line.
 
 ## Known issue
 
