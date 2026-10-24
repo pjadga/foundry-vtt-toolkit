@@ -25,20 +25,21 @@ file the user copies between machines.
 
 ## Open items
 
-1. **Combat: melee untested, narration fixes to try live.** On 23 October the user tested ranged
-   combat in cpr-test, with Player One (`character`) and NPC One (mook) on "1. Salvage in the Old
-   Combat Zone". Resolution, the Hit override, damage matching and auto-applied NPC damage all
-   worked. The narration gaps it found are fixed, deployed, and were retested live with scripted
-   rolls (messages deleted and actors restored afterwards):
-   - the fire mode and, for ranged attacks, whether the target can dodge (REF 8+ only) reach the
-     narrator: single shots were narrated as one round, with no dodging;
-   - the hit detail names the armor and its current SP (SP less ablation, as the system counts it)
-     and how much it stopped, matching the system's own damage card;
-   - turning a narrated miss into a hit deletes the miss's narration;
-   - natural 10s and 1s now reach the narrator too, but no natural roll came up live.
+1. **Combat is tested live, ranged and melee.** On 23 October, in cpr-test, with Player One
+   (`character`, Combat Knife) and NPC One (mook, Baseball Bat; 25/40 HP, body armor ablated by 1)
+   on "1. Salvage in the Old Combat Zone". The user's own ranged test, then scripted rolls (messages
+   deleted and actors restored afterwards), showed:
+   - resolution, the Hit override, damage matching and auto-applied NPC damage work;
+   - melee: a targeted NPC rolls Evasion automatically; a targeted character's card waits
+     ("Defending") until their Evasion roll, then resolves;
+   - the narrator gets the fire mode (single shots narrated as one round), whether a ranged target
+     can dodge (REF 8+ only), and a natural 10 (narrated as spectacular);
+   - the hit detail names the armor and its current SP (SP less ablation), halved for melee,
+     matching the system's own damage card;
+   - turning a narrated miss into a hit deletes the miss's narration.
 
-   Still to try: melee, where a targeted character is asked to roll Evasion. Neither actor has a
-   melee weapon, so add a `QA` one. NPC One was left at 25/40 HP, with its body armor ablated by 1.
+   Not seen live: a natural 1, and autofire or aimed shots. Melee doesn't check that the tokens are
+   adjacent.
 2. **Gemini images need billing** on the user's Gemini key. Without it, the provider says so rather
    than failing silently. Not tested live, because the key is on the free tier.
 3. **Branches:**
