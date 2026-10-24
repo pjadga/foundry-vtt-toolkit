@@ -14,7 +14,7 @@ file the user copies between machines.
 - **`main`** has everything: the NotebookLM importer (Build campaign), scene images
   (Pollinations, Cloudflare, Gemini), YouTube playlists, the GM Assistant with sources, combat
   resolution and narration, and Pack campaign. 92 tests pass.
-- **The cpr-test server** runs `main` as of `d32a323` (the narration fixes below), deployed from the
+- **The cpr-test server** runs `main` as of `705ef01` (the narration fixes below), deployed from the
   home machine on 23 October. All 35 module files match the repository, checked with
   `git hash-object`.
 - **NotebookLM:** the user's notebook ("Cyberpunk RED Single Player Mode") has the current Prompt 0
@@ -28,12 +28,14 @@ file the user copies between machines.
 1. **Combat: melee untested, narration fixes to try live.** On 23 October the user tested ranged
    combat in cpr-test, with Player One (`character`) and NPC One (mook) on "1. Salvage in the Old
    Combat Zone". Resolution, the Hit override, damage matching and auto-applied NPC damage all
-   worked. The narration gaps it found are fixed and deployed, but not yet tried live:
-   - natural 10s and 1s now reach the narrator;
-   - so do the fire mode (a single shot isn't a "burst") and, for ranged attacks, whether the target
-     can dodge (REF 8+ only);
-   - the hit detail names the armor and how much it stopped;
-   - turning a narrated miss into a hit deletes the miss's narration.
+   worked. The narration gaps it found are fixed, deployed, and were retested live with scripted
+   rolls (messages deleted and actors restored afterwards):
+   - the fire mode and, for ranged attacks, whether the target can dodge (REF 8+ only) reach the
+     narrator: single shots were narrated as one round, with no dodging;
+   - the hit detail names the armor and its current SP (SP less ablation, as the system counts it)
+     and how much it stopped, matching the system's own damage card;
+   - turning a narrated miss into a hit deletes the miss's narration;
+   - natural 10s and 1s now reach the narrator too, but no natural roll came up live.
 
    Still to try: melee, where a targeted character is asked to roll Evasion. Neither actor has a
    melee weapon, so add a `QA` one. NPC One was left at 25/40 HP, with its body armor ablated by 1.
