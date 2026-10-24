@@ -386,9 +386,17 @@ async function chooseKind() {
           return button.action;
         }
       })),
-      // Show the situation field only while the Gemini box is ticked. Dialogs drop <style> tags.
+      // Dialogs drop <style> tags, so layout fixes go in here.
       render: () => {
-        const root = document.querySelector(".roy-declarations");
+        // The newest menu: a previous one can still be in the page while it closes.
+        const root = [...document.querySelectorAll(".roy-declarations")].at(-1);
+        // v12 gives dialog buttons a 180px minimum and won't wrap them, which cuts off Random and Key.
+        const footer = root?.closest("form")?.querySelector(".form-footer");
+        if (footer) {
+          footer.style.flexWrap = "wrap";
+          for (const button of footer.querySelectorAll("button")) button.style.minWidth = "140px";
+        }
+        // Show the situation field only while the Gemini box is ticked.
         const box = root?.querySelector("[name=gemini]");
         const field = root?.querySelector(".roy-situation");
         if (!box || !field) return;
