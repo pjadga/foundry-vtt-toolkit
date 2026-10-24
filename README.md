@@ -13,6 +13,7 @@ troubleshooting and known issues. Release notes are in [CHANGELOG.md](CHANGELOG.
 | `macros/` | Standalone scripts. Paste the file contents into a new Script macro in Foundry. |
 | `macros/core/` | Work in any system. |
 | `macros/dnd5e/`, `macros/sw25/`, `macros/cpred/` | System-specific. Each guards on `game.system.id`. |
+| `macros/characters/` | Macros for a player's own character, usable in a game you don't host. |
 | `module/` | The installable module (`module.json`, ES module entry point, lang, styles). |
 | `.github/workflows/release.yml` | Tag `vX.Y.Z` to build `module.zip` and publish a release. |
 
@@ -22,6 +23,11 @@ troubleshooting and known issues. Release notes are in [CHANGELOG.md](CHANGELOG.
 2. Paste the contents of the `.js` file.
 
 Each macro starts with a header giving its name, the system it needs and the Foundry version.
+
+**Roy's Declarations** (`macros/characters/roy-declarations.js`) posts chuunibyou battle cries,
+introductions and victory quirks for the player character Roy "Slayer" Belmont, optionally fresh
+from Gemini. See [docs/macros/roy-declarations.md](docs/macros/roy-declarations.md) for installing
+it as a player in a game you don't host.
 
 ## Using the module
 
