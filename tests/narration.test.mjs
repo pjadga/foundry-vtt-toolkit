@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { woundState, chatLog, previousLines, narrationPrompt, parseNarration, repeatsEarlier } from "../module/scripts/narration/prompt.mjs";
+import { woundState, chatLog, previousLines, narrationPrompt, parseNarration, repeatsEarlier, missNarrations } from "../module/scripts/narration/prompt.mjs";
 
 test("woundState follows Cyberpunk RED's thresholds", () => {
   assert.equal(woundState({ value: 40, max: 40 }), "unhurt");
@@ -47,6 +47,22 @@ test("narrationPrompt: misses and hits", () => {
   const hit = narrationPrompt({ ...base, round: "Round 2, Alloy's turn", outcome: { result: "hit", detail: "18 damage to the body, Critical Injury; Rook is now seriously wounded" } });
   assert.match(hit, /The attack HITS \(18 damage/);
   assert.match(hit, /COMBAT: Round 2, Alloy's turn/);
+  assert.match(miss, /only if the detail says they dodge/);
+  assert.ok(!miss.includes("the target ducks"));
+  assert.match(hit, /a single shot is one round, never a burst or spray/);
+  assert.match(hit, /the armor by its name and how much it stops/);
+});
+
+test("missNarrations finds a miss's narration to retract", () => {
+  const messages = [
+    { id: "a", narration: { result: "miss", source: "atk1" } },
+    { id: "b", narration: { result: "hit", source: "dmg1" } },
+    { id: "c", narration: { result: "miss", source: "atk2" } },
+    { id: "d" },
+    { id: "e", narration: { result: "miss", source: "atk1", review: true } }
+  ];
+  assert.deepEqual(missNarrations(messages, "atk1"), ["a", "e"]);
+  assert.deepEqual(missNarrations(messages, "none"), []);
 });
 
 test("narrationPrompt: an NPC attacking", () => {

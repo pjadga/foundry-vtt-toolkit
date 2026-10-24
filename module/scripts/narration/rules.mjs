@@ -62,6 +62,51 @@ export function damageEffect({ damage, sp = 0, melee = false, crit = false, hp =
   };
 }
 
+const MODES = {
+  single: "a single shot (one round, not a burst)",
+  aimed: "a single aimed shot",
+  autofire: "autofire: a burst of rounds",
+  thrown: "a thrown weapon",
+  melee: "a melee attack"
+};
+
+/**
+ * What the narrator is told about how an attack was made: the fire mode, a natural 10 or 1 on the
+ * attack die, and, for ranged attacks, whether the target can dodge (only REF 8 or more can).
+ * @param {{mode?: string|null, natural?: string|null, kind?: string|null, canDodge?: boolean}} r
+ */
+export function attackFacts({ mode, natural, kind, canDodge }) {
+  return [
+    MODES[mode] ?? "",
+    natural === "critical" ? "a critical success: a natural 10 on the attack die" : "",
+    natural === "fumble" ? "a fumble: a natural 1 on the attack die" : "",
+    (kind === "ranged" || kind === "thrown") && canDodge === false ? "the target can't dodge ranged attacks (REF under 8), so no dodging or sidestepping" : ""
+  ].filter(Boolean);
+}
+
+/**
+ * What a damage roll did, for the narration prompt: the damage and where it landed, a Critical
+ * Injury, the armor that took it and how much it stopped (melee halves SP), and how hurt the target is.
+ * @param {{total: number, location: string, crit?: boolean, armor?: {name: string, sp: number}|null,
+ *   melee?: boolean, through: number, target: string, wounds?: string|null}} hit
+ */
+export function damageDetail({ total, location, crit = false, armor = null, melee = false, through, target, wounds = null }) {
+  const sp = Number(armor?.sp) || 0;
+  const stopped = Math.min(total, melee ? Math.ceil(sp / 2) : sp);
+  const name = `the ${String(armor?.name ?? "armor").replace(/\s*\((body|head)\)$/i, "")} (SP ${sp}${melee ? ", halved by melee" : ""})`;
+  const share = total > 0 ? stopped / total : 0;
+  const armorLine = !sp
+    ? "no armor there, so all of it gets through"
+    : through === 0
+      ? `${name} stops all of it`
+      : share > 0.6
+        ? `${name} stops most of it; only ${through} gets through`
+        : share >= 0.4
+          ? `${name} stops about half; ${through} gets through`
+          : `most of it gets through ${name}: ${through} damage`;
+  return [`${total} damage to the ${location}`, crit ? "a Critical Injury (two 6s)" : "", armorLine, wounds ? `${target} is now ${wounds}` : ""].filter(Boolean).join("; ");
+}
+
 /** One line describing what an attack was up against, for the chat card and the narration prompt. */
 export function resolutionLine({ attacker, weapon, total, defence }) {
   const against = defence.type === "dv" ? `DV ${defence.value}${defence.distance != null ? ` at ${Math.round(defence.distance)} m` : ""}` : `${defence.name}'s Evasion ${defence.value}`;

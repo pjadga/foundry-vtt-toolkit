@@ -79,6 +79,13 @@ export function previousLines(narrations, name) {
   return narrations.flatMap(n => n.lines ?? []).filter(l => String(l.speaker).toLowerCase() === key && l.line).map(l => l.line);
 }
 
+/**
+ * The ids of the narration messages for a miss on `attackId`, removed when the GM turns that miss
+ * into a hit so players don't read both.
+ * @param {{id: string, narration?: {result?: string, source?: string|null}}[]} messages
+ */
+export const missNarrations = (messages, attackId) => messages.filter(m => m.narration?.result === "miss" && m.narration.source === attackId).map(m => m.id);
+
 function describe(person) {
   const parts = [`${person.name}${person.isPC ? " (player character)" : " (NPC)"}`];
   if (person.wounds) parts.push(`currently ${person.wounds}`);
@@ -107,8 +114,8 @@ export function narrationPrompt({ system = "", scene = "", round = "", outcome =
     ? "Give the NPC being attacked a short in-character reaction, if they would say anything."
     : "Give the attacking NPC a short in-character line (a taunt, threat or battle cry), and the NPC being attacked a reaction if there is one, if they would say anything.";
   const result = {
-    miss: `The attack MISSES (${outcome.detail || "it fails to beat the defence"}). Narrate the attack and exactly how it misses: the shot goes wide, cover takes it, the target ducks or, if they rolled Evasion, dodges. ${reaction}`,
-    hit: `The attack HITS (${outcome.detail || "damage rolled"}). Narrate the attack landing and what the damage does, matching the detail: armor stopping it, a wound, a Critical Injury, a body part for a head shot. Only describe death or collapse if the detail says mortally wounded. ${reaction} A wounded NPC reacts to the pain.`,
+    miss: `The attack MISSES (${outcome.detail || "it fails to beat the defence"}). Narrate the attack and exactly how it misses: the shot goes wide, cover takes it, or, only if the detail says they dodge, the target dodges. ${reaction}`,
+    hit: `The attack HITS (${outcome.detail || "damage rolled"}). Narrate the attack landing and what the damage does, matching the detail: how much the named armor stops, a wound, a Critical Injury, a body part for a head shot. Only describe death or collapse if the detail says mortally wounded. ${reaction} A wounded NPC reacts to the pain.`,
     attempt: `Narrate the attack cinematically without deciding the result: never say whether it hits or misses or how much damage it does, and leave the outcome hanging on the moment. ${reaction}`
   }[outcome.result] ?? "";
   const task = `${who} ${result}`;
@@ -119,6 +126,7 @@ export function narrationPrompt({ system = "", scene = "", round = "", outcome =
     "RULES",
     "- narration: 2 or 3 vivid sentences, present tense, third person, naming the characters. Describe the weapon or action from the ATTACK card and how the target reacts, in the setting's tone.",
     "- Narrate exactly the outcome above. Don't add game numbers (damage totals, DVs) to the prose, and don't invent extra effects.",
+    "- Follow the outcome's details exactly: the fire mode (a single shot is one round, never a burst or spray), a critical success (make it spectacular) or fumble (make it clumsy), the armor by its name and how much it stops, and whether the target can dodge.",
     "- Never write dialogue, thoughts or decisions for a player character.",
     "- Follow the RECENT CHAT so the narration fits how the fight has gone.",
     `- Write it fresh: use none of the wording, openings or images of the EARLIER NARRATION below${strict ? ". Your last answer copied it, so start differently and describe a different detail of the fight" : ""}.`,

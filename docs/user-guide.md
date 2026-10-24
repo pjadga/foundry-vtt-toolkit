@@ -341,6 +341,7 @@ What happens next depends on the result:
 - **Hit:** the card says *Roll damage*. Narration waits for the damage roll, which confirms the hit.
 - **GM control:** **Hit** and **Miss** on the card override the result, for an ambush, cover or
   anything else the rules didn't see. Rolling damage after a miss also counts as you saying it hit.
+  Turning a miss into a hit removes the miss's narration, so players don't read both.
   When the toolkit can't work out the range, for example when the tokens are on a scene you aren't
   viewing, the card asks you to choose.
 
@@ -353,13 +354,17 @@ The hit is then narrated from what the damage did:
 
 - the damage and where it landed (the head for aimed shots);
 - a Critical Injury, from two or more 6s;
-- whether armor stopped it (melee halves SP);
+- the armor that took it, by name, and how much it stopped (melee halves SP);
 - how hurt the target is now: lightly, seriously or mortally wounded;
 - the NPC's reaction to the pain.
 
 **The narration** knows:
 
 - the attack card;
+- how the attack was made: a single shot, autofire, an aimed shot, thrown or melee;
+- a natural 10 (critical success) or 1 (fumble) on the attack die;
+- whether the target can dodge a ranged attack (only REF 8 or more can, so others never sidestep
+  bullets in the narration);
 - the round and whose turn it is;
 - the NPCs' public notes, such as appearance and voice;
 - the last 20 public chat messages;

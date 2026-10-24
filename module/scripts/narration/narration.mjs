@@ -10,8 +10,8 @@
  * the outcome, the NPCs' public notes and the recent chat, so it follows the fight without repeating
  * lines. Everything runs in the active GM's browser, which has the Gemini key.
  */
-import { narrationPrompt, parseNarration, chatLog, previousLines, woundState, repeatsEarlier, SCHEMA, LOG_MESSAGES } from "./prompt.mjs";
-import { attackKind, rangeDV, shouldDodge, hits, natural, criticalInjury, damageEffect, resolutionLine } from "./rules.mjs";
+import { narrationPrompt, parseNarration, chatLog, previousLines, woundState, repeatsEarlier, missNarrations, SCHEMA, LOG_MESSAGES } from "./prompt.mjs";
+import { attackKind, rangeDV, shouldDodge, hits, natural, criticalInjury, damageEffect, attackFacts, damageDetail, resolutionLine } from "./rules.mjs";
 import { askGemini, DEFAULT_ASSISTANT_MODEL } from "../assistant/gemini.mjs";
 
 const MODULE_ID = "foundry-vtt-toolkit";
@@ -105,10 +105,10 @@ const weaponOf = (actor, title) => actor?.items.find(i => i.type === "weapon" &&
 const skillLevel = (actor, name) => actor.items.find(i => i.type === "skill" && i.name === name)?.system.level ?? 0;
 const stat = (actor, name) => actor.system.stats?.[name]?.value ?? 0;
 
-/** The highest SP among the armor equipped at a location (Cyberpunk RED doesn't stack armor). */
-function armorSP(actor, location) {
-  const armors = actor.getEquippedArmors?.(location) ?? [];
-  return Math.max(0, ...armors.map(a => Number(a.system?.[`${location}Location`]?.sp) || 0));
+/** The armor with the highest SP equipped at a location (Cyberpunk RED doesn't stack armor), or null. */
+function armorOf(actor, location) {
+  const armors = (actor.getEquippedArmors?.(location) ?? []).map(a => ({ name: a.name, sp: Number(a.system?.[`${location}Location`]?.sp) || 0 }));
+  return armors.sort((a, b) => b.sp - a.sp)[0] ?? null;
 }
 
 const dvTables = new Map();
@@ -175,7 +175,10 @@ async function resolveAttack(message, attacker, attackerToken, targetToken) {
   const target = targetToken.actor;
   const card = cardInfo(message);
   const weapon = weaponOf(attacker, card.title);
-  const r = { attack: message.id, attacker: attacker.uuid, attackerName: attacker.name, target: targetToken.uuid, targetName: targetToken.name, weapon: card.title, total: card.total, natural: card.natural, kind: weapon ? attackKind(weapon.system) : null, defence: null, note: "", status: "unresolved" };
+  const kind = weapon ? attackKind(weapon.system) : null;
+  const autofire = /autofire/i.test(card.subtitle) || rollClass(message) === "CPRAutofireRoll";
+  const mode = kind === "melee" || kind === "thrown" ? kind : !kind ? null : autofire ? "autofire" : rollClass(message) === "CPRAimedAttackRoll" ? "aimed" : "single";
+  const r = { attack: message.id, attacker: attacker.uuid, attackerName: attacker.name, target: targetToken.uuid, targetName: targetToken.name, weapon: card.title, total: card.total, natural: card.natural, kind, mode, canDodge: stat(target, "ref") >= 8, defence: null, note: "", status: "unresolved" };
 
   if (r.kind === "melee") {
     if (isPC(target)) r.status = "awaiting";
@@ -184,7 +187,6 @@ async function resolveAttack(message, attacker, attackerToken, targetToken) {
       if (value != null) r.defence = { type: "evasion", value, name: targetToken.name };
     }
   } else if (r.kind) {
-    const autofire = /autofire/i.test(card.subtitle) || rollClass(message) === "CPRAutofireRoll";
     const name = weapon.system.dvTable || (r.kind === "thrown" ? "DV Thrown Weapon" : "");
     const bands = (autofire && (await dvBands(`${name} (Autofire)`))) || (await dvBands(name));
     const distance = distanceBetween(attackerToken, targetToken);
@@ -211,7 +213,13 @@ async function resolveAttack(message, attacker, attackerToken, targetToken) {
 
 function missDetail(r) {
   const line = `${resolutionLine({ attacker: r.attackerName, weapon: r.weapon, total: r.total, defence: r.defence ?? { type: "dv", value: "?" } })}, so it misses`;
-  return r.defence?.type === "evasion" ? `${line}; ${r.defence.name} dodges` : line;
+  return [line, r.defence?.type === "evasion" ? `${r.defence.name} dodges` : "", ...attackFacts(r)].filter(Boolean).join("; ");
+}
+
+/** Delete the narration of a miss the GM has since turned into a hit, so players don't read both. */
+async function retractMiss(attackId) {
+  const ids = missNarrations(game.messages.contents.slice(-LOOKBACK).map(m => ({ id: m.id, narration: narrationOf(m) })), attackId);
+  if (ids.length) await ChatMessage.deleteDocuments(ids);
 }
 
 /** The latest open resolution for an attacker (or for a defender awaiting Evasion), newest first. */
@@ -252,10 +260,15 @@ async function onDamage(message) {
   const targetToken = r ? fromUuidSync(r.target) : targetTokensOf(message)[0];
   if (!targetToken?.actor) return;
   if (!r && !(isPC(attacker) ? !isPC(targetToken.actor) : true)) return;
-  if (pending) r = await updateResolution(pending, { status: "done" });
+  if (pending) {
+    if (r.status === "miss") await retractMiss(r.attack);
+    r = await updateResolution(pending, { status: "done" });
+  }
 
   const target = targetToken.actor;
   const before = hpOf(target)?.value;
+  // Read before applying, which ablates it.
+  const armor = armorOf(target, info.location);
   const melee = r?.kind === "melee";
   const mode = setting("combatApplyDamage");
   let applied = false;
@@ -270,14 +283,12 @@ async function onDamage(message) {
   const after = hpOf(target);
   const effect = applied
     ? { through: Math.max(0, (before ?? 0) - (after?.value ?? 0)), hpAfter: after?.value }
-    : damageEffect({ damage: info.total, sp: armorSP(target, info.location), melee, crit: info.crit, hp: hpOf(target) });
+    : damageEffect({ damage: info.total, sp: armor?.sp ?? 0, melee, crit: info.crit, hp: hpOf(target) });
   const wounds = woundState({ value: effect.hpAfter, max: after?.max });
   const detail = [
-    `${info.total} damage to the ${info.location}`,
-    info.crit ? "a Critical Injury" : "",
-    effect.through === 0 ? "the armor stops all of it" : `${effect.through} gets through the armor`,
-    wounds ? `${targetToken.name} is now ${wounds}` : ""
-  ].filter(Boolean).join("; ");
+    ...(r ? attackFacts(r) : []),
+    damageDetail({ total: info.total, location: info.location, crit: info.crit, armor, melee, through: effect.through, target: targetToken.name, wounds })
+  ].join("; ");
   await narrateOutcome(r ?? { attacker: attacker.uuid, target: targetToken.uuid, weapon: info.title, attack: null }, "hit", detail, message);
 }
 
@@ -439,6 +450,7 @@ export function setupNarration() {
               const status = button.dataset.fvtkResolution;
               const current = resolutionOf(game.messages.get(message.id));
               if (current.status === status) return;
+              if (status === "hit" && current.status === "miss") await retractMiss(current.attack);
               const updated = await updateResolution(message, { status, note: t("SetByGM") });
               if (status === "miss") await narrateOutcome(updated, "miss", missDetail(updated));
             })

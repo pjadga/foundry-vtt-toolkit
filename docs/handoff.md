@@ -11,23 +11,32 @@ file the user copies between machines.
 
 ## State
 
-- **`main`** is at `b7488bb`. It has everything: the NotebookLM importer (Build campaign), scene images
+- **`main`** has everything: the NotebookLM importer (Build campaign), scene images
   (Pollinations, Cloudflare, Gemini), YouTube playlists, the GM Assistant with sources, combat
-  resolution and narration, and Pack campaign. 89 tests pass.
+  resolution and narration, and Pack campaign. 92 tests pass.
 - **The cpr-test server** runs `main` as of `bca2f40`, including the Gemini image work, deployed
-  on 23 October. All 35 module files match the repository, checked with `git hash-object`.
+  on 23 October. All 35 module files match the repository, checked with `git hash-object`. It
+  doesn't have the narration fixes below yet.
 - **NotebookLM:** the user's notebook ("Cyberpunk RED Single Player Mode") has the current Prompt 0
   (9,023 characters) in **Configure Chat → Custom**, with response length **Longer**. Edit Prompt 0 in
   `docs/notebooklm/cyberpunk-red-prompts.md` and the notebook together.
-- **Second machine:** the user's home machine has Node.js 24, npm 12, Git and a clone where
-  `npm test` passes. An SSH key for the server and the user's API keys in that browser are still to
-  set up.
+- **Second machine:** the user's home machine has Node.js 24, npm 12, Git, a clone where
+  `npm test` passes, the server's SSH key, `docs/handoff.local.md`, and both API keys in its browser.
 
 ## Open items
 
-1. **The user's own combat test.** The new resolution flow hasn't been tried by the user yet. In
-   cpr-test, Player One (`character`) and NPC One (mook) are on the active scene, "1. Salvage in the
-   Old Combat Zone". An earlier round of the user's rolls is still in its chat.
+1. **Combat: melee untested, narration fixes to try live.** On 23 October the user tested ranged
+   combat in cpr-test, with Player One (`character`) and NPC One (mook) on "1. Salvage in the Old
+   Combat Zone". Resolution, the Hit override, damage matching and auto-applied NPC damage all
+   worked. The narration gaps it found are fixed but not yet deployed or tried live:
+   - natural 10s and 1s now reach the narrator;
+   - so do the fire mode (a single shot isn't a "burst") and, for ranged attacks, whether the target
+     can dodge (REF 8+ only);
+   - the hit detail names the armor and how much it stopped;
+   - turning a narrated miss into a hit deletes the miss's narration.
+
+   Still to try: melee, where a targeted character is asked to roll Evasion. Neither actor has a
+   melee weapon, so add a `QA` one. NPC One was left at 25/40 HP, with its body armor ablated by 1.
 2. **Gemini images need billing** on the user's Gemini key. Without it, the provider says so rather
    than failing silently. Not tested live, because the key is on the free tier.
 3. **Branches:**
