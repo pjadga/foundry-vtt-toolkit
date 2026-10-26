@@ -67,6 +67,11 @@ music and a GM Assistant.
 - **Combat narration** by Gemini:
   - Misses are narrated straight away, and hits after damage, with the damage, Critical Injuries,
     armor and wound state.
+  - Hits name the target's armor, its current SP (after ablation) and how much it stopped.
+  - The narration knows the fire mode (single shot, aimed, autofire, thrown or melee) and any
+    natural 10 or 1, and a target under REF 8 is never described dodging a bullet.
+  - Changing a narrated miss into a hit, with the Hit button or by rolling damage, removes the miss's
+    narration, so players don't read both.
   - NPCs react in their own voice, and NPC attackers taunt.
   - It follows the chat log and earlier narration, so lines and descriptions aren't repeated.
 
@@ -91,6 +96,16 @@ music and a GM Assistant.
   system.
 - Party Passive Perception for D&D 5e.
 - Actor data inspectors for Cyberpunk RED and Sword World 2.5.
+- **Roy's Declarations** (`macros/characters/`), a player's own macro for a game they don't host, on
+  Foundry v12 and v13 in any system:
+  - It posts battle cries, introductions and victory quirks for Roy "Slayer" Belmont, from a
+    shuffled bank or fresh from Gemini with a key kept in that browser.
+  - An optional "What's happening?" field fits Gemini's line to the moment.
+  - Fresh lines keep Roy's holy, retribution-paladin tone, vary their focus and move names, and are
+    sent back once if they call his power dark.
+  - Shift, Ctrl and Alt-click shortcuts. Lines follow the chat roll mode, with a speech bubble for
+    public ones.
+  - Install guide: [docs/macros/roy-declarations.md](docs/macros/roy-declarations.md).
 
 ### Fixed before release
 
@@ -113,5 +128,16 @@ From end-to-end testing:
 - **Sources:** syncing uploads the actual file (not Foundry's 404 page), and waits for each document
   to finish indexing.
 - **Wording:** "1 gap", "1 entry" and similar now read correctly.
+
+From the first live combat tests:
+
+- **Combat narration:**
+  - A natural 10 or 1 reached the Combat card but not the narration; now it reaches both.
+  - A single shot was narrated as a burst, because the fire mode wasn't passed on.
+  - A REF 6 target was narrated sidestepping bullets.
+  - The hit detail said only how much damage got through. It named an armor's base SP, ignoring
+    ablation, so damage estimates for targets whose damage isn't applied automatically came out
+    too low.
+- **Roy's Declarations:** the menu's Random and Key buttons were cut off on Foundry v12.
 
 See [docs/user-guide.md](docs/user-guide.md#known-issues-and-limitations) for known issues.
