@@ -1,21 +1,30 @@
 # Roy's Declarations
 
-[`macros/characters/roy-declarations.js`](../../macros/characters/roy-declarations.js) asks what's
-happening in the game, then has Gemini write a fresh line for Roy "Slayer" Belmont that fits the
-moment, in his voice and with his chuunibyou mannerisms. Gemini picks what suits the moment:
+Two macros for Roy "Slayer" Belmont, a player's own macros for a game they don't host:
+
+- [`roy-declarations.js`](../../macros/characters/roy-declarations.js) asks what's happening in the
+  game, then has Gemini write a fresh line for Roy that fits the moment, in his voice and with his
+  chuunibyou mannerisms.
+- [`roy-history.js`](../../macros/characters/roy-history.js) lists every line it has written, to copy
+  again, star or delete.
+
+Gemini picks what suits the moment:
 
 - **In a fight:** battle cries, warnings, newly named attacks, shield interceptions ([Cover I]),
   spells, [Change Fate].
 - **Meeting people:** Roy presenting himself and the party, with his self-titles.
 - **After a fight or in quiet moments:** victory poses and everyday habits.
 
-The line is shown only to you. Copy it and paste it into chat if you want to use it; the macro never
-posts anything itself, so the chat's roll mode doesn't matter.
+**Everything is private to you.** Each macro works in one window that only you see. Its messages
+(waiting, errors, copied) show inside that window, not in Foundry's notifications, and nothing is
+posted to chat. Copy a line and paste it into chat yourself if you want to use it, so the chat's
+roll mode doesn't matter. The only thing sent anywhere is the request to Gemini.
 
-It is a single script macro with no module, so a player can use it in a game they don't host. It
-works on Foundry v12 and v13, in any game system.
+They are single script macros with no module, and work on Foundry v12 and v13, in any game system.
 
-## Installing it in a game you don't host
+## Installing them in a game you don't host
+
+Do this once for each macro.
 
 1. Open the macro file on GitHub and copy all of it (the **Copy raw file** button).
 2. In Foundry, click an empty slot on the hotbar (or **Create Macro** in the Macro Directory).
@@ -32,37 +41,91 @@ Script Macros and Execute Script Region Behaviors** in v13.
 
 ## Gemini key
 
-The macro needs a Gemini API key, free from Google AI Studio. The first time you click **Speak**, it
-asks for one; the **Key** button in the first window changes or removes it. The key is saved only in
-your browser's `localStorage` for that Foundry site. It is never written into the macro, the world
-or chat, so the GM and other players can't see it, but it has to be entered again in another
-browser.
+Roy's Declarations needs a Gemini API key, free from Google AI Studio. The first time you open it, a
+key field shows in the window: paste the key and click **Save**. The **Key** button shows the field
+again to replace the key, or **Remove** it. The key is saved only in your browser's `localStorage`
+for that Foundry site. It is never written into the macro, the world or chat, so the GM and other
+players can't see it, but it has to be entered again in another browser.
 
 ## Using it
 
-1. Click the macro. A **What's happening?** window opens.
-2. Describe the moment, for example *goblins ambush us on a mountain pass at night; Keira is
-   cornered*, and click **Speak** (or press Enter). The text is kept for next time, so you can just
-   edit it as the scene moves on.
-3. Roy's line appears in a window only you can see: the stage direction in italics, then his words.
+1. Click the macro. Roy's window opens and stays open; clicking the macro again brings it to the
+   front.
+2. Either describe the moment, for example *goblins ambush us on a mountain pass at night; Keira is
+   cornered*, and click **Speak** (or press Enter), or click one of the common moments:
+
+   | Group | Moments |
+   | --- | --- |
+   | **Attacking** | Melee miss, Melee hit |
+   | **Defending** | Protect ally ([Cover I]), Block attack, Light wound, Heavy wound |
+   | **Healing** | Heal ally and Heal self (Cure Wounds mid-fight), After combat, Before rest |
+   | **Health & mana** | Half HP and Low HP (under half, under a quarter), Half MP and Low MP |
+   | **Roleplay** | Resting, Eating, Preparing (exercising, stretching, warming up), Celebrating |
+
+   With a moment, whatever is in the field is added as detail, so you can keep the scene there
+   (*goblins on a mountain pass*) and click a moment each turn. The field is kept for next time;
+   clear it when the scene changes.
+
+   **Targets:** target tokens (T, or double right-click) and Roy uses their names. The line under
+   the field shows who is targeted right now, as ally or enemy from the token's disposition, so you
+   can check before clicking; with no one targeted it warns you. A moment gives targets a role: the
+   enemy for an attack, the ally you protect or heal (everyone you target for After combat, Before
+   rest, Resting, Eating and Celebrating), or the attacker when Roy is hit. A typed moment says
+   whether each target is an ally or an enemy. Heal self, Preparing and the health and mana moments
+   leave targets out, since they are about Roy alone. A moment that uses a target still works with
+   none: the window says Roy won't name anyone.
+3. While Gemini writes, the window says "Roy is finding his words…" and the buttons wait. A line
+   usually takes 5 to 20 seconds.
+4. Roy's line appears at the bottom of the window: what it was for, the stage direction in italics,
+   then his words.
    - **Copy words** copies what he says aloud.
    - **Copy with action** copies the stage direction too, as `*raises his mace* By the Light…`.
-   - **Another line** asks Gemini again for the same moment.
-   - **Close** ends it.
-4. Paste into chat (Ctrl+V) and send it however you like: in character, as an emote, or not at all.
+   - **Another line** asks Gemini again for the same moment, detail and targets.
+
+   Pick the next moment whenever you're ready; close the window with its **×**.
+5. Paste into chat (Ctrl+V) and send it however you like: in character, as an emote, or not at all.
 
 If the copy buttons don't work in your browser, select the text in the window and copy it yourself.
 
-Lines don't repeat themselves: the macro sends Gemini Roy's last eight lines and asks for something
-different, and only now and then lets him quote Dreven or his grandfather's Saga.
+Lines don't repeat themselves: the macro sends Gemini Roy's last eight lines, and the move names
+already used, and asks for something different. Only now and then does it let him quote Dreven or
+his grandfather's Saga.
 
-If Gemini can't answer (no connection, a bad key, or no reply within 20 seconds), Foundry shows why
-and nothing else happens. Click the macro to try again.
+If Gemini can't answer (no connection, a wrong key, its free limit used up, or no reply within 45
+seconds), the window says why. Click the moment again to retry.
 
 Lines keep Roy holy: if Gemini calls his power unholy, cursed or dark, the macro asks once more, then
-shows an error rather than an off-tone line.
+says so in the window rather than showing an off-tone line.
+
+## History
+
+Every line Roy's Declarations writes is saved in your browser, with when and what it was for. Click
+**Roy's History** to see them, newest first:
+
+- **Search** by words in the line, the moment or a name (for example *heal* or *Keira*).
+- **Copy words** and **Copy with action** work as in Roy's window, for a line worth using again.
+- **★** stars a line to keep; **Starred only** shows just those.
+- **🗑** deletes a line straight away, without asking.
+- **Export** saves every line, whatever the search or **Starred only** shows, as a text file in your
+  browser's downloads (`roy-declarations-<date>.txt`). Each line has its date and moment, a ★ if
+  starred, and the stage direction in asterisks as **Copy with action** gives it.
+
+Starred lines are always kept. The rest keep the latest 300, and the window shows the newest 100 that
+match; search to find older ones. A line written while the history is open appears in it at once.
+Like the key, the history lives in that browser for that Foundry site, so another browser has its
+own.
+
+## Roy's weapon
+
+Roy currently fights with only his mace. The `WEAPON` line near the top of Roy's Declarations says
+so (`a heavy mace he calls the Star of Retribution`), and Gemini is told it is his only weapon, so
+lines don't hand him a sword or blade. When Roy gets a new weapon, change that line; his looks, his
+habits and the melee moments all follow it.
 
 ## Party names
 
-Roy may mention his party. Edit the `PARTY` block near the top of the macro to rename someone, or set
-a name to `""` to leave them out.
+Roy may mention his party: Keira, Maeve, Urist and Ùna. The `PARTY` block near the top of Roy's
+Declarations describes each of them with only what Roy knows so far, since he met everyone except
+his sister Keira recently and treats them as any friendly companions. Keep secrets and backstories
+out of it, or Gemini will have Roy say them. Edit a description there, rename someone, or set a
+name to `""` to leave them out.

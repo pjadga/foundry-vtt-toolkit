@@ -53,9 +53,20 @@ file the user copies between machines.
    - Story-scene numbering is shared by every campaign in a world.
    - Auto-pick fills every empty NotebookLM playlist, not just the ones being imported.
    - Combat doesn't model cover, ambushes, autofire multipliers or suppressive fire.
-6. **Roy's Declarations** now always asks what's happening and shows Gemini's line privately with
-   copy buttons (no bank, kinds, shortcuts or chat posting). Tested with mocked Foundry and Gemini
-   only; not yet run in Foundry v12 or v13.
+6. **Roy's Declarations** is one ApplicationV2 window that stays open, with eighteen one-click
+   moments (attacking, defending, healing, health and mana, roleplay), targeted tokens named and
+   shown in a live target line (`targetToken` hook, removed on close), the Gemini key row and every
+   message inside it: no notifications, no chat, no other windows. **Roy's History**
+   (`roy-history.js`) lists the lines it saves in localStorage (`roy-declarations.history`), with
+   search, star, delete and Export. Roy's profile, party, weapon (`WEAPON`) and "Slayer" handle now
+   follow the user's NotebookLM notebook, with party secrets kept out. Both tested live on
+   26 October in cpr-test (Foundry v13): layout, first run without a key, typed and quick moments
+   with targets, copy, Another line, errors, closing mid-request, every history feature, the target
+   line and the roleplay moments, with nothing reaching notifications or chat. Both stay installed
+   in cpr-test (slots 0 and 9) and are overwritten with each change. Not run on Foundry v12, which
+   also has ApplicationV2. Gemini (`gemini-3.5-flash-lite`) took 7 to 40 seconds per line that day,
+   so the limit is 45 seconds; a resend for reused move names was dropped because it doubled the
+   wait, and the prompt lists used move names instead.
 7. **From `CLAUDE.md`:** the sw25 system id, mapping the sw25 and cpred macros, and choosing a license.
 
 ## Decisions, and why

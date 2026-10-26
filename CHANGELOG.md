@@ -96,13 +96,25 @@ music and a GM Assistant.
   system.
 - Party Passive Perception for D&D 5e.
 - Actor data inspectors for Cyberpunk RED and Sword World 2.5.
-- **Roy's Declarations** (`macros/characters/`), a player's own macro for a game they don't host, on
-  Foundry v12 and v13 in any system:
+- **Roy's Declarations** and **Roy's History** (`macros/characters/`), a player's own macros for a
+  game they don't host, on Foundry v12 and v13 in any system:
   - It asks what's happening, then Gemini writes a fresh line for Roy "Slayer" Belmont that fits
     the moment: a battle cry, an introduction or a victory quirk. The Gemini key is kept in that
     browser.
-  - The line is shown only to the player, with Copy words, Copy with action and Another line. Nothing
-    is posted to chat; the player pastes it in if they want it.
+  - One-click moments for what comes up most: Melee miss and hit; Protect ally, Block attack, Light
+    and Heavy wound; Heal ally, Heal self, After combat and Before rest; Half and Low HP, Half and
+    Low MP; Resting, Eating, Preparing and Celebrating. Typed text is added as detail.
+  - Targeted tokens are named, as the enemy, ally or attacker the moment calls for, or as ally or
+    enemy by disposition for a typed moment. Moments about Roy alone leave them out. A target line
+    shows who is targeted as it changes, and warns when no one is.
+  - Gemini gets 45 seconds to answer.
+  - One window that stays open: the line appears in it, with Copy words, Copy with action and
+    Another line, ready for the next moment. Waiting, errors and "copied" show in the window, not in
+    Foundry's notifications, and nothing is posted to chat, so no other user sees anything. The
+    Gemini key is entered in the window too.
+  - Roy's History lists every line, newest first, to search, copy again, star (starred lines are
+    always kept; the rest keep the latest 300) or delete. It is kept in that browser. Export saves
+    every line as a text file.
   - Lines keep Roy's holy, retribution-paladin tone, vary their focus and move names, and are sent
     back once if they call his power dark.
   - Install guide: [docs/macros/roy-declarations.md](docs/macros/roy-declarations.md).
@@ -142,5 +154,20 @@ From the first live combat tests:
   menu of kinds and the click shortcuts are gone: every line is written by Gemini for what's
   happening. Posting to chat is gone too, so the player no longer juggles roll modes to preview a
   line.
+- **Roy's Declarations** windows closed after every click and messages went to Foundry's
+  notifications; it is now one window that stays open and keeps its messages inside. Saving an
+  empty key field no longer removes the key: there is a Remove button for that.
+- **Roy's Declarations:** lines kept calling Roy "the SlayArm", a title left over from the old
+  built-in lines that isn't in his notebook. It's gone from his profile, which now names his right
+  arm the way the notebook does: the Sacred Crusher, or his crushing arm.
+- **Roy's Declarations:** the party came from the old built-in lines too, with one line each and a
+  "Clusti" who isn't in the party. The party is now Keira, Maeve, Urist and Ùna, described from the
+  notebook with only what Roy knows so far, and Roy treats everyone but Keira as companions he has
+  just met. He still calls them the Slayer's Fellowship, a name he proclaimed to the Adventurer's
+  Guild that no one agreed to or corrected. His profile also has his adventurer handle, Slayer,
+  which he uses in the heat of combat and with NPCs he doesn't trust.
+- **Roy's Declarations:** a line called Roy's weapon a blade. His weapon is now one `WEAPON` setting
+  (his mace, the Star of Retribution), which Gemini is told is his only weapon, and which the
+  profile and melee moments follow when it changes.
 
 See [docs/user-guide.md](docs/user-guide.md#known-issues-and-limitations) for known issues.

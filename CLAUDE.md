@@ -212,12 +212,20 @@ each machine by hand.
 - **Test documents** get a `QA ` name prefix (plus a `qa-` folder for files) and are deleted
   afterwards. Delete your own test chat messages too, and restore any actor you damaged. Leave the
   user's own rolls and documents alone.
+- **Roy's macros stay installed:** cpr-test keeps **Roy's Declarations** (hotbar slot 0) and
+  **Roy's History** (slot 9). After a change, overwrite their command with the latest version
+  (create them only if missing); don't delete them after a test, and leave the lines they wrote
+  and your token targets in place. To get an uncommitted macro into the page, copy it into a `qa-`
+  folder in the server's Data folder, `fetch` it from there, then remove the folder.
 - **Rolling like a player in Cyberpunk RED:** `item.createRoll("attack" | "damage" | "skill", actor)`,
   `await roll.roll()`, set `roll.entityData = { actor: actor.id, token: token.id }` (otherwise the card
   has no speaker), then `CPRChat.RenderRollCard(roll)`. `CPRChat` comes from
   `/systems/cyberpunk-red-core/modules/chat/cpr-chat.js`.
 - **Browser gotchas:**
   - Sound only plays after a real click on the page, which a scripted call doesn't count as.
+  - `foundry.utils` is frozen: assigning a stub to one of its functions (such as `saveDataToFile`)
+    fails silently and the real one still runs. A browser-pane download lands in the user's real
+    Downloads folder, so ask before testing one.
   - A reload can land on the join screen; rejoin as described in `docs/handoff.local.md`.
   - Pollinations allows one image per 45 s per IP address, shared with any other use from the
     same network.
