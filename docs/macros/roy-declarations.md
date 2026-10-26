@@ -100,9 +100,16 @@ says so in the window rather than showing an off-tone line.
 ## History
 
 Every line Roy's Declarations writes is saved in your browser, with when and what it was for. Click
-**Roy's History** to see them, newest first:
+**Roy's History** to see them: starred lines at the top, then the rest, each newest first.
 
-- **Search** by words in the line, the moment or a name (for example *heal* or *Keira*).
+Each line shows only its first line, collapsed: when it was written, the moment and who was
+targeted, with a ★ if starred. Click that line (or Tab to it and press Enter) to open the stage
+direction, Roy's words and the buttons; click again to close it. Lines you open stay open while the
+window is.
+
+- **Search** by words in the line, the moment or a name (for example *heal* or *Keira*). Only the
+  matches are listed, and every one opens so you can read it. Clear the search to go back to the
+  collapsed list as you left it.
 - **Copy words** and **Copy with action** work as in Roy's window, for a line worth using again.
 - **★** stars a line to keep; **Starred only** shows just those.
 - **🗑** deletes a line straight away, without asking.

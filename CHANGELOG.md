@@ -112,9 +112,10 @@ music and a GM Assistant.
     Another line, ready for the next moment. Waiting, errors and "copied" show in the window, not in
     Foundry's notifications, and nothing is posted to chat, so no other user sees anything. The
     Gemini key is entered in the window too.
-  - Roy's History lists every line, newest first, to search, copy again, star (starred lines are
-    always kept; the rest keep the latest 300) or delete. It is kept in that browser. Export saves
-    every line as a text file.
+  - Roy's History lists every line, starred ones first, then newest first, to search, copy again,
+    star (starred lines are always kept; the rest keep the latest 300) or delete. Each line is
+    collapsed to its first line until clicked, and every search match opens. It is kept in that
+    browser. Export saves every line as a text file.
   - Lines keep Roy's holy, retribution-paladin tone, vary their focus and move names, and are sent
     back once if they call his power dark.
   - Install guide: [docs/macros/roy-declarations.md](docs/macros/roy-declarations.md).

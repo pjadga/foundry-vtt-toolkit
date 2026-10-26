@@ -45,8 +45,8 @@ file the user copies between machines.
 3. **Branches:**
    - `claude/reverent-torvalds-b7384c` is merged and can be deleted.
    - `claude/quirky-keller-i3z8q3` is from the first scaffold. It still has "Use sw25-fvtt as the
-     Sword World 2.5 system id", while `main` uses `sw25`. Settle that with the open item in
-     `CLAUDE.md`, then delete the branch.
+     Sword World 2.5 system id", which is wrong: the installed system's id is `sw25` (as `main`
+     uses); `sw25-fvtt` is only its GitHub repository's name. The branch can be deleted.
 4. **Never tested end to end:** a complete NotebookLM v2 campaign (Prompts 1–8) built in one go with
    Build campaign. Parts were tested with QA bundles only.
 5. **Known limits** the user knows about, all listed in the user guide's *Known issues*:
@@ -63,11 +63,19 @@ file the user copies between machines.
    26 October in cpr-test (Foundry v13): layout, first run without a key, typed and quick moments
    with targets, copy, Another line, errors, closing mid-request, every history feature, the target
    line and the roleplay moments, with nothing reaching notifications or chat. Both stay installed
-   in cpr-test (slots 0 and 9) and are overwritten with each change. Not run on Foundry v12, which
-   also has ApplicationV2. Gemini (`gemini-3.5-flash-lite`) took 7 to 40 seconds per line that day,
+   in cpr-test (slots 0 and 9) and are overwritten with each change. Also tested on Foundry v12
+   (12.343) the same day, in a `QA Roy v12` world with Sword World 2.5 (`sw25` 2.4.1) and a sheet
+   for Roy: the window, target line, moments, copy, Another line, key row, one window per click,
+   the hook removed on close, and the history's search, star, filter and delete all work; Export
+   wasn't clicked, to avoid a download. The user keeps that world: it has Roy's sheet (identity,
+   biography, classes, gear, [Cover I], [Change Fate] and his five spells; no ability scores,
+   levels or HP/MP yet), Keira, a goblin, a `QA Roy test` scene and both macros (slots 0 and 9).
+   The v12 install is now served over HTTPS on the same site as v13 (details in
+   `docs/handoff.local.md`), so the two share localStorage: one Gemini key and one Roy history.
+   Gemini (`gemini-3.5-flash-lite`) took 7 to 40 seconds per line that day,
    so the limit is 45 seconds; a resend for reused move names was dropped because it doubled the
    wait, and the prompt lists used move names instead.
-7. **From `CLAUDE.md`:** the sw25 system id, mapping the sw25 and cpred macros, and choosing a license.
+7. **From `CLAUDE.md`:** mapping the sw25 and cpred macros, and choosing a license.
 
 ## Decisions, and why
 

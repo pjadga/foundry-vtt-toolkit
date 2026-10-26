@@ -5,7 +5,9 @@
  * Type:    script
  *
  * Every line the Roy's Declarations macro has written in this browser, newest first, in a window
- * just for you. Search them, copy one (with or without the stage direction) to paste into chat
+ * just for you, starred ones first. Each shows its first line (when, the moment and who); click it
+ * to open the rest.
+ * Search them (every match opens), copy one (with or without the stage direction) to paste into chat
  * again, star the ones worth keeping, or delete them. Starred lines are never trimmed; the rest keep
  * the latest 300. Export saves them all as a text file. Nothing is posted, and nothing shows in
  * Foundry's notifications.
@@ -80,6 +82,7 @@ class RoyHistory extends foundry.applications.api.ApplicationV2 {
         this.refresh();
       },
       exportAll() { this.exportAll(); },
+      toggle(event, head) { this.toggle(head.closest("[data-at]")); },
       remove(event, button) {
         update(Number(button.closest("[data-at]").dataset.at), () => null);
         this.status("Line deleted.");
@@ -87,6 +90,12 @@ class RoyHistory extends foundry.applications.api.ApplicationV2 {
       }
     }
   };
+
+  // Entries opened by hand, kept while the window is open. During a search every match opens;
+  // ones closed by hand during that search are in searchClosed until the search changes.
+  expanded = new Set();
+  searchClosed = new Set();
+  lastSearch = "";
 
   async _renderHTML() {
     return `<style>
@@ -96,10 +105,19 @@ class RoyHistory extends foundry.applications.api.ApplicationV2 {
         .roy-history .roy-row > button { flex: 0 0 auto; width: auto; }
         .roy-history .roy-row label { flex: 0 0 auto; display: flex; gap: 4px; align-items: center; white-space: nowrap; }
         .roy-history .roy-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
-        .roy-history .roy-entry { padding: 6px 8px; border-radius: 4px; background: rgba(127, 127, 127, 0.12); }
+        .roy-history .roy-entry { padding: 4px 8px; border-radius: 4px; background: rgba(127, 127, 127, 0.12); }
+        .roy-history .roy-head { display: flex; gap: 6px; align-items: center; margin: 0; cursor: pointer; }
+        .roy-history .roy-head-text { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .roy-history .roy-chevron { flex: 0 0 auto; margin: 0; transition: transform 0.15s; }
+        .roy-history .roy-entry.roy-open .roy-chevron { transform: rotate(90deg); }
+        .roy-history .roy-entry-body { margin-top: 2px; }
         .roy-history .roy-entry p { margin: 2px 0; user-select: text; }
         .roy-history .roy-entry .roy-say { font-size: 1.05em; }
-        .roy-history .roy-entry button { flex: 0 0 auto; width: auto; }
+        .roy-history .roy-entry button { flex: 0 0 auto; width: auto; height: 28px; align-items: center; justify-content: center; }
+        /* Icon-only buttons get no text line to size them, so they match the others by hand. */
+        .roy-history .roy-entry button[data-action="star"], .roy-history .roy-entry button[data-action="remove"] { width: 36px; padding: 0; }
+        /* v12 puts a margin after a button's icon, for the text that would follow it. */
+        .roy-history .roy-entry button[data-action="star"] i, .roy-history .roy-entry button[data-action="remove"] i { margin: 0; }
         .roy-history .roy-entry .roy-starred { color: #d4a017; }
         .roy-history .roy-status { padding: 6px 8px; border-radius: 4px; background: rgba(127, 127, 127, 0.15); }
         .roy-history .roy-status[data-kind="error"] { outline: 1px solid #c0392b; }
@@ -122,6 +140,11 @@ class RoyHistory extends foundry.applications.api.ApplicationV2 {
   _onRender() {
     this.find("[name=search]")?.addEventListener("input", () => this.refresh());
     this.find("[name=starred]")?.addEventListener("change", () => this.refresh());
+    // The first lines open and close from the keyboard too.
+    this.find(".roy-list")?.addEventListener("keydown", event => {
+      const head = event.target.closest?.(".roy-head");
+      if (head && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); this.toggle(head.closest("[data-at]")); }
+    });
     this.refresh();
     this.find("[name=search]")?.focus();
   }
@@ -135,21 +158,46 @@ class RoyHistory extends foundry.applications.api.ApplicationV2 {
     return history().find(entry => entry.at === at);
   }
 
-  /** Redraw the list from what is saved, keeping the search and filter. */
+  /** Open or close one entry, and remember it for the next redraw. */
+  toggle(entryEl) {
+    if (!entryEl) return;
+    const at = Number(entryEl.dataset.at);
+    const open = !entryEl.classList.contains("roy-open");
+    if (this.lastSearch) open ? this.searchClosed.delete(at) : this.searchClosed.add(at);
+    else open ? this.expanded.add(at) : this.expanded.delete(at);
+    entryEl.classList.toggle("roy-open", open);
+    entryEl.querySelector(".roy-entry-body").hidden = !open;
+    entryEl.querySelector(".roy-head").setAttribute("aria-expanded", String(open));
+  }
+
+  /** Redraw the list from what is saved, keeping the search, filter and opened entries. */
   refresh() {
     const list = this.find(".roy-list");
     if (!list) return;
-    const words = (this.find("[name=search]")?.value ?? "").toLowerCase().split(/\s+/).filter(Boolean);
+    const search = (this.find("[name=search]")?.value ?? "").trim().toLowerCase();
+    if (search !== this.lastSearch) this.searchClosed.clear();
+    this.lastSearch = search;
+    const words = search.split(/\s+/).filter(Boolean);
     const starredOnly = this.find("[name=starred]")?.checked;
     const entries = history();
+    // Starred lines first, then the rest; each newest first, as saved.
     const matches = entries.filter(entry => (!starredOnly || entry.starred)
-      && words.every(word => `${entry.label} ${entry.act} ${entry.say}`.toLowerCase().includes(word)));
+      && words.every(word => `${entry.label} ${entry.act} ${entry.say}`.toLowerCase().includes(word)))
+      .sort((a, b) => Number(Boolean(b.starred)) - Number(Boolean(a.starred)));
     const shown = matches.slice(0, SHOWN);
     this.find(".roy-count").textContent = !entries.length
       ? "No lines yet. Lines from Roy's Declarations appear here."
       : `${matches.length} of ${entries.length} lines${matches.length > shown.length ? `, newest ${shown.length} shown: search to find older ones` : ""}.`;
-    list.innerHTML = shown.map(entry => `<div class="roy-entry" data-at="${entry.at}">
-        <p class="hint">${esc(new Date(entry.at).toLocaleString())}${entry.label ? ` · ${esc(entry.label)}` : ""}</p>
+    list.innerHTML = shown.map(entry => {
+      const open = search ? !this.searchClosed.has(entry.at) : this.expanded.has(entry.at);
+      const head = `${new Date(entry.at).toLocaleString()}${entry.label ? ` · ${entry.label}` : ""}`;
+      return `<div class="roy-entry${open ? " roy-open" : ""}" data-at="${entry.at}">
+        <p class="hint roy-head" data-action="toggle" role="button" tabindex="0" aria-expanded="${open}" title="${esc(head)}">
+          <i class="fa-solid fa-chevron-right roy-chevron"></i>
+          ${entry.starred ? '<i class="fa-solid fa-star roy-starred" style="margin: 0;"></i>' : ""}
+          <span class="roy-head-text">${esc(head)}</span>
+        </p>
+        <div class="roy-entry-body"${open ? "" : " hidden"}>
         ${entry.act ? `<p><em>${esc(entry.act)}</em></p>` : ""}
         <p class="roy-say">${esc(entry.say)}</p>
         <div class="roy-row">
@@ -158,7 +206,9 @@ class RoyHistory extends foundry.applications.api.ApplicationV2 {
           <button type="button" data-action="star" title="${entry.starred ? "Unstar" : "Star to keep"}"><i class="fa-${entry.starred ? "solid roy-starred" : "regular"} fa-star"></i></button>
           <button type="button" data-action="remove" title="Delete"><i class="fa-solid fa-trash"></i></button>
         </div>
-      </div>`).join("");
+        </div>
+      </div>`;
+    }).join("");
   }
 
   /** A message in the window, "error" outlined. */
