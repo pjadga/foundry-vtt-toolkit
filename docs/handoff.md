@@ -53,7 +53,10 @@ file the user copies between machines.
    - Story-scene numbering is shared by every campaign in a world.
    - Auto-pick fills every empty NotebookLM playlist, not just the ones being imported.
    - Combat doesn't model cover, ambushes, autofire multipliers or suppressive fire.
-6. **From `CLAUDE.md`:** the sw25 system id, mapping the sw25 and cpred macros, and choosing a license.
+6. **Roy's Declarations** now always asks what's happening and shows Gemini's line privately with
+   copy buttons (no bank, kinds, shortcuts or chat posting). Tested with mocked Foundry and Gemini
+   only; not yet run in Foundry v12 or v13.
+7. **From `CLAUDE.md`:** the sw25 system id, mapping the sw25 and cpred macros, and choosing a license.
 
 ## Decisions, and why
 

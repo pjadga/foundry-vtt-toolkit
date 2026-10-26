@@ -98,13 +98,13 @@ music and a GM Assistant.
 - Actor data inspectors for Cyberpunk RED and Sword World 2.5.
 - **Roy's Declarations** (`macros/characters/`), a player's own macro for a game they don't host, on
   Foundry v12 and v13 in any system:
-  - It posts battle cries, introductions and victory quirks for Roy "Slayer" Belmont, from a
-    shuffled bank or fresh from Gemini with a key kept in that browser.
-  - An optional "What's happening?" field fits Gemini's line to the moment.
-  - Fresh lines keep Roy's holy, retribution-paladin tone, vary their focus and move names, and are
-    sent back once if they call his power dark.
-  - Shift, Ctrl and Alt-click shortcuts. Lines follow the chat roll mode, with a speech bubble for
-    public ones.
+  - It asks what's happening, then Gemini writes a fresh line for Roy "Slayer" Belmont that fits
+    the moment: a battle cry, an introduction or a victory quirk. The Gemini key is kept in that
+    browser.
+  - The line is shown only to the player, with Copy words, Copy with action and Another line. Nothing
+    is posted to chat; the player pastes it in if they want it.
+  - Lines keep Roy's holy, retribution-paladin tone, vary their focus and move names, and are sent
+    back once if they call his power dark.
   - Install guide: [docs/macros/roy-declarations.md](docs/macros/roy-declarations.md).
 
 ### Fixed before release
@@ -138,6 +138,9 @@ From the first live combat tests:
   - The hit detail said only how much damage got through. It named an armor's base SP, ignoring
     ablation, so damage estimates for targets whose damage isn't applied automatically came out
     too low.
-- **Roy's Declarations:** the menu's Random and Key buttons were cut off on Foundry v12.
+- **Roy's Declarations:** lines from the built-in bank often didn't suit the moment, so the bank, the
+  menu of kinds and the click shortcuts are gone: every line is written by Gemini for what's
+  happening. Posting to chat is gone too, so the player no longer juggles roll modes to preview a
+  line.
 
 See [docs/user-guide.md](docs/user-guide.md#known-issues-and-limitations) for known issues.

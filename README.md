@@ -24,9 +24,9 @@ troubleshooting and known issues. Release notes are in [CHANGELOG.md](CHANGELOG.
 
 Each macro starts with a header giving its name, the system it needs and the Foundry version.
 
-**Roy's Declarations** (`macros/characters/roy-declarations.js`) posts chuunibyou battle cries,
-introductions and victory quirks for the player character Roy "Slayer" Belmont, optionally fresh
-from Gemini. See [docs/macros/roy-declarations.md](docs/macros/roy-declarations.md) for installing
+**Roy's Declarations** (`macros/characters/roy-declarations.js`) asks what's happening and has
+Gemini write a chuunibyou line for the player character Roy "Slayer" Belmont that fits it, shown
+privately to copy into chat. See [docs/macros/roy-declarations.md](docs/macros/roy-declarations.md) for installing
 it as a player in a game you don't host.
 
 ## Using the module
