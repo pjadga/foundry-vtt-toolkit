@@ -142,6 +142,34 @@ step. Pull before starting and push before finishing.
 - Point-in-time state (what's open, what's deployed) goes in `docs/handoff.md`; update it when that
   changes.
 
+## What a feature or fix commit includes
+
+The user expects the docs to keep up with the code, so a feature or bug fix isn't done until these
+are updated, in the same commit or one right after it:
+
+- **Tests:** new or changed pure logic gets tests in `tests/`, and `npm test` passes.
+- **`CHANGELOG.md`:** an entry under the unreleased version.
+  - Features go in their feature's section (Combat, GM Assistant, Macros…).
+  - Fixes go under *Fixed before release*, saying what was wrong. After the first release, they go
+    under the new version's *Fixed* heading instead.
+  - Name the setting, button or macro the user sees.
+- **`docs/user-guide.md`:** anything the user sees or does. That means the feature's section, the
+  **Settings** table for a new setting, **Troubleshooting** for a new error message, **Known issues**
+  for a new limit, and **Privacy** for anything new sent to an outside service.
+- **`README.md`:** a new folder, macro or headline feature.
+- **NotebookLM fields:** if a field the toolkit reads is added or changed, update:
+  - `docs/notebooklm/format.md`;
+  - Prompt 0 in `docs/notebooklm/cyberpunk-red-prompts.md`, kept under 10,000 characters;
+  - `ENTRY_RULES` in `assistant/context.mjs` (the test checks it matches Prompt 0).
+
+  Then tell the user to paste the new Prompt 0 into the notebook's **Configure Chat**.
+- **`module/lang/en.json`:** every new string, under `FVTK.`.
+- **`CLAUDE.md`:** new architecture, gotchas or conventions a future session needs.
+- **`docs/handoff.md`:** what's deployed to cpr-test (the commit, and whether it was checked with
+  `git hash-object`), what was tested live, and the open items that closed or appeared.
+
+Nothing server-specific goes in any of these, because the repository is public.
+
 ## Verifying changes
 
 `npm test` runs every pure test in `tests/*.test.mjs` with `node --test` (no Foundry needed). JSON files
