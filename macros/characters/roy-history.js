@@ -5,7 +5,7 @@
  * Type:    script
  *
  * Every line the Roy's Declarations macro has written in this browser, newest first, in a window
- * just for you, starred ones first. Each shows its first line (when, the moment and who); click it
+ * just for you, starred ones first, each in its category's colour (filter to one with Category). Each shows its first line (when, the moment and who); click it
  * to open the rest.
  * Search them (every match opens), copy one (with or without the stage direction) to paste into chat
  * again, star the ones worth keeping, or delete them. Starred lines are never trimmed; the rest keep
@@ -22,6 +22,14 @@ const ROY = 'Roy "Slayer" Belmont';
 // Shared with Roy's Declarations.
 const STORE = "roy-declarations.";
 const WINDOW_ID = "roy-history";
+// The categories and colours of Roy's Declarations; keep the two in step. Lines saved without one
+// count as Unique until Roy's Declarations sorts them.
+const CATEGORIES = {
+  Attacking: "#e74c3c", Defending: "#3498db", Healing: "#2ecc71", "Health & Mana": "#9b59b6",
+  Roleplay: "#f1c40f", Unique: "#1abc9c"
+};
+const categoryOf = entry => CATEGORIES[entry.category] ? entry.category : "Unique";
+
 // Lines shown at once; search to find older ones.
 const SHOWN = 100;
 
@@ -52,7 +60,7 @@ function exportText(entries) {
     ""
   ];
   for (const entry of entries) {
-    lines.push(`${entry.starred ? "★ " : ""}${new Date(entry.at).toLocaleString()}${entry.label ? ` · ${entry.label}` : ""}`, withAction(entry), "");
+    lines.push(`${entry.starred ? "★ " : ""}${new Date(entry.at).toLocaleString()} · ${categoryOf(entry)}${entry.label ? ` · ${entry.label}` : ""}`, withAction(entry), "");
   }
   return lines.join("\n");
 }
@@ -72,7 +80,7 @@ class RoyHistory extends foundry.applications.api.ApplicationV2 {
     id: WINDOW_ID,
     classes: ["roy-history"],
     window: { title: `${ROY}: history`, icon: "fa-solid fa-scroll", resizable: true },
-    position: { width: 560, height: 640 },
+    position: { width: 620, height: 640 },
     // Called with the window as `this`.
     actions: {
       copySay(event, button) { this.copy(this.entry(button)?.say); },
@@ -105,7 +113,8 @@ class RoyHistory extends foundry.applications.api.ApplicationV2 {
         .roy-history .roy-row > button { flex: 0 0 auto; width: auto; }
         .roy-history .roy-row label { flex: 0 0 auto; display: flex; gap: 4px; align-items: center; white-space: nowrap; }
         .roy-history .roy-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
-        .roy-history .roy-entry { padding: 4px 8px; border-radius: 4px; background: rgba(127, 127, 127, 0.12); }
+        .roy-history .roy-entry { padding: 4px 8px; border-radius: 4px; background: rgba(127, 127, 127, 0.12); border-left: 4px solid var(--roy-cat, transparent); }
+        .roy-history .roy-row select { flex: 0 0 auto; width: auto; }
         .roy-history .roy-head { display: flex; gap: 6px; align-items: center; margin: 0; cursor: pointer; }
         .roy-history .roy-head-text { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .roy-history .roy-chevron { flex: 0 0 auto; margin: 0; transition: transform 0.15s; }
@@ -125,6 +134,10 @@ class RoyHistory extends foundry.applications.api.ApplicationV2 {
       </style>
       <div class="roy-row">
         <input type="search" name="search" placeholder="Search lines, moments and names">
+        <select name="category" title="Show one category">
+          <option value="">All categories</option>
+          ${Object.keys(CATEGORIES).map(category => `<option value="${esc(category)}">${esc(category)}</option>`).join("")}
+        </select>
         <label><input type="checkbox" name="starred"> Starred only</label>
         <button type="button" data-action="exportAll" title="Save every line as a text file"><i class="fa-solid fa-file-export"></i> Export</button>
       </div>
@@ -140,6 +153,7 @@ class RoyHistory extends foundry.applications.api.ApplicationV2 {
   _onRender() {
     this.find("[name=search]")?.addEventListener("input", () => this.refresh());
     this.find("[name=starred]")?.addEventListener("change", () => this.refresh());
+    this.find("[name=category]")?.addEventListener("change", () => this.refresh());
     // The first lines open and close from the keyboard too.
     this.find(".roy-list")?.addEventListener("keydown", event => {
       const head = event.target.closest?.(".roy-head");
@@ -179,10 +193,11 @@ class RoyHistory extends foundry.applications.api.ApplicationV2 {
     this.lastSearch = search;
     const words = search.split(/\s+/).filter(Boolean);
     const starredOnly = this.find("[name=starred]")?.checked;
+    const category = this.find("[name=category]")?.value;
     const entries = history();
     // Starred lines first, then the rest; each newest first, as saved.
-    const matches = entries.filter(entry => (!starredOnly || entry.starred)
-      && words.every(word => `${entry.label} ${entry.act} ${entry.say}`.toLowerCase().includes(word)))
+    const matches = entries.filter(entry => (!starredOnly || entry.starred) && (!category || categoryOf(entry) === category)
+      && words.every(word => `${categoryOf(entry)} ${entry.label} ${entry.act} ${entry.say}`.toLowerCase().includes(word)))
       .sort((a, b) => Number(Boolean(b.starred)) - Number(Boolean(a.starred)));
     const shown = matches.slice(0, SHOWN);
     this.find(".roy-count").textContent = !entries.length
@@ -191,8 +206,8 @@ class RoyHistory extends foundry.applications.api.ApplicationV2 {
     list.innerHTML = shown.map(entry => {
       const open = search ? !this.searchClosed.has(entry.at) : this.expanded.has(entry.at);
       const head = `${new Date(entry.at).toLocaleString()}${entry.label ? ` · ${entry.label}` : ""}`;
-      return `<div class="roy-entry${open ? " roy-open" : ""}" data-at="${entry.at}">
-        <p class="hint roy-head" data-action="toggle" role="button" tabindex="0" aria-expanded="${open}" title="${esc(head)}">
+      return `<div class="roy-entry${open ? " roy-open" : ""}" data-at="${entry.at}" style="--roy-cat: ${CATEGORIES[categoryOf(entry)]};">
+        <p class="hint roy-head" data-action="toggle" role="button" tabindex="0" aria-expanded="${open}" title="${esc(`${categoryOf(entry)}: ${head}`)}">
           <i class="fa-solid fa-chevron-right roy-chevron"></i>
           ${entry.starred ? '<i class="fa-solid fa-star roy-starred" style="margin: 0;"></i>' : ""}
           <span class="roy-head-text">${esc(head)}</span>

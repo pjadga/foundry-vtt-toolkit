@@ -67,9 +67,13 @@ file the user copies between machines.
    (12.343) the same day, in a `QA Roy v12` world with Sword World 2.5 (`sw25` 2.4.1) and a sheet
    for Roy: the window, target line, moments, copy, Another line, key row, one window per click,
    the hook removed on close, and the history's search, star, filter and delete all work; Export
-   wasn't clicked, to avoid a download. The user keeps that world: it has Roy's sheet (identity,
-   biography, classes, gear, [Cover I], [Change Fate] and his five spells; no ability scores,
-   levels or HP/MP yet), Keira, a goblin, a `QA Roy test` scene and both macros (slots 0 and 9).
+   wasn't clicked, to avoid a download. The user keeps that world: it has Roy's full sheet (filled
+   in on 27 October from the user's sheet; the sheet's own numbers match it: HP 26, MP 23, Defense
+   6, Evasion 3, Accuracy 4, k20@12+3, priest magic power 4, EXP 3000/4160), Keira, a goblin, a
+   `QA Roy test` scene and both macros (slots 0 and 9). The user's notes also had a JSON block that
+   disagreed in places (Fighter 2, five spells); the sheet text was used, because its numbers add
+   up. Categories (with colours and a history filter) were added and tested on v12 and v13 the
+   same day.
    The v12 install is now served over HTTPS on the same site as v13 (details in
    `docs/handoff.local.md`), so the two share localStorage: one Gemini key and one Roy history.
    Gemini (`gemini-3.5-flash-lite`) took 7 to 40 seconds per line that day,

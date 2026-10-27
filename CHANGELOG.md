@@ -116,6 +116,9 @@ music and a GM Assistant.
     star (starred lines are always kept; the rest keep the latest 300) or delete. Each line is
     collapsed to its first line until clicked, and every search match opens. It is kept in that
     browser. Export saves every line as a text file.
+  - Six colour-coded categories (Attacking, Defending, Healing, Health & Mana, Roleplay, and Unique
+    for anything typed): the buttons, Roy's line and his history all show them, and the history has
+    a Category filter.
   - Lines keep Roy's holy, retribution-paladin tone, vary their focus and move names, and are sent
     back once if they call his power dark.
   - Install guide: [docs/macros/roy-declarations.md](docs/macros/roy-declarations.md).

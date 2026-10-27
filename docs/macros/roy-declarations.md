@@ -54,13 +54,17 @@ players can't see it, but it has to be entered again in another browser.
 2. Either describe the moment, for example *goblins ambush us on a mountain pass at night; Keira is
    cornered*, and click **Speak** (or press Enter), or click one of the common moments:
 
-   | Group | Moments |
-   | --- | --- |
-   | **Attacking** | Melee miss, Melee hit |
-   | **Defending** | Protect ally ([Cover I]), Block attack, Light wound, Heavy wound |
-   | **Healing** | Heal ally and Heal self (Cure Wounds mid-fight), After combat, Before rest |
-   | **Health & mana** | Half HP and Low HP (under half, under a quarter), Half MP and Low MP |
-   | **Roleplay** | Resting, Eating, Preparing (exercising, stretching, warming up), Celebrating |
+   | Category | Colour | Moments |
+   | --- | --- | --- |
+   | **Attacking** | red | Melee miss, Melee hit |
+   | **Defending** | blue | Protect ally ([Cover I]), Block attack, Light wound, Heavy wound |
+   | **Healing** | green | Heal ally and Heal self (Cure Wounds mid-fight), After combat, Before rest |
+   | **Health & Mana** | purple | Half HP and Low HP (under half, under a quarter), Half MP and Low MP |
+   | **Roleplay** | gold | Resting, Eating, Preparing (exercising, stretching, warming up), Celebrating |
+   | **Unique** | teal | Anything typed and sent with **Speak** |
+
+   Each category's heading and buttons are edged in its colour, and the line Roy says, and its
+   place in the history, carry the same category and colour.
 
    With a moment, whatever is in the field is added as detail, so you can keep the scene there
    (*goblins on a mountain pass*) and click a moment each turn. The field is kept for next time;
@@ -76,8 +80,9 @@ players can't see it, but it has to be entered again in another browser.
    none: the window says Roy won't name anyone.
 3. While Gemini writes, the window says "Roy is finding his words…" and the buttons wait. A line
    usually takes 5 to 20 seconds.
-4. Roy's line appears at the bottom of the window: what it was for, the stage direction in italics,
-   then his words.
+4. Roy's line appears at the bottom of the window, edged in its category's colour: the category and
+   what it was for, the stage direction in italics, then his words. On a short screen the window
+   stops at the bottom edge and scrolls.
    - **Copy words** copies what he says aloud.
    - **Copy with action** copies the stage direction too, as `*raises his mace* By the Light…`.
    - **Another line** asks Gemini again for the same moment, detail and targets.
@@ -99,22 +104,26 @@ says so in the window rather than showing an off-tone line.
 
 ## History
 
-Every line Roy's Declarations writes is saved in your browser, with when and what it was for. Click
-**Roy's History** to see them: starred lines at the top, then the rest, each newest first.
+Every line Roy's Declarations writes is saved in your browser, with when, what it was for and its
+category. Click **Roy's History** to see them: starred lines at the top, then the rest, each newest
+first, each edged in its category's colour. Lines saved before categories existed get theirs from
+the moment's name the next time Roy's Declarations opens; typed ones count as Unique.
 
 Each line shows only its first line, collapsed: when it was written, the moment and who was
 targeted, with a ★ if starred. Click that line (or Tab to it and press Enter) to open the stage
 direction, Roy's words and the buttons; click again to close it. Lines you open stay open while the
 window is.
 
-- **Search** by words in the line, the moment or a name (for example *heal* or *Keira*). Only the
+- **Category** shows one category's lines only (All categories shows every line).
+- **Search** by words in the line, the moment, a name or a category (for example *heal*, *Keira* or
+  *Unique*). Only the
   matches are listed, and every one opens so you can read it. Clear the search to go back to the
   collapsed list as you left it.
 - **Copy words** and **Copy with action** work as in Roy's window, for a line worth using again.
 - **★** stars a line to keep; **Starred only** shows just those.
 - **🗑** deletes a line straight away, without asking.
 - **Export** saves every line, whatever the search or **Starred only** shows, as a text file in your
-  browser's downloads (`roy-declarations-<date>.txt`). Each line has its date and moment, a ★ if
+  browser's downloads (`roy-declarations-<date>.txt`). Each line has its date, category and moment, a ★ if
   starred, and the stage direction in asterisks as **Copy with action** gives it.
 
 Starred lines are always kept. The rest keep the latest 300, and the window shows the newest 100 that

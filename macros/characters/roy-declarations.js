@@ -150,6 +150,13 @@ async function geminiLine(situation, key) {
   throw new Error(`its lines kept calling Roy's power "${offTone}"`);
 }
 
+// Each category's colour, on its buttons here and on its lines in Roy's History. The groups below are
+// the categories; a typed moment (Speak) is Unique.
+const CATEGORIES = {
+  Attacking: "#e74c3c", Defending: "#3498db", Healing: "#2ecc71", "Health & Mana": "#9b59b6",
+  Roleplay: "#f1c40f", Unique: "#1abc9c"
+};
+
 // Moments that come up often, one click each. `target` is the role of the tokens you target: the
 // moment names them. Heal self, Preparing and the health and mana moments have none: they are only
 // about Roy.
@@ -170,7 +177,7 @@ const QUICK = {
     { label: "After combat", text: "The fight is over, and Roy casts Cure Wounds to heal the party.", target: "ally" },
     { label: "Before rest", text: "The party is about to rest, and Roy tends everyone's wounds with Cure Wounds first.", target: "ally" }
   ],
-  "Health & mana": [
+  "Health & Mana": [
     { label: "Half HP", text: "Roy is down to half his HP: wounded and battered, but still fighting." },
     { label: "Low HP", text: "Roy is down to less than a quarter of his HP: close to collapse, but refusing to fall." },
     { label: "Half MP", text: "Roy has spent half his MP, the divine power that fuels his spells, and feels it running down." },
@@ -183,7 +190,16 @@ const QUICK = {
     { label: "Celebrating", text: "Roy celebrates a victory or good news with all his heart.", target: "ally" }
   ]
 };
-const QUICK_LIST = Object.values(QUICK).flat();
+const QUICK_LIST = Object.entries(QUICK).flatMap(([category, moments]) => moments.map(moment => Object.assign(moment, { category })));
+
+// Lines saved before categories existed get theirs from the moment's name, else Unique.
+{
+  const saved = store.json("history", []);
+  if (saved.some(entry => !entry.category)) {
+    const categoryOf = label => QUICK_LIST.find(quick => label === quick.label || label?.startsWith(`${quick.label} · `))?.category ?? "Unique";
+    store.set("history", JSON.stringify(saved.map(entry => entry.category ? entry : { ...entry, category: categoryOf(entry.label) })));
+  }
+}
 
 const PLURAL = { enemy: "enemies", ally: "allies", attacker: "attackers" };
 const list = names => names.length > 1 ? `${names.slice(0, -1).join(", ")} and ${names.at(-1)}` : names[0];
@@ -208,18 +224,20 @@ function targetText(quick) {
 
 /**
  * What the moment is: typed, or a quick moment with anything typed added as detail. Returns
- * { prompt } for Gemini and a short { label } for the window, or null when there is nothing to go on.
+ * { prompt } for Gemini, a short { label } for the window and its { category }, or null when there
+ * is nothing to go on.
  */
 function situationFor(typed, quick) {
   if (!quick && !typed) return null;
   const target = targetText(quick);
   if (!quick) {
     const prompt = target.prompt ? `${typed}${/[.!?]$/.test(typed) ? "" : "."}${target.prompt}` : typed;
-    return { prompt, label: [typed, target.label].filter(Boolean).join(" · ") };
+    return { prompt, label: [typed, target.label].filter(Boolean).join(" · "), category: "Unique" };
   }
   return {
     prompt: `${quick.text}${target.prompt}${typed ? ` More detail from his player: ${typed}` : ""}`,
-    label: [quick.label, target.label, typed].filter(Boolean).join(" · ")
+    label: [quick.label, target.label, typed].filter(Boolean).join(" · "),
+    category: quick.category
   };
 }
 
@@ -231,9 +249,9 @@ async function copyText(text) {
 
 // Every line Gemini writes, newest first, for the Roy's History macro. Starred lines are always kept.
 const HISTORY_SIZE = 300;
-function remember(line, label) {
+function remember(line, { label, category }) {
   const history = store.json("history", []);
-  history.unshift({ at: Date.now(), label, act: line.act, say: line.say });
+  history.unshift({ at: Date.now(), label, category, act: line.act, say: line.say });
   let unstarred = 0;
   store.set("history", JSON.stringify(history.filter(entry => entry.starred || ++unstarred <= HISTORY_SIZE)));
   foundry.applications.instances?.get("roy-history")?.refresh?.();
@@ -273,16 +291,22 @@ class RoyWindow extends foundry.applications.api.ApplicationV2 {
   line = null;
 
   async _renderHTML() {
-    const groups = Object.entries(QUICK).map(([group, moments]) => `<fieldset><legend>${esc(group)}</legend>
+    const groups = Object.entries(QUICK).map(([group, moments]) => `<fieldset style="--roy-cat: ${CATEGORIES[group]};"><legend>${esc(group)}</legend>
         <div class="roy-grid">${moments.map(moment => `<button type="button" class="roy-ask" data-action="quick"
           data-quick="${QUICK_LIST.indexOf(moment)}">${esc(moment.label)}</button>`).join("")}</div>
       </fieldset>`).join("");
     return `<style>
+        /* On a short screen the window stops at its bottom edge and scrolls inside. */
+        .roy-declarations { max-height: calc(100vh - 16px); }
+        .roy-declarations .window-content { overflow-y: auto; }
         .roy-declarations .roy-body { display: flex; flex-direction: column; gap: 8px; }
         .roy-declarations .roy-row { display: flex; gap: 6px; align-items: center; }
         .roy-declarations .roy-row input { flex: 1; }
         .roy-declarations .roy-row button { flex: 0 0 auto; width: auto; }
         .roy-declarations .roy-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; }
+        .roy-declarations fieldset legend { color: var(--roy-cat); font-weight: bold; }
+        .roy-declarations button[data-action="quick"], .roy-declarations button[data-action="speak"] { border-left: 4px solid var(--roy-cat); }
+        .roy-declarations .roy-result { border-left: 4px solid var(--roy-cat, transparent); padding-left: 8px; }
         .roy-declarations fieldset { margin: 0; }
         .roy-declarations .roy-status { padding: 6px 8px; border-radius: 4px; background: rgba(127, 127, 127, 0.15); }
         .roy-declarations .roy-status[data-kind="error"] { outline: 1px solid #c0392b; }
@@ -300,7 +324,7 @@ class RoyWindow extends foundry.applications.api.ApplicationV2 {
         <div class="roy-row">
           <input type="text" name="situation" maxlength="300" value="${esc(store.get("situation") ?? "")}"
             placeholder="e.g. holding a rope bridge against an ogre while Maeve casts">
-          <button type="button" class="roy-ask" data-action="speak"><i class="fa-solid fa-bullhorn"></i> Speak</button>
+          <button type="button" class="roy-ask" data-action="speak" style="--roy-cat: ${CATEGORIES.Unique};" title="A typed moment is Unique"><i class="fa-solid fa-bullhorn"></i> Speak</button>
         </div>
         <div class="roy-targets" role="status" aria-live="polite"></div>
         ${groups}
@@ -440,8 +464,8 @@ class RoyWindow extends foundry.applications.api.ApplicationV2 {
     this.status(`Roy is finding his words for: ${situation.label}.${note} Gemini usually takes 5 to 20 seconds.`, "busy");
     try {
       const line = await geminiLine(situation.prompt, key);
-      remember(line, situation.label);
-      this.showLine(line, situation.label);
+      remember(line, situation);
+      this.showLine(line, situation);
       this.status("");
     } catch (error) {
       const reason = error.name === "AbortError" ? "no answer within 45 seconds" : error.message;
@@ -451,11 +475,12 @@ class RoyWindow extends foundry.applications.api.ApplicationV2 {
     }
   }
 
-  showLine(line, label) {
+  showLine(line, { label, category }) {
     const result = this.find(".roy-result");
     if (!result) return;
     this.line = line;
-    result.querySelector(".roy-for").textContent = `For: ${label}`;
+    result.querySelector(".roy-for").textContent = `${category} · ${label}`;
+    result.style.setProperty("--roy-cat", CATEGORIES[category]);
     result.querySelector(".roy-act").hidden = !line.act;
     result.querySelector(".roy-act em").textContent = line.act;
     result.querySelector(".roy-say").textContent = line.say;
