@@ -127,7 +127,8 @@ music and a GM Assistant.
     of what he says as its own exclamation ("…every wound! DIVINE MIRACLE!" rather than "…every wound
     in the DIVINE MIRACLE!"), with his anime declaration now and then rather than every time.
   - What he says is in quotation marks wherever it's shown or copied, apart from what he does.
-  - A Settings tab with the Gemini key, **Always name a move**, and **Put Roy's line on roll cards**,
+  - A Settings tab with the Gemini key, **Character for rolls** (whose sheet the Rolls page reads, by
+    name; blank for your assigned character), **Always name a move**, and **Put Roy's line on roll cards**,
     which writes the line first and puts it on the roll's chat card (off by default, the one setting
     that shows a line to others).
   - A line on a roll card has a ★ Star link anyone can click; while Roy's Declarations or Roy's

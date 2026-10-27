@@ -13,8 +13,9 @@
  *
  * The Rolls page (Sword World 2.5 only) has a button for every dice roll on the character's sheet:
  * each rolls through the sheet as usual, to chat, then Gemini writes a line for how it came out.
- * Settings holds the Gemini key, Always name a move, and Put Roy's line on roll cards (the one
- * setting that shows a line to others: it goes on the roll's chat card).
+ * Settings holds the Gemini key, Character for rolls (whose sheet the Rolls page reads), Always name
+ * a move, and Put Roy's line on roll cards (the one setting that shows a line to others: it goes on
+ * the roll's chat card).
  *
  * Needs a Gemini API key, entered in the window and kept only in this browser's localStorage for
  * this Foundry site: never in the macro, the world or chat.
@@ -344,8 +345,11 @@ function starFrom(message) {
   return { entry, by: (message.author ?? message.user)?.name ?? "Someone" };
 }
 
-// Whose sheet the Rolls page reads: your assigned character, or else the actor named ROY.
+// Whose sheet the Rolls page reads: the character named in Settings, else your assigned character,
+// else the actor named ROY.
 function rollActor() {
+  const name = store.get("rollActor");
+  if (name) return game.actors.getName(name) ?? null;
   return game.user.character ?? game.actors.getName(ROY) ?? null;
 }
 
@@ -509,7 +513,8 @@ class RoyWindow extends foundry.applications.api.ApplicationV2 {
         store.set("geminiKey", null);
         this.refreshKey();
         this.status("Gemini key removed from this browser.");
-      }
+      },
+      saveActor() { this.saveActor(); }
     }
   };
 
@@ -585,6 +590,17 @@ class RoyWindow extends foundry.applications.api.ApplicationV2 {
               <button type="button" data-action="removeKey"><i class="fa-solid fa-trash"></i> Remove</button>
             </div>
           </fieldset>
+          <fieldset><legend>Character for rolls</legend>
+            <p class="hint">Whose sheet the Rolls page reads: one of your characters, by name. Blank: your
+            assigned character, or else ${esc(ROY)}.</p>
+            <div class="roy-row">
+              <input type="text" name="rollActor" list="roy-declarations-actors" maxlength="200"
+                value="${esc(store.get("rollActor") ?? "")}" placeholder="${esc(game.user.character?.name ?? ROY)}">
+              <button type="button" data-action="saveActor"><i class="fa-solid fa-check"></i> Save</button>
+            </div>
+            <datalist id="roy-declarations-actors">${game.actors.filter(actor => actor.isOwner && actor.type === "character")
+              .map(actor => `<option value="${esc(actor.name)}"></option>`).join("")}</datalist>
+          </fieldset>
           <fieldset><legend>Lines</legend>
             <label class="roy-check"><input type="checkbox" name="alwaysMoves"${store.get("alwaysMoves") === "true" ? " checked" : ""}> Always name a move</label>
             <p class="hint">Every line gets a shouted move in capitals, whatever the moment or roll. Off: fights,
@@ -621,6 +637,9 @@ class RoyWindow extends foundry.applications.api.ApplicationV2 {
     });
     this.find("[name=key]")?.addEventListener("keydown", event => {
       if (event.key === "Enter") { event.preventDefault(); this.saveKey(); }
+    });
+    this.find("[name=rollActor]")?.addEventListener("keydown", event => {
+      if (event.key === "Enter") { event.preventDefault(); this.saveActor(); }
     });
     for (const name of ["alwaysMoves", "attachToRolls"]) {
       this.find(`[name=${name}]`)?.addEventListener("change", event => {
@@ -680,7 +699,9 @@ class RoyWindow extends foundry.applications.api.ApplicationV2 {
     const actor = rollActor();
     const say = html => { box.innerHTML = html; this.fit(); };
     if (game.system.id !== "sw25") return say("<p>The Rolls page reads Sword World 2.5 character sheets, so it isn't available in this game's system.</p>");
-    if (!actor) return say(`<p>No character found: assign yours under User Configuration, or name it ${esc(ROY)}.</p>`);
+    const named = store.get("rollActor");
+    if (!actor) return say(named ? `<p>No character named ${esc(named)}: change it under Settings, Character for rolls.</p>`
+      : `<p>No character found: assign yours under User Configuration, or name it under Settings, Character for rolls.</p>`);
     say(`<p class="hint"><i class="fa-solid fa-spinner fa-spin"></i> Reading ${esc(actor.name)}'s sheet…</p>`);
     try {
       this.rolls = await sheetRolls(actor);
@@ -803,6 +824,22 @@ class RoyWindow extends foundry.applications.api.ApplicationV2 {
     store.set("geminiKey", value);
     this.refreshKey();
     this.status("Gemini key saved in this browser.");
+  }
+
+  /**
+   * Save Character for rolls: a character you own, by name, or blank for the default. The Rolls page
+   * reads the new sheet when it next opens.
+   */
+  saveActor() {
+    const input = this.find("[name=rollActor]");
+    const name = input?.value.trim() ?? "";
+    const actor = name ? game.actors.getName(name) : null;
+    if (name && !actor) return this.status(`No character named ${name} in this world.`, "error");
+    if (actor && !actor.isOwner) return this.status(`You don't own ${name}'s sheet, so the Rolls page can't roll from it.`, "error");
+    store.set("rollActor", name || null);
+    this.rolls = null;
+    const now = rollActor();
+    this.status(now ? `The Rolls page now reads ${now.name}'s sheet.` : "Saved. No character found yet: assign yours under User Configuration.");
   }
 
   speak(quick) {

@@ -147,8 +147,8 @@ automatic success or failure, and his line reacts to it; otherwise the GM decide
 so his line reacts to the attempt without claiming either. Anything in the text box and any targets
 are added as for a moment.
 
-The page reads your assigned character's sheet (User Configuration), or else the actor named in the
-`ACTOR_NAME` line near the top of the macro. It follows the sheet: add a weapon or spell, or change a
+The page reads the sheet of the character named in **Settings**, *Character for rolls*; left blank,
+your assigned character's (User Configuration), or else Roy "Slayer" Belmont's. It follows the sheet: add a weapon or spell, or change a
 score, and its buttons update while the window is open. **Refresh** reads the sheet again by hand.
 In other game systems the page says it isn't available.
 
@@ -157,6 +157,11 @@ In other game systems the page says it isn't available.
 The **Settings** tab holds:
 
 - **Gemini key:** paste, replace or remove it (see *Gemini key* above).
+- **Character for rolls:** whose sheet the Rolls page reads. Type the name of a character you own
+  (the field suggests them) and click **Save** or press Enter. A name with no character, or one you
+  don't own, isn't saved, and the window says why. Leave it blank for your assigned character, or
+  else Roy "Slayer" Belmont. If the named character is later renamed or deleted, the Rolls page says
+  so. Roy's lines stay Roy's, whoever's sheet the rolls come from.
 - **Always name a move:** every line gets a shouted move in capitals, whatever the moment or roll,
   even eating or resting. Off by default.
 - **Put Roy's line on roll cards:** on the Rolls page, Roy's line is written first, then the roll is

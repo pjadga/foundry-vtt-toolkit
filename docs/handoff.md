@@ -95,7 +95,11 @@ file the user copies between machines.
    day removed leftovers (an old localStorage cleanup, a duplicate actor name, "dreven" in the
    word list) and shared the disposition and move helpers; tested as that player in QA Roy v12:
    target line, a typed line, a roll with its line, a line on a roll card with ★ Star, the blocked
-   answer message (with a stubbed reply) and Roy's History.
+   answer message (with a stubbed reply) and Roy's History. A **Character for rolls** setting then
+   let the Rolls page read another sheet by name (localStorage `rollActor`); tested as that player:
+   unknown and unowned names are refused, a saved name survives reopening, a missing one says so,
+   and blank goes back to the assigned character. Switching to a second owned character wasn't
+   tried, because that player owns only Roy and can't create actors.
    The v12 install is now served over HTTPS on the same site as v13 (details in
    `docs/handoff.local.md`), so the two share localStorage: one Gemini key and one Roy history.
    Gemini (`gemini-3.5-flash-lite`) took 7 to 40 seconds per line that day,
