@@ -26,7 +26,7 @@ const WINDOW_ID = "roy-history";
 // count as Unique until Roy's Declarations sorts them.
 const CATEGORIES = {
   Attacking: "#e74c3c", Defending: "#3498db", Healing: "#2ecc71", "Health & Mana": "#9b59b6",
-  Roleplay: "#f1c40f", Unique: "#1abc9c"
+  Roleplay: "#f1c40f", Unique: "#1abc9c", Rolls: "#e67e22"
 };
 const categoryOf = entry => CATEGORIES[entry.category] ? entry.category : "Unique";
 
@@ -43,7 +43,9 @@ const store = {
 };
 
 const history = () => store.json("history", []);
-const withAction = entry => entry.act ? `*${entry.act}* ${entry.say}` : entry.say;
+// What he says goes in quotation marks, apart from what he does.
+const quoted = say => `"${say}"`;
+const withAction = entry => entry.act ? `*${entry.act}* ${quoted(entry.say)}` : quoted(entry.say);
 
 /** Change the entry saved at `at` (a line's time is its id), or remove it when `change` returns null. */
 function update(at, change) {
@@ -83,7 +85,7 @@ class RoyHistory extends foundry.applications.api.ApplicationV2 {
     position: { width: 620, height: 640 },
     // Called with the window as `this`.
     actions: {
-      copySay(event, button) { this.copy(this.entry(button)?.say); },
+      copySay(event, button) { const entry = this.entry(button); this.copy(entry && quoted(entry.say)); },
       copyAct(event, button) { const entry = this.entry(button); this.copy(entry && withAction(entry)); },
       star(event, button) {
         update(Number(button.closest("[data-at]").dataset.at), entry => ({ ...entry, starred: !entry.starred }));
@@ -214,7 +216,7 @@ class RoyHistory extends foundry.applications.api.ApplicationV2 {
         </p>
         <div class="roy-entry-body"${open ? "" : " hidden"}>
         ${entry.act ? `<p><em>${esc(entry.act)}</em></p>` : ""}
-        <p class="roy-say">${esc(entry.say)}</p>
+        <p class="roy-say">${esc(quoted(entry.say))}</p>
         <div class="roy-row">
           <button type="button" data-action="copySay"><i class="fa-solid fa-copy"></i> Copy words</button>
           <button type="button" data-action="copyAct"><i class="fa-solid fa-copy"></i> Copy with action</button>

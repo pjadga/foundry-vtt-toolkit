@@ -73,7 +73,15 @@ file the user copies between machines.
    `QA Roy test` scene and both macros (slots 0 and 9). The user's notes also had a JSON block that
    disagreed in places (Fighter 2, five spells); the sheet text was used, because its numbers add
    up. Categories (with colours and a history filter) were added and tested on v12 and v13 the
-   same day.
+   same day, then the Rolls page: it reads the sw25 sheet's `.rollable[data-roll]` and
+   `.powerrollable` elements from `sheet._renderInner(await sheet.getData())` without opening it,
+   rolls through `sheet._onRoll` / `_onPowerRoll` with that element, and reads the result from the
+   chat card's `.diceresult-total`. Those are sw25 sheet internals (2.4.1 on v12), so a different
+   sw25 version may need checking. Tested on v12: accuracy, damage with a target, Cure Wounds,
+   Fortitude, Willpower, live updates and Ask again. A Settings tab followed: the key, Always name a
+   move, and Put Roy's line on roll cards, which writes the line first and adds it to the roll
+   card's flavor in `preCreateChatMessage` (tested on v12, including Gemini failing before the
+   roll). The user also rolls in QA Roy v12 now; leave their chat cards alone.
    The v12 install is now served over HTTPS on the same site as v13 (details in
    `docs/handoff.local.md`), so the two share localStorage: one Gemini key and one Roy history.
    Gemini (`gemini-3.5-flash-lite`) took 7 to 40 seconds per line that day,

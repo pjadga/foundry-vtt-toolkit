@@ -41,9 +41,9 @@ Script Macros and Execute Script Region Behaviors** in v13.
 
 ## Gemini key
 
-Roy's Declarations needs a Gemini API key, free from Google AI Studio. The first time you open it, a
-key field shows in the window: paste the key and click **Save**. The **Key** button shows the field
-again to replace the key, or **Remove** it. The key is saved only in your browser's `localStorage`
+Roy's Declarations needs a Gemini API key, free from Google AI Studio. The first time you open it, the
+window opens on its **Settings** tab at the key field: paste the key and click **Save**. Come back to
+**Settings** to replace the key, or **Remove** it. The key is saved only in your browser's `localStorage`
 for that Foundry site. It is never written into the macro, the world or chat, so the GM and other
 players can't see it, but it has to be entered again in another browser.
 
@@ -62,6 +62,7 @@ players can't see it, but it has to be entered again in another browser.
    | **Health & Mana** | purple | Half HP and Low HP (under half, under a quarter), Half MP and Low MP |
    | **Roleplay** | gold | Resting, Eating, Preparing (exercising, stretching, warming up), Celebrating |
    | **Unique** | teal | Anything typed and sent with **Speak** |
+   | **Rolls** | orange | A line from the **Rolls** page (below) |
 
    Each category's heading and buttons are edged in its colour, and the line Roy says, and its
    place in the history, carry the same category and colour.
@@ -83,8 +84,11 @@ players can't see it, but it has to be entered again in another browser.
 4. Roy's line appears at the bottom of the window, edged in its category's colour: the category and
    what it was for, the stage direction in italics, then his words. On a short screen the window
    stops at the bottom edge and scrolls.
-   - **Copy words** copies what he says aloud.
-   - **Copy with action** copies the stage direction too, as `*raises his mace* By the Light…`.
+   - **Copy words** copies what he says aloud, in quotation marks.
+   - **Copy with action** copies the stage direction too, as `*raises his mace* "By the Light…"`.
+
+   What he says is in quotation marks everywhere (the window, copies, roll cards and the history), so
+   it reads apart from what he does.
    - **Another line** asks Gemini again for the same moment, detail and targets.
 
    Pick the next moment whenever you're ready; close the window with its **×**.
@@ -92,12 +96,70 @@ players can't see it, but it has to be entered again in another browser.
 
 If the copy buttons don't work in your browser, select the text in the window and copy it yourself.
 
-Lines don't repeat themselves: the macro sends Gemini Roy's last eight lines, and the move names
-already used, and asks for something different. Only now and then does it let him quote Dreven or
-his grandfather's Saga.
+Lines don't repeat themselves: the macro sends Gemini Roy's last eight lines and the move names
+already used, and asks for something different in his usual way of speaking. Gemini is told Roy is
+an anime-style chuunibyou whose right arm is possessed by a sealed holy power, which he only calls the
+Sacred Crusher or his crushing arm.
+
+**Named moves:** in fights and spells (the Attacking, Defending and Healing moments, and weapon and
+spell rolls) he shouts a newly named move in capitals, sometimes as his anime declaration ("Taste
+the…" or "Feel the…" of Dreven's judgment, "through my crushing arm…", then the move), but after one
+of those the next shouts its move another way. The move's name always comes last. Health & Mana and Roleplay moments have no named move;
+for typed moments and checks Gemini decides. **Always name a move** in Settings gives every line one.
+
+Any other longer word in two of his last four lines is asked to rest for a line. Only now and then does it let him quote Dreven or his grandfather's Saga.
+
+Roy's divine magic is celestial and holy, in the colours of Dreven, a vampire hunter's god: silver
+and moonlight laced with crimson-ruby embers, spectral silver-red spears for Banish, a veil of silver
+threads that hardens into a barrier for Cure Wounds and Field of Protection, and a crimson flash in
+his eyes with silver compass lines for Abyss Ranger. Lines describe those colours only when his magic
+is part of the moment, with other words for them too (scarlet, vermillion, ashen, pale, starlight,
+argent, twilight, cinders, steely and more). It is described in Roy's profile near the top of the
+macro.
 
 If Gemini can't answer (no connection, a wrong key, its free limit used up, or no reply within 45
-seconds), the window says why. Click the moment again to retry.
+seconds), the window says why, with an **Ask again** button that asks for the same moment again. For
+a roll, it reuses the result in chat rather than rolling again.
+
+## Rolls page
+
+The window has two tabs: **Moments** (everything above) and **Rolls**, for Sword World 2.5 games.
+Rolls has a button for every dice roll on your character's sheet, grouped as on the sheet:
+
+| Group | Rolls |
+| --- | --- |
+| **Combat** | Each equipped weapon's accuracy and damage, and Evasion |
+| **Checks** | Fortitude, Willpower, Initiative, Monster Knowledge |
+| **Spells & items** | Magic power, each spell's casting check (and its damage if the spell has a power), and any item or feat with its own dice set up |
+| **Class checks** | Every class with every ability, such as Fighter + Dexterity or Priest (Dreven) + Intelligence |
+
+Each button shows the roll's formula with your bonuses. Clicking it rolls exactly as the sheet does:
+the usual chat card, the chat's roll mode, and the sheet's target prompt when tokens are targeted.
+Then Gemini writes Roy's line for how it came out, in the Rolls category. A natural 12 or 2 is an
+automatic success or failure, and his line reacts to it; otherwise the GM decides whether it worked,
+so his line reacts to the attempt without claiming either. Anything in the text box and any targets
+are added as for a moment.
+
+The page reads your assigned character's sheet (User Configuration), or else the actor named in the
+`ACTOR_NAME` line near the top of the macro. It follows the sheet: add a weapon or spell, or change a
+score, and its buttons update while the window is open. **Refresh** reads the sheet again by hand.
+In other game systems the page says it isn't available.
+
+## Settings
+
+The **Settings** tab holds:
+
+- **Gemini key:** paste, replace or remove it (see *Gemini key* above).
+- **Always name a move:** every line gets a shouted move in capitals, whatever the moment or roll,
+  even eating or resting. Off by default.
+- **Put Roy's line on roll cards:** on the Rolls page, Roy's line is written first, then the roll is
+  made, and the line appears on the roll's chat card under its name. Everyone who sees the roll sees
+  the line, as the chat's roll mode allows, so this is the one setting that shows a line to others.
+  Because the line is written before the dice land, it can't react to the result. If Gemini can't
+  answer, nothing is rolled, and **Ask again** writes the line and rolls. Off by default: the line
+  stays private and reacts to the result.
+
+Settings are saved in that browser, like the key.
 
 Lines keep Roy holy: if Gemini calls his power unholy, cursed or dark, the macro asks once more, then
 says so in the window rather than showing an off-tone line.
