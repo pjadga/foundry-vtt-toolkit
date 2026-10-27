@@ -201,5 +201,7 @@ From the first live combat tests:
   profile and melee moments follow when it changes.
 - **Roy's Declarations:** when Gemini blocked a line or sent no text, the window said "Unexpected
   end of JSON input"; it now says "no line" with Gemini's reason (such as SAFETY).
+- **Roy's Declarations:** on a sheet with no weapon equipped, the Rolls page showed two broken
+  buttons, ": Accuracy" and ": Damage", from the sheet's empty weapon slot. They're left out now.
 
 See [docs/user-guide.md](docs/user-guide.md#known-issues-and-limitations) for known issues.

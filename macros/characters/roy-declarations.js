@@ -355,6 +355,8 @@ function rollActor() {
 
 const ROLL_GROUPS = ["Combat", "Checks", "Spells & items", "Class checks"];
 const ABILITY_MOD = /\+(Dexterity|Agility|Strength|Vitality|Intelligence|Spirit)Mod$/;
+// What the sheet adds after an item's name: "Heavy Mace (Acc.)", "Banish (Power )".
+const ROLL_SUFFIX = /\s*\((Check|Power\s*|Acc\.)\)$/;
 
 /** A sheet label as a button label: "Fighter+DexterityMod" reads "Fighter + Dexterity". */
 function rollLabel(label) {
@@ -383,12 +385,13 @@ async function sheetRolls(actor) {
   const checks = new Set(actor.items.filter(item => item.type === "check").map(item => item.name));
   const rollData = actor.getRollData();
   const itemOf = element => actor.items.get(element.dataset.itemid ?? element.dataset.itemId ?? element.closest("[data-item-id]")?.dataset.itemId)
-    ?? actor.items.getName(element.dataset.label.replace(/\s*\((Check|Power\s*|Acc\.)\)$/, ""));
+    ?? actor.items.getName(element.dataset.label.replace(ROLL_SUFFIX, ""));
   const seen = new Set();
   const rolls = [];
   for (const element of html.find(".rollable[data-roll], .powerrollable")) {
     const { label } = element.dataset;
-    if (!label) continue;
+    // With no weapon equipped, the sheet still draws its accuracy and damage, named " (Acc.)".
+    if (!label?.replace(ROLL_SUFFIX, "").trim()) continue;
     const power = element.classList.contains("powerrollable");
     const group = element.matches(".attack-display, .deffence-display") ? "Combat"
       : checks.has(label) ? "Checks"
