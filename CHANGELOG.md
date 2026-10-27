@@ -124,13 +124,16 @@ music and a GM Assistant.
     category. The buttons follow changes to the sheet.
   - When Gemini fails, Ask again asks for the same moment again; a roll isn't rolled again.
   - Named moves for fights and spells only (Health & Mana and Roleplay have none), always at the end
-    of what he says, with his anime declaration now and then rather than every time.
+    of what he says as its own exclamation ("…every wound! DIVINE MIRACLE!" rather than "…every wound
+    in the DIVINE MIRACLE!"), with his anime declaration now and then rather than every time.
   - What he says is in quotation marks wherever it's shown or copied, apart from what he does.
   - A Settings tab with the Gemini key, **Always name a move**, and **Put Roy's line on roll cards**,
     which writes the line first and puts it on the roll's chat card (off by default, the one setting
     that shows a line to others).
   - A line on a roll card has a ★ Star link anyone can click; while Roy's Declarations or Roy's
-    History is open, the star card it posts stars the line in his player's history.
+    History is open, the self-only roll it posts stars the line in his player's history.
+  - Roy keeps his faith to himself: no gods (bar "godly"), his god's name or vampires in his words;
+    he channels his power through the Sacred Crusher, and any god that slips in becomes it.
   - Lines keep Roy's holy, retribution-paladin tone, vary their focus and move names, and are sent
     back once if they call his power dark.
   - Install guide: [docs/macros/roy-declarations.md](docs/macros/roy-declarations.md).
@@ -175,10 +178,10 @@ From the first live combat tests:
   empty key field no longer removes the key: there is a Remove button for that.
 - **Roy's Declarations:** lines leaned on the same words (two in three said heaven or celestial, and
   later freezing or absolute onslaught). Any longer word in two of his last four lines now rests for
-  a line. His magic keeps its celestial tone in Dreven's colours (silver and moonlight with
+  a line. His magic keeps its celestial tone in silver and moonlight (with
   crimson-ruby embers, spectral spears, silver threads, a crimson eye flash), described only when
   his magic is in the moment and with a range of other colour words; in 10 test lines celestial
-  came up twice and Dreven's colours in six, mostly in spell moments.
+  came up twice and the silver and crimson colours in six, mostly in spell moments.
 - **Roy's Declarations:** lines called his right arm "my righteous arm" or "my glowing arm"; he only
   ever calls it his crushing arm or the Sacred Crusher. His profile now says so, and any other
   "my … arm" or "my … limb" in his words becomes "my crushing arm" (his shield arm and left arm are

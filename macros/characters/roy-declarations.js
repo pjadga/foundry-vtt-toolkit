@@ -38,29 +38,28 @@ const WEAPON = "a heavy mace he calls the Star of Retribution";
 const GEMINI_MODEL = "gemini-flash-lite-latest";
 const STORE = "roy-declarations.";
 
-const PROFILE = `Roy "Slayer" Belmont, an 18-year-old human fighter and priest of Dreven, the Magic Hunter King (Sword World 2.5, Alframe continent).
-- Dreven: a minor god of the First Sword, a Dhampir vampire hunter before he ascended, who hunted the Eternal Night and mapped Shallow Abysses (spatial rifts). Holy symbol: a spear piercing a dark circle (a Shallow Abyss). His combat doctrine: "To strike hard is like a rock, to pierce is like ice."
-- Looks: pink hair under a feather-trimmed cap, bright blue eyes, polished splint armor with wing motifs, a round shield, ${WEAPON}, his grandfather's silver medallion of Dreven. A pale scar below his left collarbone from shielding village children from a wild boar when he was twelve.
-- He is an anime-style chuunibyou: he believes his right arm is possessed by a sealed power (a holy one, never demonic) that strains to break free, and he names it the Sacred Crusher, or his crushing arm, and only ever those (never "my righteous arm", "my glowing arm" or just "my arm"). He grips his wrist to hold it back.
-- In combat and when casting spells he shouts a newly named move in capitals (GRAND SLAM OF DESTINY!, ABYSS-SHATTERING STRIKE!, CELESTIAL METEOR CRUSH!, SACRED INTERCEPTION!), sometimes declared like an anime hero ("Taste the…" or "Feel the…" of Dreven's judgment, "through my crushing arm…"), but not always that way. The move's name always comes at the very end of what he says. Outside a fight or a spell he speaks without a named move.
+const PROFILE = `Roy "Slayer" Belmont, an 18-year-old human fighter and priest (Sword World 2.5, Alframe continent).
+- Roy keeps his faith to himself: he never speaks of a god or gods, and never says things like "my god", "the power of god" or "may god strike you". He embodies his faith instead: in his own eyes he is practically godlike, and he channels it through his right arm, the Sacred Crusher. "Godly" as an adjective is fine (GODLY CRIMSON STRIKE!). He never mentions vampires or vampire hunters.
+- His faith, which he doesn't talk about: the First Sword, who hunted the Eternal Night and mapped Shallow Abysses (spatial rifts). Holy symbol: a spear piercing a dark circle (a Shallow Abyss).
+- Looks: pink hair under a feather-trimmed cap, bright blue eyes, polished splint armor with wing motifs, a round shield, ${WEAPON}, his grandfather's silver holy medallion. A pale scar below his left collarbone from shielding village children from a wild boar when he was twelve.
+- He is an anime-style chuunibyou: he believes his right arm is possessed by a sealed power (a holy one, never demonic) that strains to break free, and he names it the Sacred Crusher, or his crushing arm, and only ever those (never "my righteous arm", "my glowing arm" or just "my arm"). He grips his right wrist with his left hand to hold it back.
+- In combat and when casting spells he shouts a newly named move in capitals (GRAND SLAM OF DESTINY!, ABYSS-SHATTERING STRIKE!, CELESTIAL METEOR CRUSH!, SACRED INTERCEPTION!), sometimes declared like an anime hero ("Taste the…" or "Feel the…" of divine judgment, "through my crushing arm…"), but not always that way. The move's name always comes at the very end of what he says, as its own exclamation ("…every wound! DIVINE MIRACLE OF THE PURE FLAME HEALING!"), never joined to the sentence with "in the", "with the" or "as I unleash". Outside a fight or a spell he speaks without a named move.
 - Chuunibyou habits: talks to his weapon like a partner; quotes his grandfather Victor Belmont's hero stories as scripture, by volume and chapter; titles himself the Shield of the Village, the Grandson of the Living Legend. Orders juice, not ale.
 - His only weapon right now is ${WEAPON}. He has no blade, sword or other weapon, so never give him one.
 - "Slayer" is the adventurer handle he gave himself: in the heat of combat, and when addressing NPCs he doesn't trust, he calls himself Slayer rather than Roy or Roy Belmont. With friends and trustworthy folk he uses his real name.
 - His heroism is genuine: a loyal frontline protector who throws himself in front of allies. His greatest fear is failing to protect one. His farming parents think adventuring is nonsense.
 - He fights like a retribution paladin: his power is holy, radiant and righteous. Spells: Cure Wounds, Field of Protection, Banish, Sanity, Awaken, Detect Faith, Abyss Ranger. Combat feats: [Cover I] (taking a hit for an ally), [Change Fate] (a reroll).
-- His divine magic is celestial and holy, in the colours of Dreven, a vampire hunter's god, rather than a sun god's warm gold: silver and moonlight laced with crimson-ruby embers, surging across his splint armor, round shield and mace (divine magic needs no free hand). Describe its colours only when his magic is part of the moment, not in every line, and vary the words: scarlet, red, fiery, vermillion, ashen, pale, luminance, starlight, argent, silvery, twinkle, starry, sparkle, twilight, cinders, fire, spark, lustrous, steely, shining.
+- His divine magic is celestial and holy, never a warm gold: silver and moonlight laced with crimson-ruby embers, surging across his splint armor, round shield and mace (divine magic needs no free hand). Describe its colours only when his magic is part of the moment, not in every line, and vary the words: scarlet, red, fiery, vermillion, ashen, pale, luminance, starlight, argent, silvery, twinkle, starry, sparkle, twilight, cinders, fire, spark, lustrous, steely, shining.
 - Banish and smites: a phantom silver-red spectral spear shoots from his medallion or mace, impales the undead or daemon, then shatters into purifying shards. In a Shallow Abyss (Shallow Judgment, +5 damage) his mace and shield flare with jagged, lance-like edges.
 - Cure Wounds and Field of Protection: no gentle shower of light; a swift veil of pale silver threads wraps the target and quickly hardens into a protective barrier.
-- Abyss Ranger: his blue eyes flash crimson for a moment, like a Dhampir's night vision, and faint silver compass needles and gridlines etch themselves into the air and floor around his boots, showing hidden hazards, secret passages and safe footing in a rift.`;
+- Abyss Ranger: his blue eyes flash crimson for a moment, and faint silver compass needles and gridlines etch themselves into the air and floor around his boots, showing hidden hazards, secret passages and safe footing in a rift.`;
 
 // Gemini's system instruction, which it weighs above the request itself.
-const TONE = "You write lines for Roy, a holy warrior. The tone is holy and righteous, like a retribution paladin: celestial wrath, radiant judgment, holy vanquishing light, divine retribution, with the cold, piercing edge of Dreven, a vampire hunter's god. Roy's own power, body, blood and weapons are always holy and radiant, never unholy, dark, shadowy, abyssal, cursed, demonic or corrupted. Darkness, the Abyss, Shallows, undead and daemons are only ever what he fights.";
+const TONE = "You write lines for Roy, a holy warrior. The tone is holy and righteous, like a retribution paladin: celestial wrath, radiant judgment, holy vanquishing light, divine retribution. Roy's own power, body, blood and weapons are always holy and radiant, never unholy, dark, shadowy, abyssal, cursed, demonic or corrupted. Darkness, the Abyss, Shallows, undead and daemons are only ever what he fights.";
 
 // Wording that makes Roy sound dark. A line containing it is sent back once; then you see an error.
 const OFF_TONE = /\b(unholy|cursed|demonic|profane|blasphemous|eldritch)\b|\b(dark|shadow|shadowy|abyssal|void|corrupt|corrupted|forbidden|sinister|infernal)\s+(energy|power|magic|might|fury|wrath|force|aura|blood|hunger|thirst|flames?|fire|strength)\b/i;
 
-// Only offered to Gemini now and then, so his lines don't all quote Dreven.
-const DREVEN_SAYINGS = `Dreven's sayings: "One's actions prove one's truth." "First move, then think. Before it's too late." "Ordinary measures do not work on Shallows. Be prepared. Be creative." "Do not be deceived by tranquility. Burn with determination and follow through!"`;
 
 // What he says goes in quotation marks wherever it's shown or copied, apart from what he does.
 const quoted = say => `"${say}"`;
@@ -84,6 +83,27 @@ store.set("useGemini", null);
  */
 function crushingArm(say) {
   return say.replace(/\bmy (?:(?!crushing\b|shield\b|left\b)[a-z-]+ )?(?:arm|limb)\b/gi, match => match[0] === "M" ? "My crushing arm" : "my crushing arm");
+}
+
+/**
+ * Roy keeps his faith to himself, so a god in his words (god, gods, my god, Dreven, the Magic Hunter
+ * King) becomes the Sacred Crusher, the arm he channels it through: "may god strike you" reads "may
+ * the Sacred Crusher strike you". "Godly" and "god-given" are left alone.
+ */
+function noGods(say) {
+  return say.replace(/\b(?:DREVEN|(?:THE )?MAGIC HUNTER KING|GODS?)('S)?\b(?!-)/g, "THE SACRED CRUSHER$1")
+    .replace(/\b(?:my |the |a )?(?:Dreven|(?:the )?Magic Hunter King|gods?)('s)?\b(?!-)/gi, "the Sacred Crusher$1")
+    .replace(/(^|[.!?]\s+)the Sacred Crusher/g, "$1The Sacred Crusher");
+}
+
+/**
+ * The move he shouts stands on its own at the end: "…mend every wound in the DIVINE MIRACLE!" reads
+ * "…mend every wound! DIVINE MIRACLE!", and the same for "with the", "through the", "as I enact" and
+ * the like.
+ */
+function moveApart(say) {
+  return say.replace(/,?\s+(?:(?:in|with|through|by|of|from|into|via|using) (?:the |my |this )?|(?:as|while|and) I \w+ (?:the |my |this )?)([A-Z][A-Z0-9'’-]*(?: [A-Z0-9'’-]+)+)\s*!*\s*$/,
+    (match, move) => `! ${move}!`);
 }
 
 async function askGemini(prompt, key) {
@@ -117,7 +137,7 @@ async function askGemini(prompt, key) {
     const text = data.candidates?.[0]?.content?.parts?.map(part => part.text ?? "").join("") ?? "";
     const line = JSON.parse(text);
     const act = String(line.act ?? "").trim().slice(0, 200);
-    const say = crushingArm(String(line.say ?? "").trim().replace(/^["“]|["”]$/g, "").slice(0, 500));
+    const say = moveApart(noGods(crushingArm(String(line.say ?? "").trim().replace(/^["“]|["”]$/g, "").slice(0, 500))));
     if (!say) throw new Error("empty answer");
     return { act, say };
   } finally {
@@ -130,9 +150,9 @@ const MOMENTS = `- In a fight: a grandiose battle cry, warning or ultimatum, new
 - Meeting people: an introduction or greeting with dramatic self-titles, introducing a party member, farm-boy manners with nobles, kindness to frightened folk.
 - After a fight or in quiet moments: a victory pose, checking on his companions, talking to his weapon, calming the Sacred Crusher, writing his own saga, ordering juice, or another everyday chuunibyou habit.`;
 
-// Lines that quote Dreven or Victor's Saga. Gemini overuses them, so a quote is only offered now and
+// Lines that quote Victor's Saga. Gemini overuses them, so a quote is only offered now and
 // then, and never when one of his last three lines quoted.
-const QUOTES = /"|Volume|Saga|Dreven's scripture/;
+const QUOTES = /"|Volume|Saga/;
 
 // A named move: two or more words in capitals, like GRAND SLAM OF DESTINY.
 const MOVE = /\b[A-Z][A-Z'-]+(?: [A-Z'-]+)+\b/g;
@@ -163,13 +183,13 @@ async function geminiLine(situation, key, moves) {
     PROFILE,
     party && `His party. Roy has proclaimed to the Adventurer's Guild that it is called the Slayer's Fellowship; no one agreed, but no one bothered to correct him, so he uses the name with total confidence. Apart from Keira, Roy met them only recently: he treats them as he would any friendly companions, warmly and protectively, with no special history or opinions of them.\n${party}`,
     quoting
-      ? `${DREVEN_SAYINGS}\nHe may quote one of Dreven's sayings or a volume and chapter of his grandfather Victor's Saga, if it suits. Dreven's sayings are Dreven's; the Saga is his grandfather's own hero stories, so never credit one to the other.`
-      : "Don't quote Dreven, scripture or Victor's Saga in this line.",
+      ? "He may quote a volume and chapter of his grandfather Victor's Saga, his grandfather's own hero stories, if it suits."
+      : "Don't quote Victor's Saga or any scripture in this line.",
     recent.length && `His recent lines (say something different, with a different stage direction and new move names, in his usual way of speaking):\n${recent.map(line => `- ${line}`).join("\n")}`,
-    moves === "always" ? `In this line he shouts a newly named move in capitals, even if this isn't a fight: Always name a move is on, and his chuunibyou names everything he does, eating and resting included. The move's name is the very last thing he says.${shoutAnotherWay}`
-      : moves === true ? `This is a combat or spell moment: he shouts a newly named move in capitals, as the very last thing he says.${shoutAnotherWay}`
+    moves === "always" ? `In this line he shouts a newly named move in capitals, even if this isn't a fight: Always name a move is on, and his chuunibyou names everything he does, eating and resting included. The move's name is the very last thing he says, as its own exclamation ("…every wound! DIVINE MIRACLE OF THE PURE FLAME HEALING!"), never joined to the sentence with "in the", "with the" or "as I unleash".${shoutAnotherWay}`
+      : moves === true ? `This is a combat or spell moment: he shouts a newly named move in capitals, as the very last thing he says, as its own exclamation ("…every wound! DIVINE MIRACLE OF THE PURE FLAME HEALING!"), never joined to the sentence with "in the", "with the" or "as I unleash".${shoutAnotherWay}`
       : moves === false ? "This isn't a combat or spell moment, so no named move or battle-cry declaration: he just speaks in character."
-      : `Shout a named move only if he attacks, defends or casts a spell here, as the very last thing he says.${shoutAnotherWay}`,
+      : `Shout a named move only if he attacks, defends or casts a spell here, as the very last thing he says, as its own exclamation ("…every wound! DIVINE MIRACLE OF THE PURE FLAME HEALING!"), never joined to the sentence with "in the", "with the" or "as I unleash".${shoutAnotherWay}`,
     `Use his mannerisms from the profile. If he names a move, invent a new name for it. These move names are already used, so never use them or a close variation: ${usedMoves.join(", ")}.`,
     tired.length && `His recent lines overused these words, so don't use any of them in this line, and don't copy those lines' sentence pattern: ${tired.join(", ")}.`,
     'Return JSON: "act" is a short stage direction in present tense, third person, without his name, under 20 words; "say" is what he says aloud, 1 to 3 sentences, under 60 words, without surrounding quotation marks. Over the top but sincere. Use only facts given here or in the description of the moment; invent no new companions.'
@@ -301,8 +321,9 @@ function remember(line, { label, category }) {
 }
 
 // A ★ Star link on a posted line is a Foundry inline roll, so anyone can click it with nothing
-// installed: it posts a small card whose flavor names the line. While Roy's Declarations or Roy's
-// History is open, that card stars the line. Keep this in step with the other macro.
+// installed: it posts a small self-only roll whose flavor names the line. Foundry still sends it to
+// every browser (others see a "privately rolled" stub), so while Roy's Declarations or Roy's History
+// is open, his player's browser reads it and stars the line. Keep this in step with the other macro.
 const STAR_CARD = /^★ Roy's line starred \(#(\d+)\)$/;
 function starFrom(message) {
   const at = Number(STAR_CARD.exec(message.flavor ?? "")?.[1]);
@@ -380,7 +401,7 @@ async function sheetRolls(actor) {
 
 /** Roy's line as it shows on a roll's chat card, under the roll's name. */
 const cardLine = line => `<p class="roy-card-line" style="margin: 2px 0 0;">${line.act ? `<em>${esc(line.act)}</em> ` : ""}${esc(quoted(line.say))}
-  <a class="inline-roll roll roy-star" data-mode="roll" data-formula="0" data-flavor="${esc(`★ ${ROY.split(" ")[0]}'s line starred (#${line.at})`)}"
+  <a class="inline-roll roll roy-star" data-mode="selfroll" data-formula="0" data-flavor="${esc(`★ ${ROY.split(" ")[0]}'s line starred (#${line.at})`)}"
     title="Star this line in ${esc(ROY.split(" ")[0])}'s history" style="white-space: nowrap;"><i class="fa-solid fa-star"></i> Star</a></p>`;
 
 /**

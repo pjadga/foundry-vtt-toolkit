@@ -103,13 +103,20 @@ Sacred Crusher or his crushing arm.
 
 **Named moves:** in fights and spells (the Attacking, Defending and Healing moments, and weapon and
 spell rolls) he shouts a newly named move in capitals, sometimes as his anime declaration ("Taste
-the…" or "Feel the…" of Dreven's judgment, "through my crushing arm…", then the move), but after one
-of those the next shouts its move another way. The move's name always comes last. Health & Mana and Roleplay moments have no named move;
+the…" or "Feel the…" of divine judgment, "through my crushing arm…", then the move), but after one
+of those the next shouts its move another way. The move's name always comes last, as its own
+exclamation ("…every wound! DIVINE MIRACLE OF THE PURE FLAME HEALING!"); a line that ends "…in the
+MOVE NAME!" or "…as I enact MOVE NAME!" is split that way. Health & Mana and Roleplay moments have no named move;
 for typed moments and checks Gemini decides. **Always name a move** in Settings gives every line one.
 
-Any other longer word in two of his last four lines is asked to rest for a line. Only now and then does it let him quote Dreven or his grandfather's Saga.
+Roy keeps his faith to himself: he never speaks of a god or gods ("godly" as an adjective is fine,
+as in GODLY CRIMSON STRIKE!), and never of vampires. He embodies his faith and channels it through
+the Sacred Crusher, so any god that slips into his words becomes the Sacred Crusher: "may god strike
+you" reads "may the Sacred Crusher strike you".
 
-Roy's divine magic is celestial and holy, in the colours of Dreven, a vampire hunter's god: silver
+Any other longer word in two of his last four lines is asked to rest for a line. Only now and then does it let him quote his grandfather's Saga.
+
+Roy's divine magic is celestial and holy: silver
 and moonlight laced with crimson-ruby embers, spectral silver-red spears for Banish, a veil of silver
 threads that hardens into a barrier for Cure Wounds and Field of Protection, and a crimson flash in
 his eyes with silver compass lines for Abyss Ranger. Lines describe those colours only when his magic
@@ -161,10 +168,11 @@ The **Settings** tab holds:
 
   A line on a roll card has a **★ Star** link, so the GM or another player can star it in your
   history. It's a Foundry inline roll, which works for anyone with nothing installed: clicking it posts
-  a small "★ Roy's line starred" card, and while Roy's Declarations or Roy's History is open in your
-  browser, that card stars the line and the window says who starred it. Stars clicked while neither
-  is open aren't picked up. The star card is public: an inline roll can only use the standard roll
-  modes, so it can't be whispered to one player.
+  a self-only roll, "★ Roy's line starred (#…)" (the number is the line's id), and while Roy's
+  Declarations or Roy's History is open in your browser, it stars the line and the window says who
+  starred it. Stars clicked while neither is open aren't picked up. Only the clicker sees the star
+  text; everyone else sees Foundry's usual "privately rolled some dice" stub. An inline roll can't be
+  whispered to one player: clicking one only offers the standard roll modes.
 
 Settings are saved in that browser, like the key.
 

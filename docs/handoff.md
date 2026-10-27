@@ -84,11 +84,14 @@ file the user copies between machines.
    roll). The user also rolls in QA Roy v12 now; leave their chat cards alone. A ★ Star link on a
    posted line followed: a deferred inline roll (`a.inline-roll` with `data-formula="0"` and a
    `data-flavor` naming the line), since the clicker runs none of our code; Roy's player's open
-   window reads the star card in `createChatMessage`. Its card can't be whispered to one player
-   (inline rolls only take the standard roll modes). Tested across users: a player user owns Roy's
+   window reads the star card in `createChatMessage`. It's a `selfroll`: Foundry still sends
+   whispered rolls to every browser (others see a "privately rolled" stub), so his player's browser
+   can read it, but it can't be whispered to one player (inline rolls only take the standard roll
+   modes). Roy also keeps his faith to himself: no gods, his god's name or vampires in his words (`noGods` turns any slip into the Sacred Crusher). Tested across users: a player user owns Roy's
    sheet with its own copies of both macros (named in `docs/handoff.local.md`), and the user's
    Gamemaster click starred the line in that player's history. Roy's macros are now tested as that
-   player.
+   player, and on 27 October the user asked to focus on QA Roy v12 only, so cpr-test's copies of
+   the two macros are a few changes behind (refresh them there if needed).
    The v12 install is now served over HTTPS on the same site as v13 (details in
    `docs/handoff.local.md`), so the two share localStorage: one Gemini key and one Roy history.
    Gemini (`gemini-3.5-flash-lite`) took 7 to 40 seconds per line that day,
