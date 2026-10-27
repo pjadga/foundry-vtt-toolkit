@@ -198,5 +198,7 @@ From the first live combat tests:
 - **Roy's Declarations:** a line called Roy's weapon a blade. His weapon is now one `WEAPON` setting
   (his mace, the Star of Retribution), which Gemini is told is his only weapon, and which the
   profile and melee moments follow when it changes.
+- **Roy's Declarations:** when Gemini blocked a line or sent no text, the window said "Unexpected
+  end of JSON input"; it now says "no line" with Gemini's reason (such as SAFETY).
 
 See [docs/user-guide.md](docs/user-guide.md#known-issues-and-limitations) for known issues.

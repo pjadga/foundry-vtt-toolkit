@@ -91,7 +91,11 @@ file the user copies between machines.
    sheet with its own copies of both macros (named in `docs/handoff.local.md`), and the user's
    Gamemaster click starred the line in that player's history. Roy's macros are now tested as that
    player, and on 27 October the user asked to focus on QA Roy v12 only, so cpr-test's copies of
-   the two macros are a few changes behind (refresh them there if needed).
+   the two macros are a few changes behind (refresh them there if needed). A code review the same
+   day removed leftovers (an old localStorage cleanup, a duplicate actor name, "dreven" in the
+   word list) and shared the disposition and move helpers; tested as that player in QA Roy v12:
+   target line, a typed line, a roll with its line, a line on a roll card with ★ Star, the blocked
+   answer message (with a stubbed reply) and Roy's History.
    The v12 install is now served over HTTPS on the same site as v13 (details in
    `docs/handoff.local.md`), so the two share localStorage: one Gemini key and one Roy history.
    Gemini (`gemini-3.5-flash-lite`) took 7 to 40 seconds per line that day,

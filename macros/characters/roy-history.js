@@ -5,8 +5,8 @@
  * Type:    script
  *
  * Every line the Roy's Declarations macro has written in this browser, newest first, in a window
- * just for you, starred ones first, each in its category's colour (filter to one with Category). Each shows its first line (when, the moment and who); click it
- * to open the rest.
+ * just for you, starred ones first, each in its category's colour (filter to one with Category).
+ * Each shows its first line (when, the moment and who); click it to open the rest.
  * Search them (every match opens), copy one (with or without the stage direction) to paste into chat
  * again, star the ones worth keeping, or delete them. Starred lines are never trimmed; the rest keep
  * the latest 300. Export saves them all as a text file. Nothing is posted, and nothing shows in
@@ -48,8 +48,9 @@ const quoted = say => `"${say}"`;
 const withAction = entry => entry.act ? `*${entry.act}* ${quoted(entry.say)}` : quoted(entry.say);
 
 // A ★ Star link on a posted line is a Foundry inline roll, so anyone can click it with nothing
-// installed: it posts a small card whose flavor names the line. While Roy's Declarations or Roy's
-// History is open, that card stars the line. Keep this in step with the other macro.
+// installed: it posts a small self-only roll whose flavor names the line. Foundry still sends it to
+// every browser (others see a "privately rolled" stub), so while Roy's Declarations or Roy's History
+// is open, his player's browser reads it and stars the line. Keep this in step with the other macro.
 const STAR_CARD = /^★ Roy's line starred \(#(\d+)\)$/;
 function starFrom(message) {
   const at = Number(STAR_CARD.exec(message.flavor ?? "")?.[1]);

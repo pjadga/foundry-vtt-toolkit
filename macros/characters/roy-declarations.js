@@ -60,7 +60,6 @@ const TONE = "You write lines for Roy, a holy warrior. The tone is holy and righ
 // Wording that makes Roy sound dark. A line containing it is sent back once; then you see an error.
 const OFF_TONE = /\b(unholy|cursed|demonic|profane|blasphemous|eldritch)\b|\b(dark|shadow|shadowy|abyssal|void|corrupt|corrupted|forbidden|sinister|infernal)\s+(energy|power|magic|might|fury|wrath|force|aura|blood|hunger|thirst|flames?|fire|strength)\b/i;
 
-
 // What he says goes in quotation marks wherever it's shown or copied, apart from what he does.
 const quoted = say => `"${say}"`;
 
@@ -72,9 +71,6 @@ const store = {
   set(key, value) { try { value == null ? localStorage.removeItem(STORE + key) : localStorage.setItem(STORE + key, value); } catch {} },
   json(key, fallback) { try { return JSON.parse(this.get(key)) ?? fallback; } catch { return fallback; } }
 };
-// Left over from the version with built-in lines and a Gemini toggle.
-store.set("bags", null);
-store.set("useGemini", null);
 
 /**
  * Roy calls his right arm only his crushing arm or the Sacred Crusher, so "my glowing arm", "my
@@ -135,6 +131,11 @@ async function askGemini(prompt, key) {
     }
     const data = await response.json();
     const text = data.candidates?.[0]?.content?.parts?.map(part => part.text ?? "").join("") ?? "";
+    // A blocked or cut-off answer has no text, which JSON.parse would report as "unexpected end".
+    if (!text) {
+      const why = data.promptFeedback?.blockReason ?? data.candidates?.[0]?.finishReason;
+      throw new Error(why ? `no line, ${why}` : "empty answer");
+    }
     const line = JSON.parse(text);
     const act = String(line.act ?? "").trim().slice(0, 200);
     const say = moveApart(noGods(crushingArm(String(line.say ?? "").trim().replace(/^["“]|["”]$/g, "").slice(0, 500))));
@@ -169,7 +170,7 @@ async function geminiLine(situation, key, moves) {
     ? ' Shout it another way this time, not with the "Taste the…" or "Feel the…" … "through my…" build.' : "";
   // Gemini leans on whatever it has just found: a longer word in two of his last four lines rests for
   // this one. Names, and the words of his move declarations, are kept.
-  const keep = new Set(["dreven", "slayer", "fellowship", "retribution", "belmont", "victor", "judgment",
+  const keep = new Set(["slayer", "fellowship", "retribution", "belmont", "victor", "judgment",
     ...Object.values(PARTY).map(member => member.name.toLowerCase()),
     "through", "before", "against", "beneath", "within", "toward", "towards", "around", "behind", "across", "forward", "himself"]);
   const lineWords = recent.slice(0, 4).map(line => new Set(line.toLowerCase().match(/[a-z]{6,}/g) ?? []));
@@ -263,6 +264,12 @@ const QUICK_LIST = Object.entries(QUICK).flatMap(([category, moments]) => moment
 const PLURAL = { enemy: "enemies", ally: "allies", attacker: "attackers" };
 const list = names => names.length > 1 ? `${names.slice(0, -1).join(", ")} and ${names.at(-1)}` : names[0];
 
+/** "ally" or "enemy" from a token's disposition, else "". */
+function side(token) {
+  const { FRIENDLY, HOSTILE } = CONST.TOKEN_DISPOSITIONS;
+  return { [FRIENDLY]: "ally", [HOSTILE]: "enemy" }[token.document?.disposition] ?? "";
+}
+
 /**
  * The tokens this user has targeted, for Gemini and for the window. A quick moment gives them its
  * role ("The allies are Keira and Urist."); a typed moment says what each token is, from its
@@ -276,8 +283,7 @@ function targetText(quick) {
     const role = names.length > 1 ? `The ${PLURAL[quick.target]} are` : `The ${quick.target} is`;
     return { prompt: ` ${role} ${list(names)}.`, label: list(names) };
   }
-  const { FRIENDLY, HOSTILE } = CONST.TOKEN_DISPOSITIONS;
-  const what = token => ({ [FRIENDLY]: " (an ally)", [HOSTILE]: " (an enemy)" })[token.document?.disposition] ?? "";
+  const what = token => side(token) ? ` (an ${side(token)})` : "";
   return { prompt: ` His player has targeted ${list(targets.map(token => token.name + what(token)))}.`, label: list(names) };
 }
 
@@ -325,6 +331,7 @@ function remember(line, { label, category }) {
 // every browser (others see a "privately rolled" stub), so while Roy's Declarations or Roy's History
 // is open, his player's browser reads it and stars the line. Keep this in step with the other macro.
 const STAR_CARD = /^★ Roy's line starred \(#(\d+)\)$/;
+const starFlavor = at => `★ Roy's line starred (#${at})`;
 function starFrom(message) {
   const at = Number(STAR_CARD.exec(message.flavor ?? "")?.[1]);
   if (!at) return null;
@@ -337,10 +344,9 @@ function starFrom(message) {
   return { entry, by: (message.author ?? message.user)?.name ?? "Someone" };
 }
 
-// Whose sheet the Rolls page reads: your assigned character, or else the actor with this name.
-const ACTOR_NAME = 'Roy "Slayer" Belmont';
+// Whose sheet the Rolls page reads: your assigned character, or else the actor named ROY.
 function rollActor() {
-  return game.user.character ?? game.actors.getName(ACTOR_NAME) ?? null;
+  return game.user.character ?? game.actors.getName(ROY) ?? null;
 }
 
 const ROLL_GROUPS = ["Combat", "Checks", "Spells & items", "Class checks"];
@@ -401,8 +407,8 @@ async function sheetRolls(actor) {
 
 /** Roy's line as it shows on a roll's chat card, under the roll's name. */
 const cardLine = line => `<p class="roy-card-line" style="margin: 2px 0 0;">${line.act ? `<em>${esc(line.act)}</em> ` : ""}${esc(quoted(line.say))}
-  <a class="inline-roll roll roy-star" data-mode="selfroll" data-formula="0" data-flavor="${esc(`★ ${ROY.split(" ")[0]}'s line starred (#${line.at})`)}"
-    title="Star this line in ${esc(ROY.split(" ")[0])}'s history" style="white-space: nowrap;"><i class="fa-solid fa-star"></i> Star</a></p>`;
+  <a class="inline-roll roll roy-star" data-mode="selfroll" data-formula="0" data-flavor="${esc(starFlavor(line.at))}"
+    title="Star this line in Roy's history" style="white-space: nowrap;"><i class="fa-solid fa-star"></i> Star</a></p>`;
 
 /**
  * Roll one sheet roll through the sheet, and return the chat cards it made (none if cancelled).
@@ -428,6 +434,9 @@ async function rollOnSheet(actor, roll, line = null) {
   return made;
 }
 
+// Weapon and spell rolls get a named move; for checks Gemini decides.
+const rollMoves = roll => ["Combat", "Spells & items"].includes(roll.group) || undefined;
+
 /** For Put Roy's line on roll cards: the moment just before the roll, since the line comes first. */
 function rollIntent(roll, typed) {
   const what = roll.power ? `a damage roll for ${roll.label}` : roll.label;
@@ -439,7 +448,7 @@ function rollIntent(roll, typed) {
     typed && `More detail from his player: ${typed}`
   ].filter(Boolean).join(" ");
   const label = [roll.label, target.label, typed].filter(Boolean).join(" · ");
-  return { prompt, label, category: "Rolls", moves: ["Combat", "Spells & items"].includes(roll.group) || undefined };
+  return { prompt, label, category: "Rolls", moves: rollMoves(roll) };
 }
 
 /**
@@ -470,8 +479,7 @@ function rollSituation(roll, messages, typed) {
     typed && `More detail from his player: ${typed}`
   ].filter(Boolean).join(" ");
   const label = [`${roll.label}: ${first.total || "rolled"}`, target.label, typed].filter(Boolean).join(" · ");
-  // Weapon and spell rolls get a named move; for checks Gemini decides.
-  return { prompt, label, category: "Rolls", moves: ["Combat", "Spells & items"].includes(roll.group) || undefined };
+  return { prompt, label, category: "Rolls", moves: rollMoves(roll) };
 }
 
 const WINDOW_ID = "roy-declarations";
@@ -646,6 +654,7 @@ class RoyWindow extends foundry.applications.api.ApplicationV2 {
     super._onClose?.(options);
     for (const [hook, id] of this.hooks ?? []) Hooks.off(hook, id);
     this.hooks = null;
+    clearTimeout(this.reloadTimer);
   }
 
   find(selector) {
@@ -671,7 +680,7 @@ class RoyWindow extends foundry.applications.api.ApplicationV2 {
     const actor = rollActor();
     const say = html => { box.innerHTML = html; this.fit(); };
     if (game.system.id !== "sw25") return say("<p>The Rolls page reads Sword World 2.5 character sheets, so it isn't available in this game's system.</p>");
-    if (!actor) return say(`<p>No character found: assign yours under User Configuration, or name it ${esc(ACTOR_NAME)}.</p>`);
+    if (!actor) return say(`<p>No character found: assign yours under User Configuration, or name it ${esc(ROY)}.</p>`);
     say(`<p class="hint"><i class="fa-solid fa-spinner fa-spin"></i> Reading ${esc(actor.name)}'s sheet…</p>`);
     try {
       this.rolls = await sheetRolls(actor);
@@ -734,8 +743,7 @@ class RoyWindow extends foundry.applications.api.ApplicationV2 {
     const box = this.find(".roy-targets");
     if (!box) return;
     const targets = [...(game.user.targets ?? [])];
-    const { FRIENDLY, HOSTILE } = CONST.TOKEN_DISPOSITIONS;
-    const what = token => ({ [FRIENDLY]: " (ally)", [HOSTILE]: " (enemy)" })[token.document?.disposition] ?? "";
+    const what = token => side(token) ? ` (${side(token)})` : "";
     box.dataset.kind = targets.length ? "" : "warn";
     box.innerHTML = targets.length
       ? `<i class="fa-solid fa-bullseye"></i> ${targets.length > 1 ? "Targets" : "Target"}: ${esc(list(targets.map(token => token.name + what(token))))}`
