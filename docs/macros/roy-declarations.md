@@ -159,6 +159,13 @@ The **Settings** tab holds:
   answer, nothing is rolled, and **Ask again** writes the line and rolls. Off by default: the line
   stays private and reacts to the result.
 
+  A line on a roll card has a **★ Star** link, so the GM or another player can star it in your
+  history. It's a Foundry inline roll, which works for anyone with nothing installed: clicking it posts
+  a small "★ Roy's line starred" card, and while Roy's Declarations or Roy's History is open in your
+  browser, that card stars the line and the window says who starred it. Stars clicked while neither
+  is open aren't picked up. The star card is public: an inline roll can only use the standard roll
+  modes, so it can't be whispered to one player.
+
 Settings are saved in that browser, like the key.
 
 Lines keep Roy holy: if Gemini calls his power unholy, cursed or dark, the macro asks once more, then

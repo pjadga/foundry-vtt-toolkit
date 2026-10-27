@@ -81,7 +81,14 @@ file the user copies between machines.
    Fortitude, Willpower, live updates and Ask again. A Settings tab followed: the key, Always name a
    move, and Put Roy's line on roll cards, which writes the line first and adds it to the roll
    card's flavor in `preCreateChatMessage` (tested on v12, including Gemini failing before the
-   roll). The user also rolls in QA Roy v12 now; leave their chat cards alone.
+   roll). The user also rolls in QA Roy v12 now; leave their chat cards alone. A ★ Star link on a
+   posted line followed: a deferred inline roll (`a.inline-roll` with `data-formula="0"` and a
+   `data-flavor` naming the line), since the clicker runs none of our code; Roy's player's open
+   window reads the star card in `createChatMessage`. Its card can't be whispered to one player
+   (inline rolls only take the standard roll modes). Tested across users: a player user owns Roy's
+   sheet with its own copies of both macros (named in `docs/handoff.local.md`), and the user's
+   Gamemaster click starred the line in that player's history. Roy's macros are now tested as that
+   player.
    The v12 install is now served over HTTPS on the same site as v13 (details in
    `docs/handoff.local.md`), so the two share localStorage: one Gemini key and one Roy history.
    Gemini (`gemini-3.5-flash-lite`) took 7 to 40 seconds per line that day,

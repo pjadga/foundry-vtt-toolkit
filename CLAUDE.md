@@ -215,7 +215,9 @@ each machine by hand.
   **Roy's History** (slot 9). After a change, overwrite their command with the latest version
   (create them only if missing); don't delete them after a test, and leave the lines they wrote
   and your token targets in place. To get an uncommitted macro into the page, copy it into a `qa-`
-  folder in the server's Data folder, `fetch` it from there, then remove the folder.
+  folder in the server's Data folder, `fetch` it from there, then remove the folder. Test them as the
+  player user who owns Roy's sheet, not as the GM; which user and world are in
+  `docs/handoff.local.md`.
 - **Rolling like a player in Cyberpunk RED:** `item.createRoll("attack" | "damage" | "skill", actor)`,
   `await roll.roll()`, set `roll.entityData = { actor: actor.id, token: token.id }` (otherwise the card
   has no speaker), then `CPRChat.RenderRollCard(roll)`. `CPRChat` comes from

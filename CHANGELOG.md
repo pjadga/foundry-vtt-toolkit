@@ -129,6 +129,8 @@ music and a GM Assistant.
   - A Settings tab with the Gemini key, **Always name a move**, and **Put Roy's line on roll cards**,
     which writes the line first and puts it on the roll's chat card (off by default, the one setting
     that shows a line to others).
+  - A line on a roll card has a ★ Star link anyone can click; while Roy's Declarations or Roy's
+    History is open, the star card it posts stars the line in his player's history.
   - Lines keep Roy's holy, retribution-paladin tone, vary their focus and move names, and are sent
     back once if they call his power dark.
   - Install guide: [docs/macros/roy-declarations.md](docs/macros/roy-declarations.md).

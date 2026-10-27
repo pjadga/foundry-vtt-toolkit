@@ -292,10 +292,28 @@ async function copyText(text) {
 const HISTORY_SIZE = 300;
 function remember(line, { label, category }) {
   const history = store.json("history", []);
-  history.unshift({ at: Date.now(), label, category, act: line.act, say: line.say });
+  // The time is the line's id, which a posted line's ★ Star link names.
+  line.at = Date.now();
+  history.unshift({ at: line.at, label, category, act: line.act, say: line.say });
   let unstarred = 0;
   store.set("history", JSON.stringify(history.filter(entry => entry.starred || ++unstarred <= HISTORY_SIZE)));
   foundry.applications.instances?.get("roy-history")?.refresh?.();
+}
+
+// A ★ Star link on a posted line is a Foundry inline roll, so anyone can click it with nothing
+// installed: it posts a small card whose flavor names the line. While Roy's Declarations or Roy's
+// History is open, that card stars the line. Keep this in step with the other macro.
+const STAR_CARD = /^★ Roy's line starred \(#(\d+)\)$/;
+function starFrom(message) {
+  const at = Number(STAR_CARD.exec(message.flavor ?? "")?.[1]);
+  if (!at) return null;
+  const history = store.json("history", []);
+  const entry = history.find(line => line.at === at);
+  if (!entry || entry.starred) return null;
+  entry.starred = true;
+  store.set("history", JSON.stringify(history));
+  foundry.applications.instances?.get("roy-history")?.refresh?.();
+  return { entry, by: (message.author ?? message.user)?.name ?? "Someone" };
 }
 
 // Whose sheet the Rolls page reads: your assigned character, or else the actor with this name.
@@ -361,7 +379,9 @@ async function sheetRolls(actor) {
 }
 
 /** Roy's line as it shows on a roll's chat card, under the roll's name. */
-const cardLine = line => `<p class="roy-card-line" style="margin: 2px 0 0;">${line.act ? `<em>${esc(line.act)}</em> ` : ""}${esc(quoted(line.say))}</p>`;
+const cardLine = line => `<p class="roy-card-line" style="margin: 2px 0 0;">${line.act ? `<em>${esc(line.act)}</em> ` : ""}${esc(quoted(line.say))}
+  <a class="inline-roll roll roy-star" data-mode="roll" data-formula="0" data-flavor="${esc(`★ ${ROY.split(" ")[0]}'s line starred (#${line.at})`)}"
+    title="Star this line in ${esc(ROY.split(" ")[0])}'s history" style="white-space: nowrap;"><i class="fa-solid fa-star"></i> Star</a></p>`;
 
 /**
  * Roll one sheet roll through the sheet, and return the chat cards it made (none if cancelled).
@@ -586,6 +606,8 @@ class RoyWindow extends foundry.applications.api.ApplicationV2 {
     this.hooks ??= [
       ["targetToken", Hooks.on("targetToken", user => { if (user === game.user) this.showTargets(); })],
       ["canvasReady", Hooks.on("canvasReady", () => this.showTargets())],
+      // A ★ Star click on one of his posted lines, by anyone.
+      ["createChatMessage", Hooks.on("createChatMessage", message => this.announceStar(starFrom(message)))],
       // The Rolls page follows the sheet: a changed character or item redraws its buttons.
       ...["updateActor", "createItem", "updateItem", "deleteItem"].map(hook => [hook, Hooks.on(hook, document => {
         const actor = document.documentName === "Actor" ? document : document.parent;
@@ -698,6 +720,11 @@ class RoyWindow extends foundry.applications.api.ApplicationV2 {
       ? `<i class="fa-solid fa-bullseye"></i> ${targets.length > 1 ? "Targets" : "Target"}: ${esc(list(targets.map(token => token.name + what(token))))}`
       : '<i class="fa-solid fa-triangle-exclamation"></i> No target selected. Target a token (T) so Roy names them.';
     this.fit();
+  }
+
+  /** Say in the window who starred which of his lines. */
+  announceStar(star) {
+    if (star) this.status(`★ ${star.by} starred "${star.entry.say.split(/\s+/).slice(0, 6).join(" ")}…" in your history.`);
   }
 
   /** Grow or shrink the window to its content. */

@@ -47,6 +47,22 @@ const history = () => store.json("history", []);
 const quoted = say => `"${say}"`;
 const withAction = entry => entry.act ? `*${entry.act}* ${quoted(entry.say)}` : quoted(entry.say);
 
+// A ★ Star link on a posted line is a Foundry inline roll, so anyone can click it with nothing
+// installed: it posts a small card whose flavor names the line. While Roy's Declarations or Roy's
+// History is open, that card stars the line. Keep this in step with the other macro.
+const STAR_CARD = /^★ Roy's line starred \(#(\d+)\)$/;
+function starFrom(message) {
+  const at = Number(STAR_CARD.exec(message.flavor ?? "")?.[1]);
+  if (!at) return null;
+  const history = store.json("history", []);
+  const entry = history.find(line => line.at === at);
+  if (!entry || entry.starred) return null;
+  entry.starred = true;
+  store.set("history", JSON.stringify(history));
+  foundry.applications.instances?.get("roy-history")?.refresh?.();
+  return { entry, by: (message.author ?? message.user)?.name ?? "Someone" };
+}
+
 /** Change the entry saved at `at` (a line's time is its id), or remove it when `change` returns null. */
 function update(at, change) {
   const entries = history().flatMap(entry => entry.at !== at ? [entry] : [change(entry)].filter(Boolean));
@@ -153,6 +169,11 @@ class RoyHistory extends foundry.applications.api.ApplicationV2 {
   }
 
   _onRender() {
+    // A ★ Star click on one of his posted lines, by anyone, while this is open.
+    this.starHook ??= Hooks.on("createChatMessage", message => {
+      const star = starFrom(message);
+      if (star) this.status(`★ ${star.by} starred a line.`);
+    });
     this.find("[name=search]")?.addEventListener("input", () => this.refresh());
     this.find("[name=starred]")?.addEventListener("change", () => this.refresh());
     this.find("[name=category]")?.addEventListener("change", () => this.refresh());
@@ -163,6 +184,12 @@ class RoyHistory extends foundry.applications.api.ApplicationV2 {
     });
     this.refresh();
     this.find("[name=search]")?.focus();
+  }
+
+  _onClose(options) {
+    super._onClose?.(options);
+    if (this.starHook) Hooks.off("createChatMessage", this.starHook);
+    this.starHook = null;
   }
 
   find(selector) {
