@@ -41,15 +41,21 @@ group, tone, themes, existing characters). Write `brief.md`. Pick a short campai
 
 ### 2. Rules digest
 
-Read the rulebook with the Read tool, a few pages at a time (20 pages per call at most), starting with
-the contents. Follow the system profile's digest checklist and write `rules-digest.md`: only what the
+Read the rulebook a few pages at a time, starting with the contents. The Read tool's `pages` option
+needs `pdftoppm`; if it says that isn't installed, extract the text instead: PyMuPDF (`import
+pymupdf`) writes each book's text to `campaigns/<name>/text/<book>.txt` with `=== PAGE n ===` markers,
+and `pdftotext -layout -f N -l M` keeps tables readable (weapon, armor and cyberware tables are
+unreadable without `-layout`). Read slices with Bash (`awk` on the page markers) or Read with offsets.
+The printed page number is usually the PDF page minus one; cite printed numbers. Follow the system profile's digest checklist and write `rules-digest.md`: only what the
 campaign needs, with page numbers. Say which parts you read and which you skipped; never fill a gap
 from memory and present it as the rulebook. If the rulebook is large, read the relevant chapters and
 say so.
 
 ### 3. Campaign bible
 
-From the brief and digest, write `bible.entries.txt`: a complete campaign in `##ENTRY` format, using
+From the brief and digest, write `bible.entries.txt` (a campaign is 70 or more entries, so write it in
+parts, `bible/01-journals-threads.txt`, `02-locations-playlists.txt`, `03-npcs.txt`,
+`04-items-scenes.txt`, and join them with `cat`): a complete campaign in `##ENTRY` format, using
 the system profile's field list, which is the same format Prompt 0 tells NotebookLM to use. Fill in
 what the user didn't say, connect the threads, and make every NPC, location and item earn its place:
 each NPC in a scene, location or thread, each location visited, each item carried or used, each scene
@@ -67,13 +73,24 @@ them change direction now: later stages are slower.
 ### 4. NotebookLM kit and refinement
 
 1. `node scripts/campaign-tools.mjs prompt0 <system> campaigns/<name>` writes `notebooklm/prompt-0.txt`
-   from the prompt kit (it checks the 10,000-character limit).
+   from the prompt kit (it checks the 10,000-character limit). The kit's Prompt 0 is written for a
+   **solo** campaign ("a solo Cyberpunk RED campaign", "single-player: … a likable companion"). For a
+   group, edit the copy in `notebooklm/prompt-0.txt` (never the kit) to say "a group of N player
+   characters", drop the companion line, and keep every other rule; check it stays under the limit.
+   Rulebook PDFs over about 9 MB can't go through the browser upload tool in one piece: split them by
+   page range with PyMuPDF (`doc.insert_pdf` into new files, saved with `garbage=4, deflate=True`),
+   keeping each part under 9 MB, and upload the parts.
 2. Write `notebooklm/queries.md`: the system profile's query list, each one tailored to this campaign.
    Every query says what to refine and names the bible entries it must keep as canon, so NotebookLM
    improves the draft instead of replacing it. End with the consistency check.
-3. Drive NotebookLM as in `notebooklm.md`: a new notebook named after the campaign, the rulebooks and
-   `bible.entries.txt` as sources, Prompt 0 as the chat configuration, then each query in order.
-   Save each answer under `campaigns/<name>/notebooklm/answers/NN-<query>.txt`.
+3. Drive NotebookLM as in `notebooklm.md`: a new notebook named after the campaign, the rulebooks,
+   `bible.entries.txt` and `rules-digest.md` as sources, Prompt 0 as the chat configuration, then each
+   query in order, saving each answer under `campaigns/<name>/notebooklm/answers/NN-<query>.txt`
+   through the answer receiver. Ask for at most 9 or 10 entries per query. After the last query,
+   merge the answers over the bible (later copies win; drop a `replaces:` equal to the entry's own
+   name), unlink any core item name outside `gear:`, and run the check on the result.
+   NotebookLM's own consistency query is a weak check (it said "nothing to fix"); your checks on
+   stats, skill names, item fields and session coverage are the real ones.
 4. Report what changed against the bible in a few lines. Where NotebookLM contradicts the rulebook or
    the user's brief, say so; don't hide it.
 

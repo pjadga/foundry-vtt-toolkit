@@ -34,8 +34,9 @@ from the prompt kit and runs `campaignCheck`; add a system by writing its profil
 `KITS`. NotebookLM has no consumer API, so the skill drives its page with the Claude in Chrome tools;
 `notebooklm.md` has the working steps and gotchas (the file input is caught by hooking
 `HTMLInputElement.prototype.click`; `file_upload` only reads project folders and about 10 MB a call;
-`javascript_tool` shows about 1,000 characters, so read answers in slices; the site is now Gemini
-Notebook at notebook.google.com). Never put server details or rulebook text in the skill files.
+`javascript_tool` shows about 1,000 characters, so long answers go to `scripts/answer-sink.mjs`, a
+127.0.0.1 receiver that accepts POSTs from notebook.google.com only (Edge asks the user to allow
+local-device access the first time); the site is now Gemini Notebook at notebook.google.com). Never put server details or rulebook text in the skill files.
 
 ## NotebookLM import
 

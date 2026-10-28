@@ -27,6 +27,14 @@ file the user copies between machines.
   rulebook, handbook, a scenario and a cyberware book), set Prompt 0 (9,023 characters) as the chat
   configuration, ran a query and read four entries back, which passed the campaign check. Not yet run
   from a real pitch end to end (intake through hand-off), and only Cyberpunk RED has a profile.
+- **First real campaign through the skill** (28 October, `campaigns/section-9/`, git-ignored): a
+  12-session Cyberpunk RED campaign for five players, "Section 9", from the user's pitch (Ghost in the
+  Shell / Psycho-Pass inspired). 74 entries; the rulebooks (core, Black Chrome, three Hardened packs,
+  split under 9 MB) went into a new NotebookLM notebook named Section 9 with a group version of
+  Prompt 0; seven refinement queries replaced 67 of the entries; the merged
+  `output/campaign.txt` passes the campaign check and extra stat, skill and item checks. Not yet built
+  in Foundry (the user runs **Build campaign** with `output/campaign.txt`). The skill's answer
+  receiver and driving notes were extended (`answer-sink.mjs`, batched uploads).
 - **Custom-Macros compendium** (28 October): the module ships every macro in `macros/` as a
   compendium, built with `npm run build:packs`. Deployed to cpr-test (only `module.json` and
   `packs/`, so the rest of the module there is still `705ef01`'s), Foundry v13 restarted with pm2

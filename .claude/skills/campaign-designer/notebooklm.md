@@ -83,10 +83,8 @@ Click the **⋮** next to Share (`find` "Notebook configuration button"), choose
    `get_page_text` reads the wrong part of this page, and `find` / `read_page` split an answer into
    many elements, so use `innerText`.
 4. **`javascript_tool` shows only about 1,000 characters of a result** and marks the rest
-   `[TRUNCATED]`. Keep the answer in the page (`window.__answer = …`) and read it in slices:
-   `window.__answer.slice(0, 1000)`, then `slice(1000, 2000)`, and so on until a slice comes back
-   short. Slices don't overlap, so join them as they are. Write the joined text to
-   `campaigns/<name>/notebooklm/answers/` and check the entry count matches what the page reported.
+   `[TRUNCATED]`, and campaign answers run 7 to 18 KB. Use the answer receiver instead (next
+   section). For a short answer, `window.__answer = …` and `slice(0, 1000)`, `slice(1000, 2000)`… works.
 5. The text has citation numbers on lines of their own. The toolkit's parser strips them, but trim
    the page's button text (keep_pin, Save to note, copy…) yourself.
 6. An answer stops after a complete `##END` when it's long. Send `continue` and read again, until the
@@ -97,3 +95,55 @@ Click the **⋮** next to Share (`find` "Notebook configuration button"), choose
 **Create note**, **Save to note** and **Copy** under each answer; a web **Search** (Fast Research) for
 new sources; and the **Studio** panel (Audio Overview, Slide Deck, Mind Map, Reports, Flashcards, Quiz,
 Infographic, Data Table). The campaign doesn't need them.
+
+## Long answers: the answer receiver
+
+`node scripts/answer-sink.mjs campaigns/<name>/notebooklm/answers 8765` (start it in the background)
+listens on 127.0.0.1 and saves whatever the page POSTs to it as a file. It accepts only
+`notebook.google.com`, plain file names and 2 MB. **The first time, Edge asks the user to allow the
+site to reach a local device; a post made before they click Allow just hangs** (the page's JavaScript
+times out after 45 s). Ask them to look for the prompt, and probe with an 8-second timeout first.
+
+Two helpers, defined once per page load with `javascript_tool` (they are lost when the page reloads):
+
+```js
+// Send a query: set the box's value the way the page expects, then press Submit.
+window.__ask = async (text) => {
+  const box = [...document.querySelectorAll("textarea")].find(x => x.placeholder?.includes("Ask a question"));
+  const set = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value").set;
+  box.focus(); set.call(box, text); box.dispatchEvent(new Event("input", { bubbles: true }));
+  await new Promise(r => setTimeout(r, 300));
+  [...document.querySelectorAll("button")].filter(b => b.getAttribute("aria-label") === "Submit").at(-1).click();
+};
+// Wait for the answer to finish, then POST everything from the first ##ENTRY to the answer's buttons.
+window.__grab = async (queryStart, file, seconds = 40) => {
+  let stable = 0, last = -1;
+  for (let i = 0; i < seconds; i++) {
+    const t = document.body.innerText, after = t.slice(t.lastIndexOf(queryStart) + queryStart.length);
+    const s = after.indexOf("##ENTRY"), e = after.indexOf("keep_pin", s);
+    const working = /\nstop\n/.test(after) || /Responding\.\.\./.test(after);
+    if (s >= 0 && e > s && !working) { stable = after.length === last ? stable + 1 : 0; last = after.length; if (stable >= 2) {
+      const text = after.slice(s, e).trimEnd();
+      await fetch("http://127.0.0.1:8765/" + file, { method: "POST", body: text });
+      return { entries: (text.match(/##ENTRY/g) ?? []).length, ends: (text.match(/##END/g) ?? []).length };
+    } }
+    await new Promise(r => setTimeout(r, 1000));
+  }
+  return { waiting: true };
+};
+```
+
+Send with `await __ask("…")`, then `await __grab("first words of the query", "NN-name.txt", 40)`; if it
+returns `waiting`, call `__grab` again (a `javascript_tool` call times out near 45 s, so ask for at
+most about 40 seconds per call). Check `entries` equals `ends` and the count you asked for. An answer
+can take 30 seconds to over a minute; one query for 17 NPCs was too long to finish in one answer, so
+ask for 8 or 9 entries at a time. A reply with no entries (a plain "nothing to fix") has no `##ENTRY`,
+so read it from the page text instead.
+
+## Batching uploads
+
+Once the Add sources dialog's positions are known (screenshot frame 1568 wide: **Add sources** at about
+(110, 117), **Upload files** at about (618, 368)), one `browser_batch` does the whole cycle: click Add
+sources, wait, click Upload files (a real click, which creates the input), wait, run the label script on
+`window.__captured.at(-1)`, then `find` the input. Then `file_upload` and `wait` 10 s. Five small files
+can go in one call; PDFs go one per call (about 7 to 8 MB each, split first). A cycle is three calls.

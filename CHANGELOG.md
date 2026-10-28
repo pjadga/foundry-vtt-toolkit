@@ -18,6 +18,8 @@ music and a GM Assistant.
 - `node scripts/campaign-tools.mjs check <entries.txt>` runs Build campaign's campaign check outside
   Foundry, and `prompt0 <system> <campaign-dir>` writes the notebook's chat configuration from the
   prompt kit (checking NotebookLM's 10,000-character limit).
+- `node scripts/answer-sink.mjs <folder>` is a local receiver (127.0.0.1, notebook.google.com only) the
+  skill uses to save long NotebookLM answers.
 - `campaigns/` is git-ignored: campaign drafts and rulebook PDFs stay on your machine.
 
 ### Building a campaign from NotebookLM
