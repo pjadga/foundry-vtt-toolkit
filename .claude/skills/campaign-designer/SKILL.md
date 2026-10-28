@@ -102,7 +102,17 @@ or touch a notebook you didn't create. If any browser step fails twice, stop and
 Join the answers into `output/campaign.txt` (the later copy of an entry wins; `replaces:` fields stay),
 then run the check on it and fix gaps by asking NotebookLM with the fix prompt the check prints, until
 it's clean. Then tell the user to run **Build campaign** in Foundry's Journal sidebar with that file.
-Building in Foundry is the importer's job; don't try to create the documents yourself. If the user
+Before building, compare the campaign's entry names with the world's existing journals, actors, items,
+scenes and playlists (the importer keeps an existing document and skips yours, which leaves your links
+pointing at the old one): name the overview "<Campaign> Overview" and prefix playlists with the
+campaign name, then fix every `[[link]]` and `soundtrack:`. Never tick **Replace** in a world that holds
+another campaign. Scenes are only created when an image matches (the importer says "no image, so no
+scene"), so decide on images before building: generate them (Pollinations is free, one per 45 s, and
+the review window needs the user), or supply images named after the entries.
+A build also renumbers every imported story scene in the world together (restore the other campaign's
+names and `sort` afterwards) and the track picker fills any imported playlist with no tracks, even
+an old campaign's empty one (remove those picks); list the world's scenes and playlists before and
+after. Building in Foundry is the importer's job; don't try to create the documents yourself. If the user
 wants it built now, follow CLAUDE.md's testing section (cpr-test world, ask before touching anything
 else).
 

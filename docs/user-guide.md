@@ -486,6 +486,13 @@ starting `foundry-vtt-toolkit |`.
 
 - There's no NotebookLM API. You copy or export NotebookLM's answers by hand. For the same
   reason, the assistant can't use your notebook's sources directly; sync copies of them instead.
+- Building a second campaign in a world that already holds one has side effects: scene numbering
+  runs across every imported story scene in the world, so the first campaign's scenes are
+  renumbered and interleaved with the new ones by session; the track picker also fills any
+  imported playlist that has no tracks, including an empty one from the first campaign; and an entry
+  with the same name as an existing document (a "Campaign Overview", a "Street" playlist) is
+  skipped, not added. Rename the second campaign's overview and playlists before building, and check
+  the scene names afterwards.
 
 **Building:**
 

@@ -35,6 +35,18 @@ file the user copies between machines.
   `output/campaign.txt` passes the campaign check and extra stat, skill and item checks. Not yet built
   in Foundry (the user runs **Build campaign** with `output/campaign.txt`). The skill's answer
   receiver and driving notes were extended (`answer-sink.mjs`, batched uploads).
+- **Section 9 built in cpr-test** (28 October): Build campaign made 39 journals, 17 NPC actors (stats
+  and 63 skills each), 14 items, 4 playlists (6 YouTube tracks each, picked with the key already in
+  that browser) and, from 27 Pollinations images the user approved, 27 scenes (12 locations and 15
+  story scenes, with hidden NPC tokens, a journal pin and a soundtrack each; images in
+  `worlds/cpr-test/assets/section-9`, 1015 px wide, watermarked). A first build without images made
+  everything but the scenes. The world held another campaign's "Campaign Overview" and Street, Tension
+  and Finale playlists, so those four entries were renamed "Section 9 ..." first; the new documents
+  share that campaign's journal folders. Side effects of the import that were put back by hand: the
+  other campaign's eight story scenes had been renumbered and interleaved (restored to 1 to 8 with
+  sort 100 to 800; Section 9's are 09 to 23), and the track picker had filled that campaign's empty
+  Tension and Finale playlists (picks removed). Re-running Build campaign would renumber the scenes
+  again. Not played or tested with players.
 - **Custom-Macros compendium** (28 October): the module ships every macro in `macros/` as a
   compendium, built with `npm run build:packs`. Deployed to cpr-test (only `module.json` and
   `packs/`, so the rest of the module there is still `705ef01`'s), Foundry v13 restarted with pm2
