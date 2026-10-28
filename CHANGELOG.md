@@ -92,6 +92,8 @@ music and a GM Assistant.
 
 ### Macros
 
+- A **Custom-Macros** compendium in the module with every macro below, in folders (Core, Characters,
+  D&D 5e, Sword World 2.5, Cyberpunk RED). Players can open it and drag macros to their hotbar.
 - Import from NotebookLM, Toggle Selected Tokens Hidden, Token Info and Whisper Roll to GM for any
   system.
 - **Toggle Acted** (`macros/core/toggle-acted.js`, Foundry v12 and v13, any system): tints your

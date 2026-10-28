@@ -15,12 +15,17 @@ troubleshooting and known issues. Release notes are in [CHANGELOG.md](CHANGELOG.
 | `macros/dnd5e/`, `macros/sw25/`, `macros/cpred/` | System-specific. Each guards on `game.system.id`. |
 | `macros/characters/` | Macros for a player's own character, usable in a game you don't host. |
 | `module/` | The installable module (`module.json`, ES module entry point, lang, styles). |
+| `module/packs/custom-macros/` | The **Custom-Macros** compendium: every macro in `macros/`, built by `npm run build:packs`. |
 | `.github/workflows/release.yml` | Tag `vX.Y.Z` to build `module.zip` and publish a release. |
 
 ## Using a macro
 
 1. In Foundry, create a macro, set **Type** to *Script*.
 2. Paste the contents of the `.js` file.
+
+In a world with the module, every macro is also in the **Custom-Macros** compendium (Compendium
+sidebar), in folders by system; drag one to the hotbar. After changing a macro, run `npm ci` once,
+then `npm run build:packs`, and commit the rebuilt pack.
 
 Each macro starts with a header giving its name, the system it needs and the Foundry version.
 

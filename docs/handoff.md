@@ -20,6 +20,15 @@ file the user copies between machines.
 - **NotebookLM:** the user's notebook ("Cyberpunk RED Single Player Mode") has the current Prompt 0
   (9,023 characters) in **Configure Chat → Custom**, with response length **Longer**. Edit Prompt 0 in
   `docs/notebooklm/cyberpunk-red-prompts.md` and the notebook together.
+- **Custom-Macros compendium** (28 October): the module ships every macro in `macros/` as a
+  compendium, built with `npm run build:packs`. Deployed to cpr-test (only `module.json` and
+  `packs/`, so the rest of the module there is still `705ef01`'s), Foundry v13 restarted with pm2
+  (the user's OK), and the user launched cpr-test. As Gamemaster: the compendium shows 10 macros in
+  5 folders, locked, players as observers; Toggle Acted imported from it ran on Player One's token
+  and the test copy was deleted. That first build had no `_stats`, so Foundry migrated the macros on
+  launch and rewrote the pack's files on the server; the committed build has `_stats` and holds the
+  same 15 records as the server's pack, but its files differ in bytes until the next deploy with the
+  world closed.
 - **Toggle Acted** (`macros/core/toggle-acted.js`, 28 October) was tested as the Roy player in QA
   Roy v12: with nothing selected it marked Roy's token, one then two selected tokens marked and
   cleared together, and a token's own tint came back. Not yet tried on Foundry v13, and not

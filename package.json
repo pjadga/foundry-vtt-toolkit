@@ -5,6 +5,10 @@
   "type": "module",
   "scripts": {
     "link": "node scripts/link-module.mjs",
+    "build:packs": "node scripts/build-packs.mjs",
     "test": "node --test \"tests/*.test.mjs\""
+  },
+  "devDependencies": {
+    "@foundryvtt/foundryvtt-cli": "3.0.5"
   }
 }

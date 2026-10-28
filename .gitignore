@@ -4,3 +4,7 @@ dist/
 .DS_Store
 # Server-specific notes kept per machine (see CLAUDE.md)
 *.local.md
+# LevelDB's lock and logs, made at run time
+module/packs/**/LOCK
+module/packs/**/LOG
+module/packs/**/LOG.old
