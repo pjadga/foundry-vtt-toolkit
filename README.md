@@ -51,6 +51,17 @@ For development, run `FOUNDRY_DATA="<path>/Data" npm run link` to symlink `modul
 The entry point, `module/scripts/main.mjs`, loads `module/scripts/systems/<system>.mjs` for the
 active game system. Add new system support by adding a file and a line in `SYSTEM_MODULES`.
 
+## Designing a campaign with Claude
+
+The **campaign-designer** skill (`.claude/skills/campaign-designer/`) takes a game system, its
+rulebook and your rough idea, writes a full draft campaign (threads, places, NPCs, items, scenes) in
+the importer's format, checks it, then drives NotebookLM in your browser to ground it in the
+rulebooks and refine it. Run it from a Claude Code session in this repo ("design a campaign");
+Cyberpunk RED is supported so far. Campaign files and rulebook PDFs stay in `campaigns/`, which is
+git-ignored. `node scripts/campaign-tools.mjs check <file>` runs Build campaign's check on any entries
+file. Driving NotebookLM needs the Claude in Chrome extension in the browser where you're signed in
+to Google.
+
 ## Building a campaign from NotebookLM
 
 Write the campaign in NotebookLM with the prompts in

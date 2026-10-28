@@ -8,6 +8,18 @@ yet, so everything below is the first release.
 The first release. It turns a NotebookLM campaign into a ready-to-run Foundry VTT v13 world, with
 music and a GM Assistant.
 
+### Designing a campaign with Claude
+
+- A **campaign-designer** skill for Claude Code (`.claude/skills/campaign-designer/`): from a system,
+  its rulebook and your direction, it writes a rules digest and a campaign draft in `##ENTRY` format,
+  runs the campaign check on it, then drives NotebookLM (Gemini Notebook) in your browser: a new
+  notebook, the rulebooks and the draft as sources, the prompt kit's Prompt 0 as the chat
+  configuration, and refinement queries, saving each answer. Cyberpunk RED first.
+- `node scripts/campaign-tools.mjs check <entries.txt>` runs Build campaign's campaign check outside
+  Foundry, and `prompt0 <system> <campaign-dir>` writes the notebook's chat configuration from the
+  prompt kit (checking NotebookLM's 10,000-character limit).
+- `campaigns/` is git-ignored: campaign drafts and rulebook PDFs stay on your machine.
+
 ### Building a campaign from NotebookLM
 
 - **Build campaign** (Journal sidebar) imports NotebookLM `##ENTRY` bundles, pasted or from a file.

@@ -24,6 +24,19 @@ Macros and a module for FoundryVTT v13. See `README.md` for layout and release s
 - The sw25 and cpred macros only log actor data. Field paths are not yet mapped.
 - No license chosen yet.
 
+## Campaign designer skill
+
+`.claude/skills/campaign-designer/` (`SKILL.md`, `systems/<id>.md`, `notebooklm.md`) designs a campaign
+for Build campaign to import: intake → rules digest → bible (`##ENTRY` draft, checked) → NotebookLM kit
+and refinement → hand-off. Work lives in `campaigns/<name>/` (git-ignored: rulebooks are copyrighted).
+`scripts/campaign-tools.mjs` (pure `extractPrompt0`, `report`, tested) writes the notebook's Prompt 0
+from the prompt kit and runs `campaignCheck`; add a system by writing its profile and adding its kit to
+`KITS`. NotebookLM has no consumer API, so the skill drives its page with the Claude in Chrome tools;
+`notebooklm.md` has the working steps and gotchas (the file input is caught by hooking
+`HTMLInputElement.prototype.click`; `file_upload` only reads project folders and about 10 MB a call;
+`javascript_tool` shows about 1,000 characters, so read answers in slices; the site is now Gemini
+Notebook at notebook.google.com). Never put server details or rulebook text in the skill files.
+
 ## NotebookLM import
 
 `openImporter` is the Build campaign flow: preview with `campaignCheck` (`check.mjs`, pure, tested)

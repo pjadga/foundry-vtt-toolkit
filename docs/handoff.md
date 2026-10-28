@@ -20,6 +20,13 @@ file the user copies between machines.
 - **NotebookLM:** the user's notebook ("Cyberpunk RED Single Player Mode") has the current Prompt 0
   (9,023 characters) in **Configure Chat → Custom**, with response length **Longer**. Edit Prompt 0 in
   `docs/notebooklm/cyberpunk-red-prompts.md` and the notebook together.
+- **Campaign designer skill** (28 October, `.claude/skills/campaign-designer/`, uncommitted until the
+  user says): designs a campaign and drives NotebookLM in the user's Edge profile through the Claude in
+  Chrome extension. Tested on the user's `QA Campaign Designer` notebook (they keep it): created and
+  renamed it, pasted a text source, uploaded five PDFs (a Cyberpunk Edgerunners mission kit, its
+  rulebook, handbook, a scenario and a cyberware book), set Prompt 0 (9,023 characters) as the chat
+  configuration, ran a query and read four entries back, which passed the campaign check. Not yet run
+  from a real pitch end to end (intake through hand-off), and only Cyberpunk RED has a profile.
 - **Custom-Macros compendium** (28 October): the module ships every macro in `macros/` as a
   compendium, built with `npm run build:packs`. Deployed to cpr-test (only `module.json` and
   `packs/`, so the rest of the module there is still `705ef01`'s), Foundry v13 restarted with pm2

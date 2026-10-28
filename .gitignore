@@ -8,3 +8,5 @@ dist/
 module/packs/**/LOCK
 module/packs/**/LOG
 module/packs/**/LOG.old
+# Campaign work and rulebook PDFs (copyrighted, never committed)
+campaigns/
