@@ -94,6 +94,10 @@ music and a GM Assistant.
 
 - Import from NotebookLM, Toggle Selected Tokens Hidden, Token Info and Whisper Roll to GM for any
   system.
+- **Toggle Acted** (`macros/core/toggle-acted.js`, Foundry v12 and v13, any system): tints your
+  selected tokens red to show they've acted this turn, and takes the tint off on the next click.
+  With nothing selected it uses your assigned character's token, and a token's own tint comes back
+  afterwards. Players can use it on tokens they own.
 - Party Passive Perception for D&D 5e.
 - Actor data inspectors for Cyberpunk RED and Sword World 2.5.
 - **Roy's Declarations** and **Roy's History** (`macros/characters/`), a player's own macros for a

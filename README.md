@@ -30,6 +30,9 @@ private window, to copy into chat. **Roy's History** (`macros/characters/roy-his
 every line it has written. See [docs/macros/roy-declarations.md](docs/macros/roy-declarations.md)
 for installing them as a player in a game you don't host.
 
+**Toggle Acted** (`macros/core/toggle-acted.js`) tints your selected tokens red to show they've
+acted this turn, and takes the tint off on the next click. Players can use it on their own tokens.
+
 ## Using the module
 
 Install from the manifest URL (available once a release exists):

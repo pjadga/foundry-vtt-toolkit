@@ -420,6 +420,7 @@ file's contents into it.
 | --- | --- | --- |
 | Import from NotebookLM | any | Opens Build campaign (needs the module) |
 | Toggle Selected Tokens Hidden | any (GM) | Flips the hidden state of the selected tokens |
+| Toggle Acted | any (v12, v13) | Tints your selected tokens red to show they've acted this turn; click again to take it off. With nothing selected, your assigned character's token |
 | Token Info | any | Whispers you a summary of each selected token's actor |
 | Whisper Roll to GM | any | Asks for a formula, rolls it, and whispers the result to the GM |
 | Party Passive Perception | dnd5e | Whispers each player character's passive Perception to the GM |

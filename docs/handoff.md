@@ -20,6 +20,10 @@ file the user copies between machines.
 - **NotebookLM:** the user's notebook ("Cyberpunk RED Single Player Mode") has the current Prompt 0
   (9,023 characters) in **Configure Chat → Custom**, with response length **Longer**. Edit Prompt 0 in
   `docs/notebooklm/cyberpunk-red-prompts.md` and the notebook together.
+- **Toggle Acted** (`macros/core/toggle-acted.js`, 28 October) was tested as the Roy player in QA
+  Roy v12: with nothing selected it marked Roy's token, one then two selected tokens marked and
+  cleared together, and a token's own tint came back. Not yet tried on Foundry v13, and not
+  installed in that player's hotbar (the test macro was deleted).
 - **Second machine:** the user's home machine has Node.js 24, npm 12, Git, a clone where
   `npm test` passes, the server's SSH key, `docs/handoff.local.md`, and both API keys in its browser.
 
