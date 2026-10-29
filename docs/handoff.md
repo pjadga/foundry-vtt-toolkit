@@ -47,15 +47,16 @@ file the user copies between machines.
   sort 100 to 800; Section 9's are 09 to 23), and the track picker had filled that campaign's empty
   Tension and Finale playlists (picks removed). Re-running Build campaign would renumber the scenes
   again. Not played or tested with players.
-- **Macros module split** (29 October, `3b70f2a`): the Custom-Macros compendium moved out of the
-  main module into `macros-module/` (`foundry-vtt-toolkit-macros`, minimum Foundry 12), so it can be used
-  in the v12 Roy world. **Installed on the v12 server** the same day (files match `3b70f2a`, checked with
-  `git hash-object`), but not yet enabled or opened in QA Roy v12: the running world only sees new
-  modules after a relaunch, then a GM enables it in Manage Modules. cpr-test still has the old copy inside the main module until the next deploy,
-  which needs: the main module redeployed (its `module.json` no longer lists the pack), the macros
-  module copied to `<Data>/modules/foundry-vtt-toolkit-macros` and enabled in cpr-test, and the world
-  relaunched (admin password, the user). Untested on v12: the macros carry `_stats.coreVersion`
-  13.351, and whether v12 loads documents stamped with a newer version needs checking before relying on it.
+- **Macros module split** (29 October): the Custom-Macros compendium moved out of the main module into
+  `macros-module/` (`foundry-vtt-toolkit-macros`, minimum Foundry 12). **Working on v12**: installed on
+  the v12 server (files match `ed30354`), enabled in QA Roy v12, and tested as the Roy player: all 10
+  macros in 5 folders, and Toggle Acted imported from it tinted Roy's token and cleared it. Two fixes
+  came out of that test: v12 rejects macros without an `author` field, and refuses to migrate
+  documents stamped with a newer Foundry version, so the macros now carry `author: null` and
+  `coreVersion` 12.343; the world then launched with no errors. The v12 server was restarted with pm2
+  (the user's OK) so it would see the new module. cpr-test still has the old copy inside the main
+  module until its next deploy (main module redeployed, macros module installed and enabled, world
+  relaunched); there v13 will migrate the 12.343-stamped macros on launch.
 - **Custom-Macros compendium** (28 October): the module ships every macro in `macros/` as a
   compendium, built with `npm run build:packs`. Deployed to cpr-test (only `module.json` and
   `packs/`, so the rest of the module there is still `705ef01`'s), Foundry v13 restarted with pm2
