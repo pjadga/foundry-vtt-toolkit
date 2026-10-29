@@ -29,7 +29,7 @@ Macros and a module for FoundryVTT v13. See `README.md` for layout and release s
 ## Open items
 
 - The sw25 and cpred macros only log actor data. Field paths are not yet mapped.
-- No license chosen yet.
+- Licence: MIT-0 (`LICENSE`), copyright holder `pjadga`; both module manifests link to it.
 
 ## Campaign designer skill
 

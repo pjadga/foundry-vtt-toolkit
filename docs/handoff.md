@@ -52,7 +52,7 @@ file the user copies between machines.
   there was no release, so Foundry's install-by-manifest showed "No module manifest found". Install
   URLs: `https://github.com/pjadga/foundry-vtt-toolkit/releases/latest/download/module.json` (main
   module, Foundry v13) and `.../macros-module.json` (Custom Macros, v12 and v13). The user's worlds
-  still have the hand-copied modules, not the released ones. No licence is chosen yet.
+  still have the hand-copied modules, not the released ones. Licence: MIT-0, added after the release, so it ships from the next tag.
 - **Macros module split** (29 October): the Custom-Macros compendium moved out of the main module into
   `macros-module/` (`foundry-vtt-toolkit-macros`, minimum Foundry 12). **Working on v12**: installed on
   the v12 server (files match `ed30354`), enabled in QA Roy v12, and tested as the Roy player: all 10
@@ -169,7 +169,7 @@ file the user copies between machines.
    Gemini (`gemini-3.5-flash-lite`) took 7 to 40 seconds per line that day,
    so the limit is 45 seconds; a resend for reused move names was dropped because it doubled the
    wait, and the prompt lists used move names instead.
-7. **From `CLAUDE.md`:** mapping the sw25 and cpred macros, and choosing a license.
+7. **From `CLAUDE.md`:** mapping the sw25 and cpred macros, and choosing a license (done: MIT-0).
 
 ## Decisions, and why
 

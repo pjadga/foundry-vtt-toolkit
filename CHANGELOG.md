@@ -8,6 +8,11 @@ yet, so everything below is the first release.
 The first release. It turns a NotebookLM campaign into a ready-to-run Foundry VTT v13 world, with
 music and a GM Assistant.
 
+### Licence
+
+- The toolkit and its macros are under the **MIT No Attribution (MIT-0)** licence (`LICENSE`); both
+  module manifests link to it.
+
 ### Designing a campaign with Claude
 
 - A **campaign-designer** skill for Claude Code (`.claude/skills/campaign-designer/`): from a system,

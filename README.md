@@ -112,3 +112,9 @@ The workflow writes the version and download URL into `module.json`, zips `modul
 | D&D 5e | `dnd5e` |
 | Sword World 2.5 | `sw25` |
 | Cyberpunk RED Core | `cyberpunk-red-core` (v13 needs the unreleased 0.93 `dev` build; see CLAUDE.md) |
+
+## Licence
+
+[MIT No Attribution (MIT-0)](LICENSE): use, change and share the code and macros freely, with no
+requirement to keep a notice or credit, and no warranty. It covers this repository's code and docs, not
+the Cyberpunk, Sword World or Foundry names, which belong to their owners.

@@ -2,6 +2,7 @@
   "name": "foundry-vtt-toolkit",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT-0",
   "type": "module",
   "scripts": {
     "link": "node scripts/link-module.mjs",
