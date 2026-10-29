@@ -14,8 +14,11 @@ Macros and a module for FoundryVTT v13. See `README.md` for layout and release s
   Foundry CLI, which uses a native LevelDB package). The pure part, names from the header and stable
   ids from the path, is `scripts/macro-pack.mjs`; a new `macros/` subfolder needs an entry in its
   `FOLDERS`. `.gitattributes` keeps `macros-module/packs/**` binary. Macros carry `_stats.coreVersion`
-  (`CORE_VERSION`, the server's Foundry version): without it Foundry migrates every macro when a
-  world launches and rewrites the pack on the server. Bump it when the server's Foundry updates.
+  (`CORE_VERSION`) set to the **oldest** Foundry the macros module supports (12.343) and an `author`
+  field (null): v12 rejects a macro without `author` and refuses to migrate documents stamped with a
+  newer version than its own, while v13 migrates older ones when a world launches (it rewrites the
+  pack's files on the server, so check a deployed pack by its records). Raise it only with the
+  module's minimum version.
 - **Guard system macros** on `game.system.id` and return a notification, never throw.
 - **Module code is ES modules** (`.mjs`). Per-system code lives in `module/scripts/systems/` and is registered in `SYSTEM_MODULES` in `main.mjs`.
 - **Namespace** CSS under `.fvtk` and lang keys under `FVTK.`.

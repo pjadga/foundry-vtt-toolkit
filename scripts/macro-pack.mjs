@@ -14,11 +14,13 @@ export const FOLDERS = {
 };
 
 const ICON = "icons/svg/dice-target.svg";
-// The Foundry version the documents are written for. Without _stats, Foundry migrates every macro
-// when a world launches and rewrites the pack on the server.
-export const CORE_VERSION = "13.351";
+// The Foundry version the documents are written for: the oldest the macros module supports. Foundry
+// v12 refuses to migrate documents stamped with a newer version ("Documents from a core version newer
+// than the running version cannot be migrated"); v13 migrates older ones quietly when a world launches.
+// Only v12's _stats fields, so v12 has nothing unknown to strip.
+export const CORE_VERSION = "12.343";
 const STATS = { coreVersion: CORE_VERSION, systemId: null, systemVersion: null, createdTime: null, modifiedTime: null,
-  lastModifiedBy: null, compendiumSource: null, duplicateSource: null, exportSource: null };
+  lastModifiedBy: null, compendiumSource: null, duplicateSource: null };
 
 /** A stable 16-character Foundry id from a name, so a rebuild keeps every document's id. */
 export function stableId(name) {
