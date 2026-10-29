@@ -47,6 +47,12 @@ file the user copies between machines.
   sort 100 to 800; Section 9's are 09 to 23), and the track picker had filled that campaign's empty
   Tension and Finale playlists (picks removed). Re-running Build campaign would renumber the scenes
   again. Not played or tested with players.
+- **First release, v0.1.0** (29 October): the first `v*` tag, which ran the release workflow and
+  published `module.json`, `module.zip`, `macros-module.json` and `macros-module.zip`. Before this
+  there was no release, so Foundry's install-by-manifest showed "No module manifest found". Install
+  URLs: `https://github.com/pjadga/foundry-vtt-toolkit/releases/latest/download/module.json` (main
+  module, Foundry v13) and `.../macros-module.json` (Custom Macros, v12 and v13). The user's worlds
+  still have the hand-copied modules, not the released ones. No licence is chosen yet.
 - **Macros module split** (29 October): the Custom-Macros compendium moved out of the main module into
   `macros-module/` (`foundry-vtt-toolkit-macros`, minimum Foundry 12). **Working on v12**: installed on
   the v12 server (files match `ed30354`), enabled in QA Roy v12, and tested as the Roy player: all 10
