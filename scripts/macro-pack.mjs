@@ -53,8 +53,9 @@ export function macroDocuments(files) {
     if (names.has(name)) throw new Error(`${path}: another macro is already named ${name}`);
     names.add(name);
     const _id = stableId(`macro:${path}`);
-    // Foundry trims a macro's command, so the pack holds it trimmed too.
-    return { _id, _key: `!macros!${_id}`, name, type, img: ICON, scope: "global",
+    // Foundry trims a macro's command, so the pack holds it trimmed too. Foundry v12 requires an
+    // author field (null: no author, as in Foundry's own packs); v13 accepts it either way.
+    return { _id, _key: `!macros!${_id}`, name, type, author: null, img: ICON, scope: "global",
       command: text.replace(/\r\n/g, "\n").trim(), folder: folderIds[dir], sort: 0, ownership: { default: 0 }, flags: {}, _stats: { ...STATS } };
   });
   return { folders: folders.filter(folder => macros.some(macro => macro.folder === folder._id)), macros };

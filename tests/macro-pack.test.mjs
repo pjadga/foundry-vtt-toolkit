@@ -42,6 +42,7 @@ test("macroDocuments: stable ids, keys and refusals", () => {
   assert.equal(first.folders.length, 1);
   assert.equal(first.macros[0]._key, `!macros!${first.macros[0]._id}`);
   assert.match(first.macros[0]._id, /^[A-Za-z0-9]{16}$/);
+  assert.ok("author" in first.macros[0] && first.macros[0].author === null, "Foundry v12 requires the author field");
   assert.equal(first.macros[0].command, text.trim());
   assert.throws(() => macroDocuments([{ path: "core/a.js", text }, { path: "core/b.js", text }]), /already named Test/);
   assert.throws(() => macroDocuments([{ path: "other/a.js", text }]), /no compendium folder/);
