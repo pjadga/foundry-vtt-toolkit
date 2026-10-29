@@ -16,4 +16,4 @@
 *.tgz binary
 
 # Compendium packs are LevelDB databases, built by npm run build:packs.
-module/packs/** binary
+macros-module/packs/** binary

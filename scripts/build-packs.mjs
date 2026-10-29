@@ -1,4 +1,5 @@
-// Builds the module's Custom-Macros compendium (module/packs/custom-macros, LevelDB) from macros/.
+// Builds the Custom-Macros compendium (macros-module/packs/custom-macros, LevelDB) from macros/. It ships in
+// its own module, foundry-vtt-toolkit-macros, so it works on Foundry v12 and without the main toolkit.
 // Usage: npm run build:packs, after adding or changing a macro; commit the pack and packs.sha256.
 import fs from "node:fs";
 import os from "node:os";
@@ -17,7 +18,7 @@ const source = fs.mkdtempSync(path.join(os.tmpdir(), "fvtk-pack-"));
 for (const doc of [...documents.folders, ...documents.macros]) {
   fs.writeFileSync(path.join(source, `${doc._key.split("!")[1]}-${doc._id}.json`), JSON.stringify(doc, null, 2));
 }
-const dest = path.join(root, "module", "packs", PACK);
+const dest = path.join(root, "macros-module", "packs", PACK);
 fs.rmSync(dest, { recursive: true, force: true });
 await compilePack(source, dest);
 fs.rmSync(source, { recursive: true, force: true });

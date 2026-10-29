@@ -413,10 +413,13 @@ Field details are in [format.md](notebooklm/format.md#cyberpunk-red-items).
 
 ### Macros
 
-The `macros/` folder has standalone script macros. With the module enabled, they're all in the
-**Custom-Macros** compendium (Compendium sidebar), in folders by system: drag one to your hotbar, or
-right-click it and import it. Players can open the compendium too. Without the module, create a
-Script macro in Foundry and paste the file's contents into it.
+The `macros/` folder has standalone script macros. They're all in the **Custom-Macros** compendium,
+which comes in its own small module, **Foundry VTT Toolkit: Custom Macros**: install it from the
+manifest `https://github.com/pjadga/foundry-vtt-toolkit/releases/latest/download/macros-module.json`
+and enable it in the world. It works on Foundry v12 and v13, with or without the main toolkit. In the
+Compendium sidebar the macros are in folders by system: drag one to your hotbar, or right-click it
+and import it. Players can open the compendium too. Without the module, create a Script macro in
+Foundry and paste the file's contents into it.
 
 | Macro | System | What it does |
 | --- | --- | --- |

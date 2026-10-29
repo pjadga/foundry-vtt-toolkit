@@ -47,6 +47,13 @@ file the user copies between machines.
   sort 100 to 800; Section 9's are 09 to 23), and the track picker had filled that campaign's empty
   Tension and Finale playlists (picks removed). Re-running Build campaign would renumber the scenes
   again. Not played or tested with players.
+- **Macros module split** (29 October, not yet deployed): the Custom-Macros compendium moved out of the
+  main module into `macros-module/` (`foundry-vtt-toolkit-macros`, minimum Foundry 12), so it can be used
+  in the v12 Roy world. cpr-test still has the old copy inside the main module until the next deploy,
+  which needs: the main module redeployed (its `module.json` no longer lists the pack), the macros
+  module copied to `<Data>/modules/foundry-vtt-toolkit-macros` and enabled in cpr-test, and the world
+  relaunched (admin password, the user). Untested on v12: the macros carry `_stats.coreVersion`
+  13.351, and whether v12 loads documents stamped with a newer version needs checking before relying on it.
 - **Custom-Macros compendium** (28 October): the module ships every macro in `macros/` as a
   compendium, built with `npm run build:packs`. Deployed to cpr-test (only `module.json` and
   `packs/`, so the rest of the module there is still `705ef01`'s), Foundry v13 restarted with pm2

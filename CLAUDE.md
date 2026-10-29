@@ -6,12 +6,14 @@ Macros and a module for FoundryVTT v13. See `README.md` for layout and release s
 
 - **Target v13.** Use `foundry.applications.api.DialogV2` and ApplicationV2, not the legacy `Dialog`/`FormApplication`.
 - **Macros are standalone.** No imports, no build step. They run as the body of an async function, so top-level `await` and `return` are valid. Start each with the header block (Name / System / Foundry / Type).
-- **Every macro is in the Custom-Macros compendium** the module ships (`module/packs/custom-macros`,
-  LevelDB). After adding or changing a file in `macros/`, run `npm run build:packs` and commit the pack
+- **Every macro is in the Custom-Macros compendium**, which ships in its own module,
+  `macros-module/` (id `foundry-vtt-toolkit-macros`, Foundry v12 and v13, no scripts; pack in
+  `macros-module/packs/custom-macros`, LevelDB). The release workflow stamps and zips both modules and
+  publishes the macros manifest as `macros-module.json`. After adding or changing a file in `macros/`, run `npm run build:packs` and commit the pack
   with `scripts/packs.sha256`; a test fails until you do. The build needs `npm ci` first (the
   Foundry CLI, which uses a native LevelDB package). The pure part, names from the header and stable
   ids from the path, is `scripts/macro-pack.mjs`; a new `macros/` subfolder needs an entry in its
-  `FOLDERS`. `.gitattributes` keeps `module/packs/**` binary. Macros carry `_stats.coreVersion`
+  `FOLDERS`. `.gitattributes` keeps `macros-module/packs/**` binary. Macros carry `_stats.coreVersion`
   (`CORE_VERSION`, the server's Foundry version): without it Foundry migrates every macro when a
   world launches and rewrites the pack on the server. Bump it when the server's Foundry updates.
 - **Guard system macros** on `game.system.id` and return a notification, never throw.
@@ -214,8 +216,10 @@ each machine by hand.
   then `tar -xzf fvtk.tgz -C <Data>/modules/foundry-vtt-toolkit` over `ssh`. Archiving the
   `HEAD:module` subtree doesn't see the root `.gitattributes`, so without `core.autocrlf=false` a
   Windows machine packs CRLF files. Check with `git hash-object` on the server, which has git.
+  The macros module deploys the same way from `HEAD:macros-module` into
+  `<Data>/modules/foundry-vtt-toolkit-macros`, and must be enabled in the world.
   Foundry reads a module's compendiums when a world launches and keeps them open, so a deploy that
-  changes `module/packs/` or the `packs` in `module.json` needs the world relaunched; deploy a pack
+  changes `macros-module/packs/` or a module's `packs` needs the world relaunched; deploy a pack
   change with the world closed (or relaunch it right after), since the server holds the old files.
   Foundry can also rewrite a pack's files itself (migration, compaction), so check a deployed pack
   by its records (read it with `classic-level`), not with `git hash-object`.

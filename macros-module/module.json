@@ -1,0 +1,23 @@
+{
+  "id": "foundry-vtt-toolkit-macros",
+  "title": "Foundry VTT Toolkit: Custom Macros",
+  "description": "The Foundry VTT Toolkit's macros in one compendium, Custom-Macros, in folders by system. Works without the main toolkit module, on Foundry v12 and v13.",
+  "version": "0.1.0",
+  "compatibility": {
+    "minimum": "12",
+    "verified": "13"
+  },
+  "authors": [{ "name": "pjadga", "url": "https://github.com/pjadga" }],
+  "packs": [
+    {
+      "name": "custom-macros",
+      "label": "Custom-Macros",
+      "path": "packs/custom-macros",
+      "type": "Macro",
+      "ownership": { "PLAYER": "OBSERVER", "ASSISTANT": "OWNER" }
+    }
+  ],
+  "url": "https://github.com/pjadga/foundry-vtt-toolkit",
+  "manifest": "https://github.com/pjadga/foundry-vtt-toolkit/releases/latest/download/macros-module.json",
+  "download": "https://github.com/pjadga/foundry-vtt-toolkit/releases/latest/download/macros-module.zip"
+}

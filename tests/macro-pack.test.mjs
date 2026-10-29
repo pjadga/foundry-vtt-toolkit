@@ -10,12 +10,17 @@ const files = () => fs.readdirSync(macrosDir, { recursive: true }).filter(file =
 
 test("the Custom-Macros pack is current with macros/", () => {
   const recorded = fs.readFileSync(new URL("../scripts/packs.sha256", import.meta.url), "utf8").split(/\s+/)[0];
-  assert.equal(packHash(macroDocuments(files())), recorded, "run npm run build:packs and commit module/packs");
+  assert.equal(packHash(macroDocuments(files())), recorded, "run npm run build:packs and commit macros-module/packs");
 });
 
-test("module.json declares the pack", () => {
-  const pack = JSON.parse(fs.readFileSync(new URL("../module/module.json", import.meta.url), "utf8")).packs?.find(p => p.name === PACK);
+test("the macros module declares the pack, works on v12, and the main module doesn't", () => {
+  const read = file => JSON.parse(fs.readFileSync(new URL(`../${file}`, import.meta.url), "utf8"));
+  const macros = read("macros-module/module.json");
+  const pack = macros.packs?.find(p => p.name === PACK);
   assert.deepEqual([pack?.label, pack?.type, pack?.path], ["Custom-Macros", "Macro", `packs/${PACK}`]);
+  assert.equal(macros.compatibility.minimum, "12");
+  assert.ok(fs.existsSync(new URL(`../macros-module/packs/${PACK}/CURRENT`, import.meta.url)), "the built pack is in macros-module/packs");
+  assert.equal(read("module/module.json").packs?.find(p => p.name === PACK), undefined);
 });
 
 test("every macro in macros/ is in the pack, by its header name, in its folder", () => {

@@ -13,19 +13,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Stamp version and download URL into module.json
+      - name: Stamp version and download URL into both modules' module.json
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          jq --arg v "$VERSION" \
-             --arg dl "https://github.com/${{ github.repository }}/releases/download/${GITHUB_REF_NAME}/module.zip" \
+          BASE="https://github.com/${{ github.repository }}/releases/download/${GITHUB_REF_NAME}"
+          jq --arg v "$VERSION" --arg dl "$BASE/module.zip" \
              '.version = $v | .download = $dl' module/module.json > module.json.tmp
           mv module.json.tmp module/module.json
+          jq --arg v "$VERSION" --arg dl "$BASE/macros-module.zip" \
+             '.version = $v | .download = $dl' macros-module/module.json > macros.json.tmp
+          mv macros.json.tmp macros-module/module.json
 
-      - name: Zip module
-        run: cd module && zip -r ../module.zip .
+      - name: Zip the modules
+        run: |
+          (cd module && zip -r ../module.zip .)
+          (cd macros-module && zip -r ../macros-module.zip .)
+          # The macros module's manifest is published under its own name; inside its zip it stays module.json.
+          cp macros-module/module.json macros-module.json
 
       - uses: softprops/action-gh-release@v2
         with:
           files: |
             module/module.json
             module.zip
+            macros-module.json
+            macros-module.zip
