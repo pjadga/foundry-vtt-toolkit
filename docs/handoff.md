@@ -54,9 +54,15 @@ file the user copies between machines.
   came out of that test: v12 rejects macros without an `author` field, and refuses to migrate
   documents stamped with a newer Foundry version, so the macros now carry `author: null` and
   `coreVersion` 12.343; the world then launched with no errors. The v12 server was restarted with pm2
-  (the user's OK) so it would see the new module. cpr-test still has the old copy inside the main
-  module until its next deploy (main module redeployed, macros module installed and enabled, world
-  relaunched); there v13 will migrate the 12.343-stamped macros on launch.
+  (the user's OK) so it would see the new module. **cpr-test switched over** the same day: the world
+  was returned to setup (the user's Gamemaster session was dropped), the main module redeployed
+  without its `packs` folder and the macros module installed (both match `7cad70f` file for file), the
+  v13 server restarted with pm2 (the user's OK), and the module enabled in cpr-test. Tested as
+  GamemasterHOME: the main module no longer has the old compendium, Custom-Macros shows 10 macros in
+  5 folders, and Toggle Acted imported from it tinted Player One's token and cleared it. On that first
+  launch v13 logged "author: may not be undefined" once per macro (v13 requires an author, v12 none),
+  filled in the current GM as author and saved its migrated copy on the server; later launches are
+  quiet.
 - **Custom-Macros compendium** (28 October): the module ships every macro in `macros/` as a
   compendium, built with `npm run build:packs`. Deployed to cpr-test (only `module.json` and
   `packs/`, so the rest of the module there is still `705ef01`'s), Foundry v13 restarted with pm2

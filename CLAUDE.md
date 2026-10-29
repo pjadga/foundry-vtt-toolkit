@@ -17,8 +17,10 @@ Macros and a module for FoundryVTT v13. See `README.md` for layout and release s
   (`CORE_VERSION`) set to the **oldest** Foundry the macros module supports (12.343) and an `author`
   field (null): v12 rejects a macro without `author` and refuses to migrate documents stamped with a
   newer version than its own, while v13 migrates older ones when a world launches (it rewrites the
-  pack's files on the server, so check a deployed pack by its records). Raise it only with the
-  module's minimum version.
+  pack's files on the server, so check a deployed pack by its records). v13 also requires a non-null
+  author, so its first launch with a new pack logs "author: may not be undefined" once per macro and
+  fills in the current GM; no single value satisfies both versions, so that one-time warning is
+  expected. Raise the stamp only with the module's minimum version.
 - **Guard system macros** on `game.system.id` and return a notification, never throw.
 - **Module code is ES modules** (`.mjs`). Per-system code lives in `module/scripts/systems/` and is registered in `SYSTEM_MODULES` in `main.mjs`.
 - **Namespace** CSS under `.fvtk` and lang keys under `FVTK.`.
