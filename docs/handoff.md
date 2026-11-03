@@ -37,7 +37,9 @@ file the user copies between machines.
   `CPRChat.RenderRollCard`, which both versions call, and falls back to reading the card. Tested on
   v13 (cpr-test) and v12 (the "Cyberpunk RED" world, with the user's OK) with QA actors and results
   kept from the Agent: Agent and Foundry rolls report the card's total, title and criticals, once
-  each. On v12, Dice So Nice's animation never finishes in the Claude browser pane, so rolls there
+  each; a Foundry roll made while an Agent roll's capture is still open is reported; a cancelled
+  dialog sends nothing and ends the capture after 1.5 s (both checked on both versions). Released as
+  Bridge 1.3.4.3. On v12, Dice So Nice's animation never finishes in the Claude browser pane, so rolls there
   only complete with `game.dice3d.showForRoll` stubbed in the page.
 - **Campaign designer skill** (28 October, `.claude/skills/campaign-designer/`, uncommitted until the
   user says): designs a campaign and drives NotebookLM in the user's Edge profile through the Claude in
