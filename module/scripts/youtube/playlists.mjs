@@ -18,6 +18,6 @@ export async function importPlaylist(entry, ctx) {
   }
   return Playlist.create(
     { _id: ctx.id, name: entry.name, folder: ctx.folder.id, mode: CONST.PLAYLIST_MODES.SEQUENTIAL, description, flags },
-    { keepId: true }
+    { keepId: true, pack: ctx.pack }
   );
 }

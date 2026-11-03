@@ -44,6 +44,27 @@ file the user copies between machines.
   dialog sends nothing and ends the capture after 1.5 s (both checked on both versions). Released as
   Bridge 1.3.4.3. On v12, Dice So Nice's animation never finishes in the Claude browser pane, so rolls there
   only complete with `game.dice3d.showForRoll` stubbed in the page.
+- **Agent, Bridge and toolkit test round** (3 November, uncommitted until the user says): a full
+  test of every Agent tab against both worlds found 16 problems; all are fixed in the Agent fork
+  (`lockscreen` branch: stale character id, autofire fire mode, failure messages, LP text, role
+  section, cyberware refresh, cyberware weapons in Control, skills heading), the Bridge fork
+  (Foundry-side changes routed to the owning player, death-save outcome, pairing sends the
+  assignment, die roller mode/speaker/duplicate, autofire DV, consume without a GM dialog, paused
+  and not-in-combat messages, unanimated moves) and the toolkit (cyberware options installed in
+  their foundational piece; combat resolution for cyberware weapons). Deployed from the working
+  trees: the live Agent (its server checkout now has uncommitted files), the Bridge `dist` on both
+  servers, the toolkit on cpr-test. Retested on v13 and v12; Agent suite 248 pass, Bridge 7,
+  toolkit 115.
+- **Build campaign is compendium-first** (3 November, uncommitted): builds into the NotebookLM
+  compendiums, adds to the world from there, finishes scenes in the world and copies back; asks to
+  clean (archive + remove) or keep an existing campaign. Tested live in cpr-test: *Keep* (5 QA
+  documents and a scene, ids matching, custom gear found in the Items compendium, a `replaces:`
+  rebuild keeping ids and a hand-placed token), and *Clean* with the user's OK (Section 9 and the
+  other campaign archived as "Section 9 (2026-11-03)", world and compendiums cleaned, new build
+  made, then restored with Import Adventure: all 198 documents, 16 folders and 121 tokens and pins
+  back with their ids). The test found the compendium-folder bug (fixed). QA documents deleted;
+  the archive and the five (now empty) NotebookLM compendiums are left in cpr-test for the user to
+  keep or delete.
 - **Campaign designer skill** (28 October, `.claude/skills/campaign-designer/`, uncommitted until the
   user says): designs a campaign and drives NotebookLM in the user's Edge profile through the Claude in
   Chrome extension. Tested on the user's `QA Campaign Designer` notebook (they keep it): created and

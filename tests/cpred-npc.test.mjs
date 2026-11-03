@@ -1,6 +1,41 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { parseStats, parseSkills, buildStats, buildSkills, derivedStats, matchGear, npcNotes, tierOf } from "../module/scripts/systems/cpred-npc.mjs";
+import { parseStats, parseSkills, buildStats, buildSkills, derivedStats, matchGear, npcNotes, tierOf, wireCyberware } from "../module/scripts/systems/cpred-npc.mjs";
+
+test("cyberware: options go inside a foundational piece of their type, stale ids are dropped", () => {
+  let n = 0;
+  const newId = () => `new${++n}`;
+  const items = [
+    { _id: "skill1", type: "skill", name: "Handgun", system: {} },
+    { _id: "core-int", type: "cyberware", name: "Internal", system: { isFoundational: true, type: "internal", installedItems: { list: [], slots: 7 } } },
+    // As in the compendium: a Cyberarm listing two ids that exist nowhere.
+    { _id: "arm", folder: "f", type: "cyberware", name: "Cyberarm", system: { isFoundational: true, type: "cyberArm", installedItems: { list: ["V3W535", "S6OQfG"], slots: 4, usedSlots: 0 } } },
+    { _id: "wolv", type: "cyberware", name: "Wolvers", system: { isFoundational: false, type: "cyberArm", size: 1, installedIn: [] } },
+    { _id: "agent", type: "cyberware", name: "Internal Agent", system: { isFoundational: false, type: "internal", size: 1, installedIn: [] } },
+    { _id: "eyes", type: "cyberware", name: "Kiroshi", system: { isFoundational: false, type: "cybereye", size: 1, installedIn: [] } }
+  ];
+  const { items: out, installed } = wireCyberware(items, newId);
+  const byName = name => out.find(i => i.name === name);
+  assert.ok(out.every(i => i._id.startsWith("new") && !("folder" in i)));
+  assert.deepEqual(byName("Cyberarm").system.installedItems.list, [byName("Wolvers")._id]);
+  assert.equal(byName("Cyberarm").system.installedItems.usedSlots, 1);
+  assert.deepEqual(byName("Wolvers").system.installedIn, [byName("Cyberarm")._id]);
+  assert.deepEqual(byName("Internal").system.installedItems.list, [byName("Internal Agent")._id]);
+  // No foundational piece for cybereyes: it stays at the top level.
+  assert.deepEqual(installed.sort(), [byName("Internal")._id, byName("Cyberarm")._id, byName("Kiroshi")._id].sort());
+});
+
+test("cyberware: a full foundational piece takes no more options", () => {
+  let n = 0;
+  const items = [
+    { _id: "arm", type: "cyberware", name: "Cyberarm", system: { isFoundational: true, type: "cyberArm", installedItems: { list: [], slots: 1 } } },
+    { _id: "a", type: "cyberware", name: "Wolvers", system: { type: "cyberArm", size: 1 } },
+    { _id: "b", type: "cyberware", name: "Big Knucks", system: { type: "cyberArm", size: 1 } }
+  ];
+  const { items: out, installed } = wireCyberware(items, () => `id${++n}`);
+  assert.equal(out[0].system.installedItems.list.length, 1);
+  assert.equal(installed.length, 2);
+});
 
 const npc = (fields = {}, body = "") => ({ type: "npc", name: "Test", tags: [], fields, body, links: [] });
 

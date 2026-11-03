@@ -7,9 +7,12 @@ const t = (key, data) => (data ? game.i18n.format(`FVTK.Adventure.${key}`, data)
 // Adventure fields, and the world collection each is packed from.
 const CONTENTS = { scenes: "scenes", actors: "actors", items: "items", journal: "journal", playlists: "playlists" };
 
-/** A NotebookLM folder: the root folder of a document type, or anything inside one. */
+/**
+ * A NotebookLM folder: the root folder of a document type, or anything inside one. The Compendium
+ * sidebar's NotebookLM folder, which holds Build campaign's compendiums, isn't part of the campaign.
+ */
 function inCampaignFolder(folder) {
-  if (!folder) return false;
+  if (!folder || folder.type === "Compendium") return false;
   return [folder, ...folder.ancestors].some(f => f.name === ROOT_FOLDER && !f.folder);
 }
 
@@ -62,7 +65,7 @@ export async function packAdventure(name, docs = campaignDocuments()) {
 }
 
 /** Whether an adventure holds every one of these documents. */
-function holdsAll(adventure, docs) {
+export function holdsAll(adventure, docs) {
   // An adventure's contents are Sets of documents, not collections keyed by id.
   return Object.entries(docs).every(([field, list]) => {
     const ids = new Set([...(adventure[field] ?? [])].map(d => d.id));

@@ -1,7 +1,8 @@
 import { normalizeName, findLinks } from "../import/parser.mjs";
-import { STAT_KEYS, TIERS, tierOf, buildStats, buildSkills, derivedStats, matchGear, npcNotes } from "./cpred-npc.mjs";
+import { STAT_KEYS, TIERS, tierOf, buildStats, buildSkills, derivedStats, matchGear, npcNotes, wireCyberware } from "./cpred-npc.mjs";
 import { itemType, itemChanges, itemDescription } from "./cpred-items.mjs";
 import { DEFAULT_STAT, characterStats, characterSkills, roleRank, ledgers, lifepath, characterNotes } from "./cpred-character.mjs";
+import { CAMPAIGN_PACKS } from "../import/campaign.mjs";
 
 const MODULE_ID = "foundry-vtt-toolkit";
 const SYSTEM_ID = "cyberpunk-red-core";
@@ -85,7 +86,7 @@ async function importItem(entry, ctx) {
   if (ctx.existing) await ctx.existing.delete();
   const [item] = await CONFIG.Item.documentClass.createDocuments(
     [{ ...base, _id: ctx.id, name: entry.name, type, folder: ctx.folder.id, flags: foundry.utils.mergeObject(base.flags ?? {}, ctx.flags, { inplace: false }), system }],
-    { keepId: true }
+    { keepId: true, pack: ctx.pack }
   );
   await ctx.track(item, DESCRIPTION_PATH, raw);
   return item;
@@ -117,7 +118,7 @@ async function importNpc(entry, ctx) {
   if (ctx.existing) await ctx.existing.delete();
   const actor = await Actor.create(
     { _id: ctx.id, name: entry.name, type: "mook", folder: ctx.folder.id, flags: ctx.flags, system, items: parts.allItems },
-    { keepId: true }
+    { keepId: true, pack: ctx.pack }
   );
   await ctx.track(actor, NOTES_PATH, raw);
   return actor;
@@ -166,7 +167,7 @@ async function importCharacter(entry, ctx) {
       _id: ctx.id, name: entry.name, type: "character", folder: ctx.folder.id, flags: ctx.flags, ownership, system, items: parts.allItems,
       prototypeToken: { name: entry.name, actorLink: true, disposition: CONST.TOKEN_DISPOSITIONS.FRIENDLY }
     },
-    { keepId: true }
+    { keepId: true, pack: ctx.pack }
   );
   await ctx.track(actor, NOTES_PATH, raw);
   return actor;
@@ -178,8 +179,9 @@ function actorSystem(stats, { hp, humanity, humanityMax, emp }, parts) {
     stats: Object.fromEntries(STAT_KEYS.map(k => [k, { value: stats[k] }])),
     derivedStats: { hp: { max: hp, value: hp }, humanity: { max: humanityMax, value: humanity } },
     roleInfo: { activeRole: parts.roleName },
-    // Installed, as the system does for a new actor's cyberware.
-    installedItems: { list: parts.allItems.filter(i => i.type === "cyberware").map(i => i._id) }
+    // Installed, as the system does for a new actor's cyberware; options sit inside their
+    // foundational piece instead (see wireCyberware).
+    installedItems: { list: parts.installed }
   };
   system.stats.luck.max = stats.luck;
   system.stats.emp.max = stats.emp;
@@ -199,8 +201,12 @@ async function actorItems(entry, rank, skillLevels, problems) {
   const wanted = findLinks(entry.fields.gear ?? "");
   if (!wanted.length && entry.fields.gear) wanted.push(...entry.fields.gear.split(",").map(s => s.trim()).filter(Boolean));
   const index = await gearIndex();
+  // Custom items from this build are in the NotebookLM Items compendium until the build is added
+  // to the world, so look there too.
+  const campaignItems = game.packs.get(`world.${CAMPAIGN_PACKS.Item.name}`)?.contents ?? [];
   for (const name of wanted) {
-    const world = game.items.find(i => normalizeName(i.name) === normalizeName(name));
+    const world = game.items.find(i => normalizeName(i.name) === normalizeName(name))
+      ?? campaignItems.find(i => normalizeName(i.name) === normalizeName(name));
     const hit = world ? { name: world.name, uuid: world.uuid, type: world.type, exact: true } : matchGear(name, index);
     if (!hit) {
       gear.missing.push(name);
@@ -245,9 +251,9 @@ async function actorItems(entry, rank, skillLevels, problems) {
     else problems.push(`Skill "${name}" is not a core skill; add it by hand.`);
   }
   const coreCyberware = (await game.packs.get(`${SYSTEM_ID}.internal_cyberware-core`)?.getDocuments() ?? []).map(d => d.toObject());
-  const allItems = [...coreSkills, ...coreCyberware, ...items].map(({ _id, folder, ...data }) => ({ ...data, _id: foundry.utils.randomID() }));
+  const { items: allItems, installed } = wireCyberware([...coreSkills, ...coreCyberware, ...items], () => foundry.utils.randomID());
 
   // Gear cyberware costs its static Humanity Loss (core foundational cyberware costs none).
   const humanityLoss = items.filter(i => i.type === "cyberware").reduce((sum, i) => sum + (Number(i.system.humanityLoss?.static) || 0), 0);
-  return { allItems, roleName, gear, humanityLoss };
+  return { allItems, installed, roleName, gear, humanityLoss };
 }

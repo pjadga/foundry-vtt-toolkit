@@ -2,6 +2,26 @@
 
 The module's version is set from the git tag when a release is published.
 
+## Unreleased
+
+### Building a campaign from NotebookLM
+
+- **Build campaign builds into compendiums first:** journals, actors, items, scenes and playlists go
+  into the world compendiums *NotebookLM Journals*, *Actors*, *Items*, *Scenes* and *Playlists* (in a
+  *NotebookLM* compendium folder, with the same folders), then into the world from there, keeping
+  their ids. Scenes are finished in the world (tokens, pins, soundtrack, numbering) and copied back,
+  so the compendiums hold the campaign as built.
+- **A campaign is already imported:** Build campaign asks whether to *Clean the world first* (after
+  archiving the old campaign in *NotebookLM Campaigns*, ticked by default) or *Keep it and add to it*.
+  Nothing is removed until the preview is confirmed, and nothing at all if the archive fails.
+
+### Fixed
+
+- Imported cyberware options (Wolvers) are installed inside their foundational piece (the
+  Cyberarm), and the compendium Cyberarm's two missing option ids are no longer copied.
+- Combat resolution recognises cyberware weapons such as Wolvers, so their melee attacks roll the
+  NPC's Evasion instead of asking the GM for *Hit* or *Miss*.
+
 ## 0.2.0
 
 ### Building a campaign from NotebookLM

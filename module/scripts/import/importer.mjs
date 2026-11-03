@@ -5,6 +5,9 @@ import { generateSceneImages } from "../images/review.mjs";
 import { autoPickTracks, playlistsToFill } from "../youtube/tracks.mjs";
 import { namesIn, tokenPositions, notePosition } from "./setup.mjs";
 import { campaignCheck, fixPrompt } from "./check.mjs";
+import { campaignPacks, campaignPackCount, clearCampaignPacks, copyDocument, ensureFolder } from "./campaign-packs.mjs";
+import { existingCampaign, archiveName } from "./campaign.mjs";
+import { campaignDocuments, clearCampaign, packAdventure, holdsAll } from "./adventure.mjs";
 
 const MODULE_ID = "foundry-vtt-toolkit";
 const ROOT_FOLDER = "NotebookLM";
@@ -60,12 +63,6 @@ export function worldLookup() {
   return name => index.get(normalizeName(name)) ?? null;
 }
 
-/** Find or create a folder of a document type, optionally under a parent. */
-async function ensureFolder(name, type, parent = null) {
-  const existing = game.folders.find(f => f.type === type && f.name === name && (f.folder?.id ?? null) === (parent?.id ?? null));
-  return existing ?? Folder.create({ name, type, folder: parent?.id ?? null });
-}
-
 /**
  * Notes HTML for an imported document: a public part and a GM-only secret part, both Markdown with
  * [[links]]. The secret id is derived from the document id so the output is stable for relinking.
@@ -98,22 +95,34 @@ export async function importEntries(entries, { overwrite = false, images = [] } 
   const supported = entries.filter(e => isSupported(e.type));
   if (!supported.length) return report;
 
+  // The campaign is built in the NotebookLM compendiums, then added to the world from there.
+  const packs = await campaignPacks();
   const roots = {};
   const folders = {};
+  const worldFolders = {};
   for (const type of new Set(supported.map(e => e.type))) {
     const documentName = documentNameFor(type);
-    roots[documentName] ??= await ensureFolder(ROOT_FOLDER, documentName);
-    folders[type] = await ensureFolder(JOURNAL_TYPES[type] ?? HANDLERS[type].folder, documentName, roots[documentName]);
+    const sub = JOURNAL_TYPES[type] ?? HANDLERS[type].folder;
+    roots[documentName] ??= await ensureFolder(ROOT_FOLDER, documentName, null, packs[documentName]);
+    folders[type] = await ensureFolder(sub, documentName, roots[documentName], packs[documentName]);
+    // The world folder an earlier import used, to find what it made there.
+    worldFolders[type] = game.folders.find(f => f.type === documentName && f.name === sub && f.folder?.name === ROOT_FOLDER && !f.folder.folder) ?? null;
   }
 
   // Decide every entry's id up front so links can point at documents that don't exist yet.
   // An entry with `replaces:` supersedes that document (keeping its id, so links to it survive) even
   // without the overwrite option; otherwise an existing document of the same name is the target.
+  // The compendium copy is the one that gets rebuilt; a world copy from an import made before the
+  // compendiums existed lends its id, so the new build replaces it rather than doubling it.
   const plan = supported.map(e => {
     const documentName = documentNameFor(e.type);
-    const inFolder = name => game.collections.get(documentName).find(d => normalizeName(d.name) === normalizeName(name) && d.folder?.id === folders[e.type].id);
-    const existing = (e.replaces && inFolder(e.replaces)) || inFolder(e.name) || null;
-    return { entry: e, documentName, existing, replace: overwrite || !!e.replaces, id: existing?.id ?? foundry.utils.randomID() };
+    const pack = packs[documentName];
+    const inPack = name => pack.contents.find(d => normalizeName(d.name) === normalizeName(name) && d.folder?.id === folders[e.type].id);
+    const inWorld = name => worldFolders[e.type] && game.collections.get(documentName).find(d => normalizeName(d.name) === normalizeName(name) && d.folder?.id === worldFolders[e.type].id);
+    const existing = (e.replaces && inPack(e.replaces)) || inPack(e.name) || null;
+    const worldCopy = (existing && game.collections.get(documentName).get(existing.id)) || (e.replaces && inWorld(e.replaces)) || inWorld(e.name) || null;
+    const id = existing?.id ?? worldCopy?.id ?? foundry.utils.randomID();
+    return { entry: e, documentName, pack, existing, worldCopy, replace: overwrite || !!e.replaces, id };
   });
   const orderOf = type => HANDLERS[type]?.order ?? 0;
   plan.sort((a, b) => orderOf(a.entry.type) - orderOf(b.entry.type));
@@ -123,12 +132,16 @@ export async function importEntries(entries, { overwrite = false, images = [] } 
 
   const toCreate = [];
   const newPages = new Map();
-  for (const { entry, documentName, existing, replace, id } of plan) {
-    if (existing && !replace) {
+  const built = [];
+  for (const { entry, documentName, pack, existing, worldCopy, replace, id } of plan) {
+    if ((existing || worldCopy) && !replace) {
+      // An earlier import's world copy that the compendium doesn't have yet: adopt it.
+      if (worldCopy && !existing) await copyDocument(worldCopy, pack);
       report.skipped.push(`${entry.name} (already exists)`);
       continue;
     }
-    const outcome = existing ? report.updated : report.created;
+    const outcome = existing || worldCopy ? report.updated : report.created;
+    built.push({ documentName, id, name: entry.name });
     const baseFlags = { source: "notebooklm", type: entry.type, tags: entry.tags };
     if (entry.type === "scene") baseFlags.order = progressionKey(entry);
 
@@ -150,9 +163,11 @@ export async function importEntries(entries, { overwrite = false, images = [] } 
     }
 
     try {
+      // Handlers create in the compendium (ctx.pack): pass it as the `pack` create option.
       const ctx = {
         id,
         existing,
+        pack: pack.collection,
         folder: folders[entry.type],
         flags: { [MODULE_ID]: baseFlags },
         lookup,
@@ -162,21 +177,63 @@ export async function importEntries(entries, { overwrite = false, images = [] } 
       await HANDLERS[entry.type].import(entry, ctx);
       outcome.push(entry.name);
     } catch (err) {
+      built.pop();
       console.error(`${MODULE_ID} | Failed to import ${entry.type} "${entry.name}"`, err);
       report.skipped.push(`${entry.name} (error: ${err.message})`);
     }
   }
   if (toCreate.length) {
-    const created = await JournalEntry.createDocuments(toCreate, { keepId: true });
+    const created = await JournalEntry.createDocuments(toCreate, { keepId: true, pack: packs.JournalEntry.collection });
     for (const journal of created) await journal.createEmbeddedDocuments("JournalEntryPage", [newPages.get(journal.id)]);
   }
 
-  report.scenes = await importScenes(plan.filter(p => p.entry.type in SCENE_TYPES), images);
+  // Add what was built to the world, from the compendiums. Items first, so actors that carry them
+  // and journals that link them find them, as in the build order.
+  for (const { documentName, id, name } of built) {
+    const doc = packs[documentName].get(id);
+    try {
+      if (doc) await copyDocument(doc);
+    } catch (err) {
+      console.error(`${MODULE_ID} | Could not add ${name} to the world`, err);
+      report.skipped.push(`${name} (not added to the world: ${err.message})`);
+    }
+  }
+
+  report.scenes = await importScenes(plan.filter(p => p.entry.type in SCENE_TYPES), images, packs);
   await orderScenes();
 
   const touched = new Set([...report.created, ...report.updated]);
-  report.relinked = (await relink()).filter(name => !touched.has(name));
+  const relinked = await relink();
+  report.relinked = relinked.filter(name => !touched.has(name));
+
+  // The world finished the campaign (links, numbering, scene order): copy that back, so the
+  // compendiums hold the campaign as it is in the world.
+  await syncCampaignPacks(packs, [...built.map(b => b.id), ...report.scenes.ids], relinked);
   return report;
+}
+
+/**
+ * Copy the world's copies of this build's documents back into the compendiums, and refresh the
+ * compendium copies of documents relinked since and of story scenes and journals (renumbered and
+ * sorted after every import). A campaign imported before the compendiums existed stays in the world
+ * only: it isn't copied over piece by piece.
+ */
+async function syncCampaignPacks(packs, ids, relinkedNames) {
+  const relinked = new Set(relinkedNames.map(normalizeName));
+  const isStory = d => d.flags[MODULE_ID]?.source === "notebooklm" && d.flags[MODULE_ID]?.type === "scene";
+  const wanted = new Set(ids);
+  for (const documentName of Object.keys(packs)) {
+    for (const doc of game.collections.get(documentName)) {
+      if (doc.flags[MODULE_ID]?.source !== "notebooklm") continue;
+      const refresh = (relinked.has(normalizeName(doc.name)) || isStory(doc)) && packs[documentName].get(doc.id);
+      if (!wanted.has(doc.id) && !refresh) continue;
+      try {
+        await copyDocument(doc, packs[documentName]);
+      } catch (err) {
+        console.warn(`${MODULE_ID} | Could not copy ${doc.name} back to the compendium`, err);
+      }
+    }
+  }
 }
 
 /**
@@ -210,35 +267,43 @@ export function sceneImages(entries, images) {
 
 /**
  * Create or update a gridless Foundry scene, sized to its image, for each location or scene entry
- * with an image, with the scene's notes pointing at the entry's journal. An existing scene is
- * updated in place (keeping tokens, drawings and walls) when the entry is being replaced, and
- * skipped otherwise; a missing scene is created even if its journal already existed.
+ * with an image, with the scene's notes pointing at the entry's journal. The scene is built in the
+ * Scenes compendium and added to the world from there; the world copy is then finished (thumbnail,
+ * tokens, pin, soundtrack) and copied back. An existing world scene is updated in place (keeping
+ * tokens, drawings and walls) when the entry is being replaced, and skipped otherwise; a missing
+ * scene is created even if its journal already existed.
  */
-async function importScenes(plan, images) {
-  const result = { created: [], updated: [], skipped: [] };
+async function importScenes(plan, images, packs) {
+  const result = { created: [], updated: [], skipped: [], ids: [] };
+  const pack = packs.Scene;
   const srcFor = sceneImages(plan.map(p => p.entry), images);
-  const findFolder = (name, parent) => game.folders.find(f => f.type === "Scene" && f.name === name && (f.folder?.id ?? null) === (parent?.id ?? null));
+  const findFolder = (folders, name, parent) => folders.find(f => f.type === "Scene" && f.name === name && (f.folder?.id ?? null) === (parent?.id ?? null));
   for (const { entry, id, replace } of plan) {
     // Look for the entry's scene first: one that exists keeps its own background when no image is
-    // given this time, and still gets set up.
-    const sceneFolder = findFolder(SCENE_TYPES[entry.type], findFolder(ROOT_FOLDER, null));
-    const sameName = name => sceneFolder && game.scenes.find(s => s.folder?.id === sceneFolder.id && normalizeName(sceneBaseName(s)) === normalizeName(name));
-    const existing = (entry.replaces && sameName(entry.replaces)) || sameName(entry.name) || null;
-    const src = srcFor.get(entry) ?? existing?.background.src;
+    // given this time, and still gets set up. The world copy wins: it is the one that is played.
+    const worldFolder = findFolder(game.folders, SCENE_TYPES[entry.type], findFolder(game.folders, ROOT_FOLDER, null));
+    const packFolder = findFolder(pack.folders, SCENE_TYPES[entry.type], findFolder(pack.folders, ROOT_FOLDER, null));
+    const sameName = (scenes, folder) => name => folder && scenes.find(s => s.folder?.id === folder.id && normalizeName(sceneBaseName(s)) === normalizeName(name));
+    const inWorld = sameName(game.scenes, worldFolder);
+    const inPack = sameName(pack.contents, packFolder);
+    const packScene = (entry.replaces && inPack(entry.replaces)) || inPack(entry.name) || null;
+    const existing = (packScene && game.scenes.get(packScene.id)) || (entry.replaces && inWorld(entry.replaces)) || inWorld(entry.name) || null;
+    const src = srcFor.get(entry) ?? existing?.background.src ?? packScene?.background.src;
     if (!src) {
       if (entry.type === "scene") result.skipped.push(`${entry.name} (no image)`);
       continue;
     }
-    const folder = sceneFolder ?? (await ensureFolder(SCENE_TYPES[entry.type], "Scene", await ensureFolder(ROOT_FOLDER, "Scene")));
     if (existing && !replace) {
       // A scene from before scene setup existed still gets its tokens, pin and soundtrack, once.
       if (existing.flags[MODULE_ID]?.source === "notebooklm" && !existing.flags[MODULE_ID]?.setup) {
         const missing = await setupScene(existing, entry, game.journal.get(id)).catch(err => [`(setup error: ${err.message})`]);
         result.skipped.push(...missing.map(name => `${entry.name}: no actor or playlist named ${name}`));
       }
+      if (!packScene || !existing.flags[MODULE_ID]?.setup) await copyDocument(existing, pack).catch(() => null);
       result.skipped.push(`${entry.name} (scene already exists)`);
       continue;
     }
+    const folder = packFolder ?? (await ensureFolder(SCENE_TYPES[entry.type], "Scene", await ensureFolder(ROOT_FOLDER, "Scene", null, pack), pack));
     let texture;
     try {
       texture = await foundry.canvas.loadTexture(src);
@@ -262,7 +327,14 @@ async function importScenes(plan, images) {
       journal: game.journal.get(id) ? id : null,
       flags: { [MODULE_ID]: { source: "notebooklm", type: entry.type, baseName: entry.name, order: entry.type === "scene" ? progressionKey(entry) : null } }
     };
-    const scene = existing ? (await existing.update(data), existing) : await Scene.create(data);
+    // Build in the compendium, keeping the world scene's id so its tokens, pins and links stay valid.
+    const sceneId = existing?.id ?? packScene?.id ?? foundry.utils.randomID();
+    const inCompendium = pack.get(sceneId);
+    const built = inCompendium
+      ? (await inCompendium.update(data), inCompendium)
+      : await Scene.create({ ...data, _id: sceneId }, { keepId: true, pack: pack.collection });
+    // Into the world from there: an existing world scene is updated in place, keeping its tokens.
+    const scene = await copyDocument(built);
     try {
       const { thumb } = await scene.createThumbnail();
       await scene.update({ thumb });
@@ -276,6 +348,8 @@ async function importScenes(plan, images) {
       console.error(`${MODULE_ID} | Could not set up ${scene.name}`, err);
       result.skipped.push(`${entry.name} (setup error: ${err.message})`);
     }
+    // syncCampaignPacks copies the finished scene back once the scenes are numbered.
+    result.ids.push(scene.id);
     (existing ? result.updated : result.created).push(entry.name);
   }
   return result;
@@ -507,7 +581,7 @@ function onPreviewRender(event, dialog) {
   });
 }
 
-function previewHTML({ entries, warnings }, images = [], jobs = [], issues = null, overwrite = false) {
+function previewHTML({ entries, warnings }, images = [], jobs = [], issues = null, overwrite = false, cleaning = false) {
   const srcFor = sceneImages(entries, images);
   const counts = { added: 0, replaced: 0, kept: 0 };
   const generating = new Set(jobs.map(j => j.entry));
@@ -516,7 +590,8 @@ function previewHTML({ entries, warnings }, images = [], jobs = [], issues = nul
     let status = destinationFor(e.type) ?? "skipped (not supported yet)";
     if (isSupported(e.type)) {
       const replacing = overwrite || !!e.replaces;
-      const kind = !existingFor(e) ? "added" : replacing ? "replaced" : "kept";
+      // A world being cleaned first has nothing to replace or keep.
+      const kind = cleaning || !existingFor(e) ? "added" : replacing ? "replaced" : "kept";
       counts[kind]++;
       if (kind !== "added") status += ` (${game.i18n.localize(`FVTK.Import.Exists.${kind}`)})`;
     }
@@ -536,7 +611,63 @@ function previewHTML({ entries, warnings }, images = [], jobs = [], issues = nul
   const generate = jobs.length ? `<p>${escape(game.i18n.format("FVTK.Images.WillGenerate", { count: jobs.length, provider }) + cost)}</p>` : "";
   const found = `${entries.length} entr${entries.length === 1 ? "y" : "ies"} found.`;
   const summary = counts.replaced || counts.kept ? ` ${game.i18n.format("FVTK.Import.Counts", counts)}` : "";
-  return `<div class="fvtk fvtk-import-preview"><p>${escape(found + summary)}</p>${checkHTML(issues)}${generate}<ul>${rows.join("")}</ul>${warn}</div>`;
+  const clean = cleaning ? `<p class="fvtk-clean-note"><i class="fa-solid fa-broom"></i> ${escape(game.i18n.localize("FVTK.Import.Existing.WillClean"))}</p>` : "";
+  return `<div class="fvtk fvtk-import-preview"><p>${escape(found + summary)}</p>${clean}${checkHTML(issues)}${generate}<ul>${rows.join("")}</ul>${warn}</div>`;
+}
+
+/**
+ * The world already holds an imported campaign (or the campaign compendiums do): ask whether to
+ * clean it out first, optionally archiving it as an Adventure, or to add the new entries to it.
+ * @returns {Promise<{action: "clean"|"keep", archive: boolean}|null>} null when cancelled.
+ */
+async function askAboutExistingCampaign({ counts, packed }) {
+  const f = (key, data) => escape(data ? game.i18n.format(`FVTK.Import.Existing.${key}`, data) : game.i18n.localize(`FVTK.Import.Existing.${key}`));
+  let archive = true;
+  const choice = await foundry.applications.api.DialogV2.wait({
+    window: { title: game.i18n.localize("FVTK.Import.Existing.Title") },
+    position: { width: 520 },
+    content: `<div class="fvtk fvtk-existing">
+      <p>${f("Found", counts)}</p>${packed ? `<p>${f("Packed", { count: packed })}</p>` : ""}
+      <p>${f("Explain")}</p>
+      <label><input type="checkbox" name="archive" checked> ${f("Archive")}</label></div>`,
+    buttons: [
+      { action: "clean", label: game.i18n.localize("FVTK.Import.Existing.Clean"), icon: "fa-solid fa-broom",
+        callback: (event, button) => { archive = button.form.elements.archive.checked; return "clean"; } },
+      { action: "keep", label: game.i18n.localize("FVTK.Import.Existing.Keep"), icon: "fa-solid fa-layer-group", default: true },
+      { action: "cancel", label: game.i18n.localize("FVTK.Import.Existing.Cancel") }
+    ],
+    rejectClose: false
+  });
+  if (choice !== "clean" && choice !== "keep") return null;
+  return { action: choice, archive };
+}
+
+/**
+ * Clean the world of the earlier campaign before a new build: its scenes, actors, items, journals,
+ * playlists and NotebookLM folders, and the campaign compendiums. With `archive`, it is first packed
+ * into an Adventure in "NotebookLM Campaigns", and nothing is deleted unless the adventure holds it all.
+ * @returns {Promise<boolean>} Whether the world was cleaned.
+ */
+async function cleanWorld(archive) {
+  const docs = campaignDocuments();
+  if (archive && Object.entries(docs).some(([k, list]) => k !== "folders" && list.length)) {
+    try {
+      const adventure = await packAdventure(archiveName(docs.journal.map(j => j.name), game.world.title), docs);
+      if (!holdsAll(adventure, docs)) {
+        ui.notifications.error(game.i18n.localize("FVTK.Import.Existing.ArchiveIncomplete"));
+        return false;
+      }
+      ui.notifications.info(game.i18n.format("FVTK.Import.Existing.Archived", { name: adventure.name }));
+    } catch (err) {
+      console.error(`${MODULE_ID} | Archiving the campaign failed`, err);
+      ui.notifications.error(game.i18n.format("FVTK.Import.Existing.ArchiveFailed", { message: err.message }));
+      return false;
+    }
+  }
+  await clearCampaign(docs);
+  await clearCampaignPacks();
+  ui.notifications.info(game.i18n.localize("FVTK.Import.Existing.Cleaned"));
+  return true;
 }
 
 /**
@@ -586,15 +717,25 @@ export async function openImporter({ text: initial = "" } = {}) {
   const jobs = imageJobs(parsed.entries, images);
   const issues = checkBundle(parsed.entries);
 
+  // A campaign already in the world (or its compendiums): clean it out first, or add to it?
+  const before = existingCampaign(campaignDocuments(), await campaignPackCount());
+  let clean = null;
+  if (before.ask) {
+    clean = await askAboutExistingCampaign(before);
+    if (!clean) return;
+  }
+  const cleaning = clean?.action === "clean";
+
   const confirmed = await DialogV2.confirm({
     window: { title: game.i18n.localize("FVTK.Import.Title") },
     position: { width: 620 },
-    content: previewHTML(parsed, images, jobs, issues, input.overwrite),
+    content: previewHTML(parsed, images, jobs, issues, input.overwrite, cleaning),
     render: onPreviewRender,
     yes: { label: importable === 1 ? game.i18n.localize("FVTK.Import.ConfirmOne") : game.i18n.format("FVTK.Import.Confirm", { count: importable }) },
     rejectClose: false
   });
   if (!confirmed) return;
+  if (cleaning && !(await cleanWorld(clean.archive))) return;
 
   if (jobs.length) {
     const generated = await generateSceneImages(jobs, imageSettings(folder));

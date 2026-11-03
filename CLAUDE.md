@@ -54,6 +54,20 @@ pack `world.notebooklm-campaigns` (Compendium sidebar button, `api.importer.pack
 campaign from this world* ticked, `clearCampaign` deletes it afterwards, only if the adventure holds
 every document (an Adventure's contents are Sets of documents, not id-keyed collections).
 
+Build campaign is compendium-first. `importEntries` creates every document in the world compendiums
+`world.notebooklm-journal`, `-actors`, `-items`, `-scenes`, `-playlists` (`campaign-packs.mjs`;
+names, the in-place rule and the existing-campaign question are pure in `campaign.mjs`). Handlers
+get `ctx.pack` and must pass it as the `pack` create option; `ctx.existing` is the compendium copy.
+`copyDocument` then adds each document to the world with the same id and folder path (a scene or
+playlist already in the world is updated in place, keeping tokens and picked tracks; a player
+character keeps its assigned users). Scenes are finished in the world (thumbnail, `setupScene`,
+`orderScenes`, `relink`) and `syncCampaignPacks` copies them back. Before a build, `openImporter`
+asks to clean (`cleanWorld`: `packAdventure` + `holdsAll` check, `clearCampaign`,
+`clearCampaignPacks`) or keep an existing campaign. A custom item from the same build is only in
+the Items compendium while handlers run, so `actorItems` looks there as well as in `game.items`.
+The Compendium sidebar's folder is also named "NotebookLM": `inCampaignFolder` skips folders of type
+`Compendium`, or cleaning the world would archive and delete it.
+
 `module/scripts/import/parser.mjs` is pure (no Foundry globals) so it stays testable; Foundry calls live in
 `importer.mjs`. Format and supported types: `docs/notebooklm/format.md`. Journals, locations and threads
 import as journals; system modules add other types with `api.importer.registerType` (Cyberpunk RED

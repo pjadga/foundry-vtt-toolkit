@@ -124,7 +124,16 @@ token placement and soundtracks.
    background. Generated images are saved here. The default is `worlds/<world>/assets/notebooklm`.
 3. **Replace…:** tick this to update documents that already exist. Without it, they are kept as
    they are. An entry with `replaces: <name>` always replaces that document.
-4. **Preview** shows what each entry becomes, whether it is new, will replace an earlier import or
+4. **A campaign is already imported:** if the world already holds an imported campaign, you're
+   asked what to do with it before the preview:
+   - **Clean the world first** removes everything earlier imports made from the world and from the
+     NotebookLM compendiums, imported player characters included, before this build. With *Archive
+     it first* ticked (the default), it is packed into an Adventure in *NotebookLM Campaigns* first,
+     as [Pack campaign](#pack-campaign-and-starting-over) does, and nothing is removed unless the
+     adventure holds it all. Nothing is removed until you confirm the preview.
+   - **Keep it and add to it**, for a sequel or more content: the build adds to the campaign, and
+     replaces only what the entries replace.
+5. **Preview** shows what each entry becomes, whether it is new, will replace an earlier import or
    is kept, which image each scene gets, and the [campaign check](#campaign-check).
 
 ![The preview, with the campaign check opened](images/screenshots/build-preview.png)
@@ -132,11 +141,20 @@ token placement and soundtracks.
 **Build campaign** then runs, in order:
 
 1. it generates missing scene images, for you to review (see [Scene images](#scene-images));
-2. it imports the journals, items, NPCs and playlists (items before NPCs, so NPCs get them);
-3. it builds the scenes, numbers them in campaign order and sets them up (see [Scenes and scene
-   setup](#scenes-and-scene-setup));
-4. it picks YouTube tracks for playlists that have none (see [YouTube playlists](#youtube-playlists));
-5. it shows a summary.
+2. it builds the journals, items, NPCs and playlists in the **NotebookLM compendiums** (items before
+   NPCs, so NPCs get them), then adds them to the world from there;
+3. it builds the scenes in the same way, then numbers them in campaign order and sets them up in the
+   world (see [Scenes and scene setup](#scenes-and-scene-setup));
+4. it copies the finished campaign back into the compendiums, so they hold it as it is in the world;
+5. it picks YouTube tracks for playlists that have none (see [YouTube playlists](#youtube-playlists));
+6. it shows a summary.
+
+The compendiums are *NotebookLM Journals*, *Actors*, *Items*, *Scenes* and *Playlists*, in a
+*NotebookLM* folder in the Compendium sidebar, with the same folders as the world. A document keeps
+its id in the world and in the compendium, so links, tokens and journal pins work in both. To put a
+document back in the world after deleting it, import it from its compendium. Building again updates
+a world scene in place, keeping the tokens and drawings you added, and keeps the YouTube tracks
+picked for a playlist.
 
 ![The summary after a build](images/screenshots/build-summary.png)
 
@@ -392,7 +410,9 @@ adventure.
   world must be on the same server.
 - **To scrap the campaign and start a new one:** tick *Remove the campaign from this world after
   packing it*. The toolkit checks the adventure holds everything, asks you to confirm, and then
-  deletes the campaign from the world. **Import Adventure** brings it back.
+  deletes the campaign from the world. **Import Adventure** brings it back. Or simply build the new
+  campaign: [Build campaign](#build-campaign) offers to archive and clean out the old one first,
+  and also empties the NotebookLM compendiums.
 - **To continue with a sequel:** don't remove anything. Tell NotebookLM **campaign over** and
   choose *continue*. It writes an *Aftermath* journal, then builds the sequel. The sequel reuses
   your NPCs and places and numbers its sessions on from the old campaign's, so its scenes are
@@ -486,6 +506,7 @@ The image folder, sources folder and *search the sources* choice are remembered 
 | The range DV is wrong | The DV comes from the distance between the tokens, using the scene's grid scale. Gridless scenes imported from NotebookLM use 2 m per 100 pixels. Fix the token positions or the scene's grid, or use the card's **Hit** and **Miss** buttons. |
 | A damage roll wasn't narrated | Damage is matched to the attacker's last open attack (within the last 40 messages), or to the targets on the damage card. If neither exists, it isn't narrated. |
 | Secret sections are missing on a sheet | Secrets show only to the document's owners, the GM included. Players see them only on their own characters. |
+| "Archiving the earlier campaign failed" or "The archive doesn't hold the whole earlier campaign" | Build campaign was asked to clean the world after archiving it, and the archive didn't work, so it stopped before removing or importing anything. Check the console (F12), then try **Pack campaign** by hand, or untick *Archive it first* if you don't need the old campaign. |
 
 For anything else, turn on **Debug logging**, then check the browser console (F12) for lines
 starting `foundry-vtt-toolkit |`.
@@ -512,9 +533,14 @@ starting `foundry-vtt-toolkit |`.
 - Building again with a changed NPC, character or item replaces the whole document, so changes you
   made by hand on its sheet are lost. Journals you edited by hand aren't re-linked.
 - An imported player character is part of the campaign: **Pack campaign** packs it, and *Remove the
-  campaign from this world* deletes it from the world (it stays in the packed adventure, so
-  importing the adventure brings it back).
+  campaign from this world* (or Build campaign's *Clean the world first*) deletes it from the world
+  (it stays in the packed adventure, so importing the adventure brings it back).
   The ledgers (eddies, IP, reputation) start at the imported values with no transaction history.
+- A campaign built before the NotebookLM compendiums existed stays in the world only. Later builds
+  add their own documents to the compendiums, and adopt an older document there only when an entry
+  of the same name is kept. Pack it with **Pack campaign** to keep a copy.
+- The compendiums mirror what Build campaign made. Changes you make in the world afterwards aren't
+  copied back until the next build that touches that document.
 
 **Images:**
 
@@ -585,6 +611,7 @@ doesn't use your data this way. Enabling billing on your Gemini key switches it 
 | `importer.importEntries(entries, { overwrite, images })` | Imports parsed entries without the dialogs |
 | `importer.parseBundle(text)` | Parses `##ENTRY` text into `{ entries, warnings }` |
 | `importer.pack()`, `importer.packAdventure(name)`, `importer.clearCampaign()` | Pack campaign, and clearing the world |
+| `importer.campaignPacks()`, `importer.clearCampaignPacks()` | The NotebookLM compendiums Build campaign builds into (created on first use), and emptying them |
 | `importer.registerType(type, handler)` | Adds an entry type, as the Cyberpunk RED support does |
 | `youtube.pick(playlist)`, `youtube.choose()`, `youtube.autoPick(playlists)` | The YouTube picker, and auto-picking |
 | `assistant.open()`, `assistant.ask(question)` | The GM Assistant |

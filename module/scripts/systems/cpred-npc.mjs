@@ -76,6 +76,45 @@ export function derivedStats(stats, humanityLoss = 0) {
   return { hp: 10 + 5 * Math.ceil((stats.body + stats.will) / 2), humanity, humanityMax: stats.emp * 10, emp: Math.max(-10, Math.floor(humanity / 10)) };
 }
 
+/**
+ * Give an actor's items new ids and wire up cyberware the way Core records an install: an option
+ * (Wolvers) sits in the installedItems of a foundational piece of the same type (Cyberarm) with
+ * room for it, which counts its size in usedSlots, and the option names its parent in installedIn.
+ * Ids inside installedItems lists are remapped to the new ids; ids of items that aren't part of
+ * the actor (a compendium Cyberarm lists two that aren't even in its pack) are dropped.
+ * @param {object[]} items Item data; `_id` is replaced and `folder` removed.
+ * @param {() => string} newId
+ * @returns {{items: object[], installed: string[]}} installed: the actor's top-level installed
+ *   cyberware (everything installed that isn't inside another piece).
+ */
+export function wireCyberware(items, newId) {
+  const ids = new Map();
+  const out = items.map(({ _id, folder, ...data }) => {
+    const id = newId();
+    if (_id) ids.set(_id, id);
+    return { ...data, _id: id };
+  });
+  const cyberware = out.filter(i => i.type === "cyberware");
+  for (const i of cyberware) {
+    const slot = i.system?.installedItems;
+    if (slot && Array.isArray(slot.list)) slot.list = slot.list.map(id => ids.get(id)).filter(Boolean);
+  }
+  const used = parent => (parent.system.installedItems.list ?? [])
+    .reduce((sum, id) => sum + (Number(out.find(i => i._id === id)?.system?.size) || 0), 0);
+  const placed = new Set(cyberware.flatMap(i => i.system?.installedItems?.list ?? []));
+  for (const option of cyberware.filter(i => !i.system?.isFoundational && !placed.has(i._id))) {
+    const size = Number(option.system?.size) || 0;
+    const parent = cyberware.find(p => p.system?.isFoundational && p.system.type === option.system?.type
+      && p.system.installedItems && used(p) + size <= (Number(p.system.installedItems.slots) || 0));
+    if (!parent) continue;
+    parent.system.installedItems.list = [...(parent.system.installedItems.list ?? []), option._id];
+    option.system.installedIn = [parent._id];
+    placed.add(option._id);
+  }
+  for (const p of cyberware.filter(i => i.system?.installedItems)) p.system.installedItems.usedSlots = used(p);
+  return { items: out, installed: cyberware.filter(i => !placed.has(i._id)).map(i => i._id) };
+}
+
 // Gear words that mean body armor, mapped to the compendium's body variant.
 const ARMOR_ALIASES = [
   ["heavy armorjack", "Heavy Armorjack (Body)"],

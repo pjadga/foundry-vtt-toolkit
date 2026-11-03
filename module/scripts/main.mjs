@@ -3,6 +3,7 @@ import { importPlaylist } from "./youtube/playlists.mjs";
 import { YouTubePicker, chooseAndPick } from "./youtube/picker.mjs";
 import { autoPickTracks } from "./youtube/tracks.mjs";
 import { openPacker, packAdventure, clearCampaign } from "./import/adventure.mjs";
+import { campaignPacks, clearCampaignPacks } from "./import/campaign-packs.mjs";
 import { openAssistant, setupAssistant, ask as askAssistant } from "./assistant/assistant.mjs";
 import { openSources, syncSources } from "./assistant/sources-sync.mjs";
 import { setupNarration } from "./narration/narration.mjs";
@@ -177,7 +178,7 @@ Hooks.once("ready", async () => {
     id: MODULE_ID,
     log,
     system: null,
-    importer: { open: openImporter, importEntries, parseBundle, relink, registerType, orderScenes, pack: openPacker, packAdventure, clearCampaign },
+    importer: { open: openImporter, importEntries, parseBundle, relink, registerType, orderScenes, pack: openPacker, packAdventure, clearCampaign, campaignPacks, clearCampaignPacks },
     youtube: { pick: playlist => new YouTubePicker(playlist).render({ force: true }), choose: chooseAndPick, autoPick: autoPickTracks },
     assistant: { open: openAssistant, ask: askAssistant, sources: openSources, syncSources }
   };

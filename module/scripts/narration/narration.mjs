@@ -101,7 +101,9 @@ function damageInfo(message) {
   };
 }
 
-const weaponOf = (actor, title) => actor?.items.find(i => i.type === "weapon" && i.name === title) ?? actor?.items.find(i => i.type === "weapon" && title.includes(i.name));
+// Weapons, and cyberware that is a weapon (Wolvers, Popup Grenade Launcher...).
+const isWeapon = i => i.type === "weapon" || (i.type === "cyberware" && i.system?.isWeapon);
+const weaponOf = (actor, title) => actor?.items.find(i => isWeapon(i) && i.name === title) ?? actor?.items.find(i => isWeapon(i) && title.includes(i.name));
 const skillLevel = (actor, name) => actor.items.find(i => i.type === "skill" && i.name === name)?.system.level ?? 0;
 const stat = (actor, name) => actor.system.stats?.[name]?.value ?? 0;
 
