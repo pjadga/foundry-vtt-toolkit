@@ -14,9 +14,12 @@ file the user copies between machines.
 - **`main`** has everything: the NotebookLM importer (Build campaign), scene images
   (Pollinations, Cloudflare, Gemini), YouTube playlists, the GM Assistant with sources, combat
   resolution and narration, and Pack campaign. 92 tests pass.
-- **The cpr-test server** runs `main` as of `705ef01` (the narration fixes below), deployed from the
-  home machine on 23 October. All 35 module files match the repository, checked with
-  `git hash-object`.
+- **Releases:** toolkit `v0.2.0` (3 November: player characters) and Bridge `v1.3.4.3` (the roll
+  fix). **The cpr-test server** runs the toolkit's `v0.2.0` release zip, deployed on 3 November from
+  the work machine; all 35 module files match the tag (checked with `git hash-object`; only
+  `module.json` differs, stamped by the release). The macros module got only the 0.2.0
+  `module.json` (its pack is unchanged). Both servers have the Bridge's 1.3.4.3 zip. Foundry shows
+  the new version numbers after the worlds are relaunched; the code is already live.
 - **NotebookLM:** the user's notebook ("Cyberpunk RED Single Player Mode") has the current Prompt 0
   (9,023 characters) in **Configure Chat → Custom**, with response length **Longer**. Edit Prompt 0 in
   `docs/notebooklm/cyberpunk-red-prompts.md` and the notebook together.
