@@ -20,6 +20,21 @@ file the user copies between machines.
 - **NotebookLM:** the user's notebook ("Cyberpunk RED Single Player Mode") has the current Prompt 0
   (9,023 characters) in **Configure Chat → Custom**, with response length **Longer**. Edit Prompt 0 in
   `docs/notebooklm/cyberpunk-red-prompts.md` and the notebook together.
+- **Player characters** (3 November): Build campaign imports a Cyberpunk RED `type: character` entry
+  (`systems/cpred-character.mjs`). Prompt 0 grew to 9,642 characters with the `character` fields; the
+  user's notebooks still have the old one until it's pasted into **Configure Chat**. Deployed to
+  cpr-test from the working tree before committing (checked with `git hash-object`) and tested live:
+  a QA character imported with owner, stats, HP, Humanity after cyberware, role rank, ledgers,
+  lifepath, notes and a linked friendly token, and its sheet renders without errors. QA documents
+  deleted.
+- **Agent Bridge on Foundry v13** (3 November): the Bridge (1.3.4.2, the user's fork) is installed and
+  enabled in cpr-test and connected to the self-hosted Agent (the same GM session as the v12 world).
+  On v13 with Cyberpunk RED 0.93-dev it loads cleanly, Quick Setup, the WebSocket channel, QR pairing
+  and character sync to the Agent work. Two problems: an Agent-initiated roll rolls in Foundry but no
+  result goes back to the Agent (the Bridge's capture replaces the global `renderTemplate`, which
+  0.93 doesn't call), and a roll made in Foundry reaches the Agent with only the d10 as its total and
+  "Dice Roll" as its label (0.93's `CPRRoll#toJSON` drops the rest; the real total is in the card's
+  `.d10-number-div`). Not yet checked whether 0.92 on v12 has the second problem too.
 - **Campaign designer skill** (28 October, `.claude/skills/campaign-designer/`, uncommitted until the
   user says): designs a campaign and drives NotebookLM in the user's Edge profile through the Claude in
   Chrome extension. Tested on the user's `QA Campaign Designer` notebook (they keep it): created and

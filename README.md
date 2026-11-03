@@ -77,7 +77,8 @@ it. One run:
 2. generates scene images for locations and scenes that have none, free (Pollinations, or your own
    Cloudflare Worker) or with Gemini on a key with billing, for you to review;
 3. imports journals, locations and story threads, and in a Cyberpunk RED world real weapons, armor,
-   cyberware and gear, and NPCs as mook actors with role, stats, skills and gear;
+   cyberware and gear, NPCs as mook actors with role, stats, skills and gear, and player characters
+   with their lifepath, owned by their player;
 4. builds Foundry scenes in campaign order, each with hidden NPC tokens, a journal pin and its
    soundtrack playlist;
 5. fills the playlists with YouTube tracks (with your own YouTube Data API key, optionally helped by

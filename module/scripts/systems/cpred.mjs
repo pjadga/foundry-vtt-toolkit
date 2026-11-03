@@ -1,6 +1,7 @@
 import { normalizeName, findLinks } from "../import/parser.mjs";
 import { STAT_KEYS, TIERS, tierOf, buildStats, buildSkills, derivedStats, matchGear, npcNotes } from "./cpred-npc.mjs";
 import { itemType, itemChanges, itemDescription } from "./cpred-items.mjs";
+import { DEFAULT_STAT, characterStats, characterSkills, roleRank, ledgers, lifepath, characterNotes } from "./cpred-character.mjs";
 
 const MODULE_ID = "foundry-vtt-toolkit";
 const SYSTEM_ID = "cyberpunk-red-core";
@@ -13,6 +14,7 @@ export function register(api) {
   // Items first, so NPCs in the same import pick up the custom items by name.
   api.importer.registerType("item", { label: "Items (Cyberpunk RED)", documentName: "Item", folder: "Items", order: 10, import: importItem });
   api.importer.registerType("npc", { label: "NPCs (Cyberpunk RED mook actors)", documentName: "Actor", folder: "NPCs", order: 20, import: importNpc });
+  api.importer.registerType("character", { label: "Characters (Cyberpunk RED player characters)", documentName: "Actor", folder: "Characters", order: 20, import: importCharacter });
   Hooks.on("renderActorSheetV2", showSecretsToOwner);
   Hooks.on("renderItemSheetV2", showSecretsToOwner);
   api.log("Cyberpunk RED support registered");
@@ -104,6 +106,93 @@ async function importNpc(entry, ctx) {
   const { stats, unknown } = buildStats(entry);
   if (unknown.length) problems.push(`Ignored unknown stats: ${unknown.join(", ")}.`);
 
+  const parts = await actorItems(entry, tier.rank, buildSkills(entry), problems);
+  const { hp, humanity, humanityMax, emp } = derivedStats(stats, parts.humanityLoss);
+  if (parts.humanityLoss) problems.push(`Cyberware Humanity Loss applied: ${parts.humanityLoss} (static values), so EMP ${stats.emp} → ${emp}.`);
+
+  const raw = npcNotes(entry, parts.gear, problems);
+  const system = actorSystem(stats, { hp, humanity, humanityMax, emp }, parts);
+  system.information = { notes: ctx.notes(raw) };
+
+  if (ctx.existing) await ctx.existing.delete();
+  const actor = await Actor.create(
+    { _id: ctx.id, name: entry.name, type: "mook", folder: ctx.folder.id, flags: ctx.flags, system, items: parts.allItems },
+    { keepId: true }
+  );
+  await ctx.track(actor, NOTES_PATH, raw);
+  return actor;
+}
+
+/**
+ * NotebookLM "character" entry -> Cyberpunk RED player character: stats, skills, role and rank,
+ * gear, HP and Humanity as for an NPC (without tier defaults), plus eddies, IP, reputation,
+ * lifepath, alias, appearance and backstory. The `player` field names the Foundry user who owns it.
+ * Replacing an existing character deletes and recreates it with the same id.
+ */
+async function importCharacter(entry, ctx) {
+  const problems = [];
+  const { stats, unknown, missing } = characterStats(entry);
+  if (unknown.length) problems.push(`Ignored unknown stats: ${unknown.join(", ")}.`);
+  if (missing.length) problems.push(`No value given for ${missing.map(k => k.toUpperCase()).join(", ")}; set to ${DEFAULT_STAT}.`);
+
+  const parts = await actorItems(entry, roleRank(entry), characterSkills(entry), problems);
+  const derived = derivedStats(stats, parts.humanityLoss);
+  if (parts.humanityLoss) problems.push(`Cyberware Humanity Loss applied: ${parts.humanityLoss} (static values), so EMP ${stats.emp} → ${derived.emp}.`);
+
+  let owner = null;
+  const player = entry.fields.player?.trim();
+  if (player) {
+    owner = game.users.find(u => normalizeName(u.name) === normalizeName(player)) ?? null;
+    if (!owner) problems.push(`No Foundry user named "${player}"; give the player ownership by hand.`);
+  }
+
+  const raw = characterNotes(entry, parts.gear, problems);
+  const html = text => ctx.notes({ public: text, secret: "" });
+  const system = actorSystem(stats, derived, parts);
+  system.information = {
+    alias: entry.fields.alias ?? "",
+    description: entry.fields.appearance ? html(entry.fields.appearance) : "",
+    history: entry.body ? html(entry.body) : "",
+    notes: ctx.notes(raw)
+  };
+  system.lifepath = Object.fromEntries(Object.entries(lifepath(entry)).map(([k, v]) => [k, html(v)]));
+  for (const [key, value] of Object.entries(ledgers(entry))) system[key] = { value, transactions: [] };
+
+  const ownership = { default: CONST.DOCUMENT_OWNERSHIP_LEVELS.NONE };
+  if (owner) ownership[owner.id] = CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER;
+  if (ctx.existing) await ctx.existing.delete();
+  const actor = await Actor.create(
+    {
+      _id: ctx.id, name: entry.name, type: "character", folder: ctx.folder.id, flags: ctx.flags, ownership, system, items: parts.allItems,
+      prototypeToken: { name: entry.name, actorLink: true, disposition: CONST.TOKEN_DISPOSITIONS.FRIENDLY }
+    },
+    { keepId: true }
+  );
+  await ctx.track(actor, NOTES_PATH, raw);
+  return actor;
+}
+
+/** Stats, HP, Humanity, active role and installed cyberware, as both actor types store them. */
+function actorSystem(stats, { hp, humanity, humanityMax, emp }, parts) {
+  const system = {
+    stats: Object.fromEntries(STAT_KEYS.map(k => [k, { value: stats[k] }])),
+    derivedStats: { hp: { max: hp, value: hp }, humanity: { max: humanityMax, value: humanity } },
+    roleInfo: { activeRole: parts.roleName },
+    // Installed, as the system does for a new actor's cyberware.
+    installedItems: { list: parts.allItems.filter(i => i.type === "cyberware").map(i => i._id) }
+  };
+  system.stats.luck.max = stats.luck;
+  system.stats.emp.max = stats.emp;
+  system.stats.emp.value = emp;
+  return system;
+}
+
+/**
+ * An actor's items: core skills (with the given levels) and core cyberware, as CPRActor.create would
+ * add them, plus the entry's gear and role at the given rank.
+ * @returns {Promise<{allItems: object[], roleName: string, gear: object, humanityLoss: number}>}
+ */
+async function actorItems(entry, rank, skillLevels, problems) {
   // Gear: an imported world item of the same name wins, then the compendium.
   const items = [];
   const gear = { matched: [], missing: [] };
@@ -140,7 +229,7 @@ async function importNpc(entry, ctx) {
     const found = (await packIndex("core_roles")).find(r => normalizeName(r.name) === normalizeName(role));
     if (found) {
       const data = await itemData(found.uuid);
-      data.system.rank = tier.rank;
+      data.system.rank = rank;
       items.push(data);
       roleName = data.name;
     } else {
@@ -150,7 +239,7 @@ async function importNpc(entry, ctx) {
 
   // Core skills and core cyberware, as CPRActor.create would add them, with skill levels applied.
   const coreSkills = (await game.packs.get(`${SYSTEM_ID}.internal_skills`).getDocuments()).map(d => d.toObject());
-  for (const { name, level } of buildSkills(entry)) {
+  for (const { name, level } of skillLevels) {
     const skill = coreSkills.find(s => normalizeName(s.name) === normalizeName(name));
     if (skill) skill.system.level = level;
     else problems.push(`Skill "${name}" is not a core skill; add it by hand.`);
@@ -160,27 +249,5 @@ async function importNpc(entry, ctx) {
 
   // Gear cyberware costs its static Humanity Loss (core foundational cyberware costs none).
   const humanityLoss = items.filter(i => i.type === "cyberware").reduce((sum, i) => sum + (Number(i.system.humanityLoss?.static) || 0), 0);
-  const { hp, humanity, humanityMax, emp } = derivedStats(stats, humanityLoss);
-  if (humanityLoss) problems.push(`Cyberware Humanity Loss applied: ${humanityLoss} (static values), so EMP ${stats.emp} → ${emp}.`);
-
-  const raw = npcNotes(entry, gear, problems);
-  const system = {
-    stats: Object.fromEntries(STAT_KEYS.map(k => [k, { value: stats[k] }])),
-    derivedStats: { hp: { max: hp, value: hp }, humanity: { max: humanityMax, value: humanity } },
-    information: { notes: ctx.notes(raw) },
-    roleInfo: { activeRole: roleName },
-    // Installed, as the system does for a new actor's cyberware.
-    installedItems: { list: allItems.filter(i => i.type === "cyberware").map(i => i._id) }
-  };
-  system.stats.luck.max = stats.luck;
-  system.stats.emp.max = stats.emp;
-  system.stats.emp.value = emp;
-
-  if (ctx.existing) await ctx.existing.delete();
-  const actor = await Actor.create(
-    { _id: ctx.id, name: entry.name, type: "mook", folder: ctx.folder.id, flags: ctx.flags, system, items: allItems },
-    { keepId: true }
-  );
-  await ctx.track(actor, NOTES_PATH, raw);
-  return actor;
+  return { allItems, roleName, gear, humanityLoss };
 }

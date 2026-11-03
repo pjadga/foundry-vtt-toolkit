@@ -57,8 +57,9 @@ every document (an Adventure's contents are Sets of documents, not id-keyed coll
 `module/scripts/import/parser.mjs` is pure (no Foundry globals) so it stays testable; Foundry calls live in
 `importer.mjs`. Format and supported types: `docs/notebooklm/format.md`. Journals, locations and threads
 import as journals; system modules add other types with `api.importer.registerType` (Cyberpunk RED
-registers `item` and `npc`, see `systems/cpred.mjs`, with pure rules in `systems/cpred-items.mjs` and
-`systems/cpred-npc.mjs`; handler `order` makes items import before NPCs). Locations and scene entries
+registers `item`, `npc` and `character`, see `systems/cpred.mjs`, with pure rules in
+`systems/cpred-items.mjs`, `systems/cpred-npc.mjs` and `systems/cpred-character.mjs`; NPCs and
+characters share `actorItems`/`actorSystem`; handler `order` makes items import before actors). Locations and scene entries
 also become Foundry scenes when an image matches (`findImage` in the parser, `importScenes` in the
 importer; images come from the dialog's image folder via `FilePicker.browse`). `setupScene` then
 places hidden NPC tokens, a journal pin and the `soundtrack` playlist (once, flag `setup`, for an

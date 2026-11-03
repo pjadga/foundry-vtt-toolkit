@@ -58,8 +58,9 @@ Markdown body. Refer to other entries as [[Exact Name]].
 | `scene` | Journal entry, plus a scene when it or its location has an image | NotebookLM / Scenes (Journal and Scenes) |
 | `item` (Cyberpunk RED) | Item | NotebookLM / Items (Items) |
 | `npc` (Cyberpunk RED) | Mook actor | NotebookLM / NPCs (Actors) |
+| `character` (Cyberpunk RED) | Player character actor, owned by its player | NotebookLM / Characters (Actors) |
 | `playlist` | Playlist (tracks are picked from YouTube afterwards) | NotebookLM / Playlists (Playlists) |
-| `npc` and `item` (other systems) | Not yet; listed as skipped | |
+| `npc`, `character` and `item` (other systems) | Not yet; listed as skipped | |
 
 ### Fields the toolkit reads
 
@@ -73,6 +74,7 @@ Any other `key: value` line is kept and shown on the journal or sheet. These dri
 | `location` | `district`, `controlled_by`, `danger_level`, `notable_features`, `secrets`, `npcs` (placed as hidden tokens on its scene), `visual` (image prompt) |
 | `scene` | `session` (numbering), `location` (image fallback), `npcs_present` (hidden tokens), `soundtrack` (the playlist that plays when the scene is activated), `objective`, `complications`, `best_outcome`, `worst_outcome`, `visual` (image prompt) |
 | `npc` (Cyberpunk RED) | `role`, `tier`, `stats`, `skills`, `gear`, `appearance`, `voice_and_mannerisms`, the rest as GM-only notes |
+| `character` (Cyberpunk RED) | `player`, `role`, `role_rank`, `alias`, `stats`, `skills`, `gear`, `eddies`, `improvement_points`, `reputation`, `appearance`, the lifepath fields (see below), the rest as notes |
 | `item` (Cyberpunk RED) | `category`, `price`, `damage`, `rate_of_fire`, `range_or_melee`, `sp`, `penalty`, `effect`, `humanity_loss`, `story_item`, `too_strong_flag` |
 | `playlist` | `mood`, `tracks` (one numbered line each) |
 
@@ -376,3 +378,23 @@ by one per 10 lost.
 
 Re-importing an entry with the same name skips it unless "Replace journals that already exist" is
 ticked, which replaces its page.
+
+### Cyberpunk RED player characters
+
+Handled by `module/scripts/systems/cpred.mjs`; the pure rules are in `cpred-character.mjs`. Stats,
+skills, gear, HP and Humanity work as for NPCs, without tier defaults.
+
+| Field | Used for |
+| --- | --- |
+| `player` | The Foundry user (by name) who owns the character. Without one, or with a name no user has, only the GM can open it |
+| `role`, `role_rank` | Role item from the roles compendium at that rank (1 to 10; 4, a starting character's, when left out) |
+| `stats` | All ten stats; any left out is 5 and noted on the sheet |
+| `skills` | Core skill levels; skills not listed keep the system's starting level (2 for the basic skills) |
+| `gear` | As for NPCs: weapons and armor equipped, cyberware installed |
+| `eddies`, `improvement_points`, `reputation` | Wealth, IP and reputation on the sheet (`2,500 eb` reads as 2500) |
+| `alias`, `appearance`, body | Alias, description and history on the sheet |
+| `cultural_origin`, `personality`, `clothing_style`, `hairstyle`, `affectations`, `value_most`, `feelings_about_people`, `valued_person`, `valued_possession`, `family_background`, `childhood_environment`, `family_crisis`, `friends`, `enemies`, `tragic_love_affairs`, `life_goals`, `role_lifepath` | The matching lifepath fields |
+| everything else | The sheet's notes, open to the player (nothing is secret on their own character) |
+
+Its prototype token is linked to the actor and friendly. Importing doesn't assign the character to
+the player's user; do that in the player's User Configuration. Re-importing works as for NPCs.

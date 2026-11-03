@@ -58,8 +58,11 @@ export function campaignContext() {
   for (const a of docs.actors) {
     // Skills and roles are on every Cyberpunk RED actor; the gear is what tells NPCs apart.
     const gear = a.items.filter(i => !["skill", "role"].includes(i.type)).map(i => i.name);
-    const text = [notesText(a, "system.information.notes") || htmlText(a.system?.details?.biography?.value), gear.length && `Carries: ${gear.join(", ")}`].filter(Boolean).join("\n");
-    out.push({ kind: "npc", name: a.name, text });
+    // A player character's notes only hold what has no place on its sheet; its backstory is in history.
+    const isCharacter = a.flags[MODULE_ID]?.type === "character";
+    const backstory = isCharacter && htmlText(a.system?.information?.history);
+    const text = [notesText(a, "system.information.notes") || htmlText(a.system?.details?.biography?.value), backstory, gear.length && `Carries: ${gear.join(", ")}`].filter(Boolean).join("\n");
+    out.push({ kind: isCharacter ? "character" : "npc", name: a.name, text });
   }
   for (const i of docs.items) out.push({ kind: "item", name: i.name, text: [`Type: ${i.type}`, notesText(i, "system.description.value")].filter(Boolean).join("\n") });
   for (const p of docs.playlists) {

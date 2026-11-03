@@ -3,6 +3,17 @@
 The module's version is set from the git tag when a release is published. Nothing has been tagged
 yet, so everything below is the first release.
 
+## Unreleased
+
+### Building a campaign from NotebookLM
+
+- **Player characters (Cyberpunk RED):** a `type: character` entry imports as a player character in
+  NotebookLM / Characters, owned by the Foundry user its `player` field names. It gets role and rank,
+  stats, skills, gear (equipped and installed), HP and Humanity, eddies, IP, reputation, alias,
+  appearance, backstory and every lifepath field. Prompt 0 lists the fields, so paste the new
+  Prompt 0 into the notebook's chat configuration, then ask NotebookLM for your character as a
+  `character` entry.
+
 ## 0.1.0 (unreleased)
 
 The first release. It turns a NotebookLM campaign into a ready-to-run Foundry VTT v13 world, with

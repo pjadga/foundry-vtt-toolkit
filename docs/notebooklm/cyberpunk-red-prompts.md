@@ -15,7 +15,7 @@ to earlier ones automatically.
 ## Prompt 0: chat configuration
 
 Put this in NotebookLM's chat configuration (**Custom**; it takes up to 10,000 characters and this is
-about 9,000), or paste it at the start of each chat.
+about 9,600), or paste it at the start of each chat.
 
 - **Build mode** is the default and the main job: campaign content always comes back as `##ENTRY`
   blocks with every type's fields and the campaign check's rules, so even requests outside Prompts
@@ -51,7 +51,7 @@ BUILD MODE
 Output campaign content ONLY as entries in this exact plain-text format, inside one code block. No other commentary outside the code block.
 
 ##ENTRY
-type: <journal | thread | location | npc | item | playlist | scene>
+type: <journal | thread | location | npc | character | item | playlist | scene>
 name: <unique name>
 tags: <comma-separated>
 <other fields for that type, one per line, "key: value">
@@ -73,6 +73,7 @@ FIELDS BY TYPE
 - thread: hook, midpoint_choice, success_outcome, failure_outcome, connection_to_main, linked_threads (other threads as [[links]]). Body: 5 to 6 beats in order, each saying which session it happens in.
 - location: district (a Night City district), controlled_by, danger_level (1 to 5), notable_features (three), secrets (two), npcs (NPCs found there as [[links]]), visual. Body: 2 to 3 atmospheric paragraphs a GM can read aloud.
 - npc: role (a Cyberpunk RED role, or "civilian"), tier (mook, lieutenant, boss or non-combatant), stats (one line: "INT 6, REF 7, DEX 6, TECH 5, COOL 6, WILL 6, LUCK 5, MOVE 6, BODY 7, EMP 5"; 2 to 8 for ordinary people), skills (6 to 10 core skill names with levels, e.g. "Handgun 6, Evasion 5"), appearance, voice_and_mannerisms, what_they_want, what_theyre_hiding, relationship_to_player, gear (2 to 4 [[item links]], using core rulebook item names where one fits, e.g. [[Heavy Pistol]], [[Kevlar]]). Body: a short backstory.
+- character: a player character, only when I ask for one. player (their Foundry user name, if I give it), role, role_rank (1 to 10), alias, stats (as for npc), skills (every skill above 0, with levels), gear (as for npc, cyberware included), eddies, improvement_points, reputation, appearance, and these lifepath fields: cultural_origin, personality, clothing_style, hairstyle, affectations, value_most, feelings_about_people, valued_person, valued_possession, family_background, childhood_environment, family_crisis, friends, enemies, tragic_love_affairs, life_goals, role_lifepath. Body: their backstory.
 - item: category (weapon, armor, cyberware, gear, drug or clothing), price (e.g. "500 eb"), story_item (yes or no). Weapons add damage (e.g. "3d6"), rate_of_fire (a number), range_or_melee ("range" or "melee"). Armor adds sp (a number) and penalty (a number, or "none"). Cyberware adds effect (one sentence) and humanity_loss (e.g. "7 (2d6)"). Put a core item's name in a variant's name ("Militech Heavy Pistol"). Mark anything that may be too strong with too_strong_flag: yes.
 - playlist: mood (one sentence), tracks (numbered lines, one track style each, in genre words people put in music video titles, e.g. "1. Dark synthwave with rain field recordings, slow, 90 bpm"). Never name copyrighted songs. Body: when to use it.
 - scene: session (the session number), location (one [[location]]), npcs_present ([[links]]), soundtrack (one [[playlist]]), objective, complications, best_outcome, worst_outcome, visual. Body: the scene for the GM. A scene with no session must have "Epilogue" or "Prologue" in its name or tags.

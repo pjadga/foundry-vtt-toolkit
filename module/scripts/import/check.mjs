@@ -4,8 +4,8 @@
  */
 import { normalizeName, findLinks, progressionKey } from "./parser.mjs";
 
-// An NPC's gear links name rulebook items, which the system importer finds in its compendium.
-const LOOKED_UP_ELSEWHERE = { npc: ["gear"] };
+// An NPC's or character's gear links name rulebook items, which the system importer finds in its compendium.
+const LOOKED_UP_ELSEWHERE = { npc: ["gear"], character: ["gear"] };
 
 /** An entry's links outside the fields whose links are looked up elsewhere. */
 function ownLinks(e) {

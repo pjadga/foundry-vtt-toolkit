@@ -153,6 +153,7 @@ What each entry type becomes:
 | `scene` | Journal entry, plus a numbered scene | NotebookLM / Scenes |
 | `playlist` | Sequential playlist, filled with YouTube tracks | NotebookLM / Playlists |
 | `npc` (Cyberpunk RED) | Mook actor with role, stats, skills and gear | NotebookLM / NPCs |
+| `character` (Cyberpunk RED) | Player character, owned by its player | NotebookLM / Characters |
 | `item` (Cyberpunk RED) | Weapon, armor, cyberware, gear and so on | NotebookLM / Items |
 
 GM-only details (what an NPC is hiding, story-item notes) go into secret sections that only owners
@@ -406,6 +407,12 @@ In a Cyberpunk RED world:
 - **NPCs** are mook actors with their role and rank, stats, skills and HP. Their gear is matched
   to the core compendiums and equipped or installed, and Humanity and EMP are reduced for their
   cyberware.
+- **Player characters** come from a `character` entry: ask NotebookLM for "my character as a
+  character entry" (naming your Foundry user as the player). The sheet gets role and rank, stats,
+  skills, gear, HP and Humanity as for NPCs, plus eddies, IP, reputation, alias, appearance,
+  backstory and the lifepath. The player named in `player` owns it; assign it to them in their
+  **User Configuration** if they should play it by default. Anything the import couldn't place
+  (an unknown skill, a stat left out, gear not in the compendium) is listed in the sheet's notes.
 - **Secret sections** on Cyberpunk RED sheets are shown to owners. The system's own sheets hide
   them from everyone, GM included.
 
@@ -502,8 +509,12 @@ starting `foundry-vtt-toolkit |`.
 - Story-scene numbering covers every NotebookLM story scene in the world, so two separate
   campaigns in one world share it. Pack and clear the old campaign first, or build a sequel with
   sessions that follow on.
-- Building again with a changed NPC or item replaces the whole document, so changes you made by
-  hand on its sheet are lost. Journals you edited by hand aren't re-linked.
+- Building again with a changed NPC, character or item replaces the whole document, so changes you
+  made by hand on its sheet are lost. Journals you edited by hand aren't re-linked.
+- An imported player character is part of the campaign: **Pack campaign** packs it, and *Remove the
+  campaign from this world* deletes it from the world (it stays in the packed adventure, so
+  importing the adventure brings it back).
+  The ledgers (eddies, IP, reputation) start at the imported values with no transaction history.
 
 **Images:**
 
