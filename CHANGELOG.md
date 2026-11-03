@@ -1,9 +1,8 @@
 # Release notes
 
-The module's version is set from the git tag when a release is published. Nothing has been tagged
-yet, so everything below is the first release.
+The module's version is set from the git tag when a release is published.
 
-## Unreleased
+## 0.2.0
 
 ### Building a campaign from NotebookLM
 
@@ -14,15 +13,17 @@ yet, so everything below is the first release.
   Prompt 0 into the notebook's chat configuration, then ask NotebookLM for your character as a
   `character` entry.
 
-## 0.1.0 (unreleased)
-
-The first release. It turns a NotebookLM campaign into a ready-to-run Foundry VTT v13 world, with
-music and a GM Assistant.
+## 0.1.1
 
 ### Licence
 
 - The toolkit and its macros are under the **MIT No Attribution (MIT-0)** licence (`LICENSE`); both
   module manifests link to it.
+
+## 0.1.0
+
+The first release. It turns a NotebookLM campaign into a ready-to-run Foundry VTT v13 world, with
+music and a GM Assistant.
 
 ### Designing a campaign with Claude
 
