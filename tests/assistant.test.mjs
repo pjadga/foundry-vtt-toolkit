@@ -11,6 +11,18 @@ test("ENTRY_RULES match the prompt kit's Prompt 0 word for word", () => {
   for (const section of ["FORMAT RULES", "FIELDS BY TYPE", "CONSISTENCY"]) assert.ok(ENTRY_RULES.includes(section));
 });
 
+test("the group kit's Prompt 0 keeps ENTRY_RULES, with only the group wording changed", () => {
+  const kit = fs.readFileSync(new URL("../docs/notebooklm/cyberpunk-red-group-prompts.md", import.meta.url), "utf8").replace(/\r\n/g, "\n");
+  const start = kit.indexOf("## Prompt 0");
+  const block = kit.slice(kit.indexOf("```\n", start) + 4, kit.indexOf("\n```", kit.indexOf("```\n", start) + 4));
+  // Field names the importer reads stay the same; relationship_to_player* goes to the GM notes either way.
+  const group = ENTRY_RULES
+    .replace("relationship_to_player,", "relationship_to_players,")
+    .replace("- character: a player character, only when I ask for one.", "- character: a player character (one entry each), only when I ask for one.");
+  assert.ok(block.includes(group), "keep the group kit's Prompt 0 in step with the solo kit's");
+  assert.ok(block.includes("for a group of 3 to 5 player characters") && !/single-player|companion who/i.test(block));
+});
+
 test("contextText groups by kind and keeps within limits", () => {
   const docs = [
     { kind: "npc", name: "Rook", text: "Bodyguard." },

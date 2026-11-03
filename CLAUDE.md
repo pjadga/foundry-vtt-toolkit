@@ -203,6 +203,8 @@ are updated, in the same commit or one right after it:
 - **NotebookLM fields:** if a field the toolkit reads is added or changed, update:
   - `docs/notebooklm/format.md`;
   - Prompt 0 in `docs/notebooklm/cyberpunk-red-prompts.md`, kept under 10,000 characters;
+  - the group kit's Prompt 0 in `docs/notebooklm/cyberpunk-red-group-prompts.md` (about 9,900 of
+    the 10,000; the test checks it matches the solo one apart from the group wording);
   - `ENTRY_RULES` in `assistant/context.mjs` (the test checks it matches Prompt 0).
 
   Then tell the user to paste the new Prompt 0 into the notebook's **Configure Chat**.

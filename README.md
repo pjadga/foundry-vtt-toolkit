@@ -68,7 +68,9 @@ to Google.
 ## Building a campaign from NotebookLM
 
 Write the campaign in NotebookLM with the prompts in
-[docs/notebooklm/cyberpunk-red-prompts.md](docs/notebooklm/cyberpunk-red-prompts.md), collect the
+[docs/notebooklm/cyberpunk-red-prompts.md](docs/notebooklm/cyberpunk-red-prompts.md) (one player) or
+[docs/notebooklm/cyberpunk-red-group-prompts.md](docs/notebooklm/cyberpunk-red-group-prompts.md)
+(a group of 3 to 5), collect the
 answers in one file, then click **Build campaign** in Foundry's Journal sidebar (GM only) and choose
 it. One run:
 

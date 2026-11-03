@@ -6,7 +6,9 @@ play YouTube music. A Gemini-powered GM Assistant inside Foundry then answers qu
 campaign and your rulebooks, and writes new content you can import with one click.
 
 For the exact NotebookLM entry format, see [notebooklm/format.md](notebooklm/format.md). For the
-prompts that write a campaign, see [notebooklm/cyberpunk-red-prompts.md](notebooklm/cyberpunk-red-prompts.md).
+prompts that write a campaign, see [notebooklm/cyberpunk-red-prompts.md](notebooklm/cyberpunk-red-prompts.md)
+(one player) or [notebooklm/cyberpunk-red-group-prompts.md](notebooklm/cyberpunk-red-group-prompts.md)
+(a group of 3 to 5).
 Release notes are in [../CHANGELOG.md](../CHANGELOG.md).
 
 ## Contents
@@ -79,10 +81,14 @@ The rest of this guide explains each step.
 
 ### Writing the campaign in NotebookLM
 
-NotebookLM writes the campaign from your sources; the toolkit only imports it. The prompt kit
-([cyberpunk-red-prompts.md](notebooklm/cyberpunk-red-prompts.md)) has:
+NotebookLM writes the campaign from your sources; the toolkit only imports it. There are two prompt
+kits: [cyberpunk-red-prompts.md](notebooklm/cyberpunk-red-prompts.md) for one player, and
+[cyberpunk-red-group-prompts.md](notebooklm/cyberpunk-red-group-prompts.md) for a group of 3 to 5,
+which gives every character something to do in each scene, a side thread per character, no
+companion, and an optional Prompt 9 that writes the player characters. Both write the same entries.
+Each has:
 
-- **Prompt 0, the chat configuration (about 9,000 of NotebookLM's 10,000 characters).** It makes
+- **Prompt 0, the chat configuration (about 9,600 or 9,900 of NotebookLM's 10,000 characters).** It makes
   NotebookLM answer in the toolkit's `##ENTRY` format, with every type's fields and the
   consistency rules. It has three modes:
   - **Build mode (the default):** everything you ask for comes back as entries ready to import.

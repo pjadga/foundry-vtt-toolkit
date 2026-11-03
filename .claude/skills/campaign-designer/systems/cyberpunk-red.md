@@ -1,7 +1,8 @@
 # Cyberpunk RED (`cpred`)
 
-Foundry system id `cyberpunk-red-core`. Prompt kit: `docs/notebooklm/cyberpunk-red-prompts.md`, whose
-Prompt 0 is the notebook's chat configuration and the authority on entry fields. Importer: NPC and item
+Foundry system id `cyberpunk-red-core`. Prompt kits: `docs/notebooklm/cyberpunk-red-prompts.md`
+(`cpred`, one player) and `docs/notebooklm/cyberpunk-red-group-prompts.md` (`cpred-group`, 3 to 5
+players), whose Prompt 0 is the notebook's chat configuration and the authority on entry fields. Importer: NPC and item
 entries become real actors and items (`module/scripts/systems/cpred.mjs`, `cpred-npc.mjs`,
 `cpred-items.mjs`); everything else imports as journals, scenes and playlists.
 

@@ -2,7 +2,8 @@
 
 The importer (`module/scripts/import/`, **Build campaign** in the Journal sidebar) reads plain-text
 entries. NotebookLM is told to write them by the custom instruction in
-[cyberpunk-red-prompts.md](cyberpunk-red-prompts.md) (Prompt 0).
+[cyberpunk-red-prompts.md](cyberpunk-red-prompts.md) (Prompt 0), or its group version in
+[cyberpunk-red-group-prompts.md](cyberpunk-red-group-prompts.md).
 
 **What one build does:** preview with the campaign check (below) → generate missing scene images
 (review window) → import journals, items, NPCs and playlists → build, number and set up scenes →
@@ -78,8 +79,10 @@ Any other `key: value` line is kept and shown on the journal or sheet. These dri
 | `item` (Cyberpunk RED) | `category`, `price`, `damage`, `rate_of_fire`, `range_or_melee`, `sp`, `penalty`, `effect`, `humanity_loss`, `story_item`, `too_strong_flag` |
 | `playlist` | `mood`, `tracks` (one numbered line each) |
 
-The prompt kit, [cyberpunk-red-prompts.md](cyberpunk-red-prompts.md), asks NotebookLM for exactly
-these.
+The prompt kits, [cyberpunk-red-prompts.md](cyberpunk-red-prompts.md) (one player) and
+[cyberpunk-red-group-prompts.md](cyberpunk-red-group-prompts.md) (3 to 5 players), ask NotebookLM for
+exactly these. The group kit names the NPC field `relationship_to_players`; like
+`relationship_to_player`, it goes into the NPC's GM notes.
 
 ### Playlists and YouTube tracks
 

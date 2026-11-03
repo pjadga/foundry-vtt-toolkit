@@ -73,10 +73,10 @@ them change direction now: later stages are slower.
 ### 4. NotebookLM kit and refinement
 
 1. `node scripts/campaign-tools.mjs prompt0 <system> campaigns/<name>` writes `notebooklm/prompt-0.txt`
-   from the prompt kit (it checks the 10,000-character limit). The kit's Prompt 0 is written for a
-   **solo** campaign ("a solo Cyberpunk RED campaign", "single-player: … a likable companion"). For a
-   group, edit the copy in `notebooklm/prompt-0.txt` (never the kit) to say "a group of N player
-   characters", drop the companion line, and keep every other rule; check it stays under the limit.
+   from the prompt kit (it checks the 10,000-character limit). Pick the kit by group size: `cpred`
+   for one player, `cpred-group` for 3 to 5 (its Prompts 1 to 9 say "N": write the number in when
+   tailoring them). For another group size, edit the copy in `notebooklm/prompt-0.txt` (never the
+   kit) and check it stays under the limit.
    Rulebook PDFs over about 9 MB can't go through the browser upload tool in one piece: split them by
    page range with PyMuPDF (`doc.insert_pdf` into new files, saved with `garbage=4, deflate=True`),
    keeping each part under 9 MB, and upload the parts.

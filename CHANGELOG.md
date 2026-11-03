@@ -15,6 +15,14 @@ The module's version is set from the git tag when a release is published.
   archiving the old campaign in *NotebookLM Campaigns*, ticked by default) or *Keep it and add to it*.
   Nothing is removed until the preview is confirmed, and nothing at all if the archive fails.
 
+### Designing a campaign
+
+- **Group prompt kit** for 3 to 5 players (`docs/notebooklm/cyberpunk-red-group-prompts.md`): a group
+  Prompt 0 (something for every character in each scene, a side thread per character, no
+  companion, playtests with several characters), Prompts 1 to 8 for a crew, and an optional
+  Prompt 9 that writes the player characters as `character` entries. `campaign-tools.mjs prompt0
+  cpred-group` writes it for the campaign-designer skill.
+
 ### Fixed
 
 - Imported cyberware options (Wolvers) are installed inside their foundational piece (the

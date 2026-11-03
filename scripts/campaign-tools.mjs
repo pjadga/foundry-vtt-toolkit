@@ -10,7 +10,10 @@ import { campaignCheck, fixPrompt } from "../module/scripts/import/check.mjs";
 export const PROMPT_LIMIT = 10000;
 
 // Each system's prompt kit, where Prompt 0 lives.
-export const KITS = { cpred: "docs/notebooklm/cyberpunk-red-prompts.md" };
+export const KITS = {
+  cpred: "docs/notebooklm/cyberpunk-red-prompts.md",
+  "cpred-group": "docs/notebooklm/cyberpunk-red-group-prompts.md"
+};
 
 /** The code block under "## Prompt 0" in a prompt kit, or null. */
 export function extractPrompt0(kit) {
