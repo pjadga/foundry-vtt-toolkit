@@ -25,6 +25,10 @@ The module's version is set from the git tag when a release is published.
 
 ### Fixed
 
+- Imported NPCs and player characters keep specialised skills such as `Language (Mandarin)` and
+  `Local Expert (Watson)`. They were dropped with a note on the sheet because they aren't core skill
+  names; now the first Local Expert takes the core *Local Expert (Your Home)* slot and the rest
+  are added as extra skills.
 - Imported cyberware options (Wolvers) are installed inside their foundational piece (the
   Cyberarm), and the compendium Cyberarm's two missing option ids are no longer copied.
 - Combat resolution recognises cyberware weapons such as Wolvers, so their melee attacks roll the

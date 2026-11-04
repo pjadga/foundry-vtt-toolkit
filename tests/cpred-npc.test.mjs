@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { parseStats, parseSkills, buildStats, buildSkills, derivedStats, matchGear, npcNotes, tierOf, wireCyberware } from "../module/scripts/systems/cpred-npc.mjs";
+import { parseStats, parseSkills, buildStats, buildSkills, derivedStats, matchGear, npcNotes, tierOf, wireCyberware, applySkillLevels } from "../module/scripts/systems/cpred-npc.mjs";
 
 test("cyberware: options go inside a foundational piece of their type, stale ids are dropped", () => {
   let n = 0;
@@ -112,4 +112,32 @@ test("notes keep secrets out of the public part", () => {
   assert.match(notes.secret, /Kevlar Vest \(sheet: Kevlar® \(Body\)\)/);
   assert.match(notes.secret, /\[\[Pocket Camera\]\]/);
   assert.match(notes.secret, /Skill "X" missing/);
+});
+
+test("skills: specialised Language and Local Expert skills come from their core siblings", () => {
+  const skill = (name, extra = {}) => ({ _id: name, name, type: "skill", system: { level: 2, core: true, basic: true, skillType: "generic", stat: "int", ...extra } });
+  const core = [skill("Handgun", { level: 0, basic: false }), skill("Language (Streetslang)", { skillType: "language" }), skill("Local Expert (Your Home)", { core: false })];
+  const { skills, unknown } = applySkillLevels(core, [
+    { name: "Handgun", level: 6 },
+    { name: "Language (Mandarin)", level: 4 },
+    { name: "Local Expert (Watson)", level: 3 },
+    { name: "Local Expert (Pacifica)", level: 2 },
+    { name: "Basket Weaving", level: 5 }
+  ]);
+  const byName = n => skills.find(s => s.name === n);
+  assert.equal(byName("Handgun").system.level, 6);
+  assert.equal(byName("Language (Streetslang)").system.level, 2);
+  assert.deepEqual([byName("Language (Mandarin)").system.level, byName("Language (Mandarin)").system.skillType, byName("Language (Mandarin)").system.core, byName("Language (Mandarin)")._id], [4, "language", false, undefined]);
+  // The first Local Expert takes the Your Home slot; a second is an extra skill.
+  assert.equal(byName("Local Expert (Your Home)"), undefined);
+  assert.equal(byName("Local Expert (Watson)").system.level, 3);
+  assert.equal(byName("Local Expert (Pacifica)").system.basic, false);
+  assert.deepEqual(unknown, ["Basket Weaving"]);
+  assert.equal(core[2].name, "Local Expert (Your Home)", "the core list is not changed");
+});
+
+test("skills: a listed Your Home skill keeps its name and the place becomes an extra", () => {
+  const core = [{ name: "Local Expert (Your Home)", system: { level: 2, core: false, basic: true } }];
+  const { skills } = applySkillLevels(core, [{ name: "Local Expert (Your Home)", level: 4 }, { name: "Local Expert (Heywood)", level: 3 }]);
+  assert.deepEqual(skills.map(s => `${s.name} ${s.system.level}`), ["Local Expert (Your Home) 4", "Local Expert (Heywood) 3"]);
 });

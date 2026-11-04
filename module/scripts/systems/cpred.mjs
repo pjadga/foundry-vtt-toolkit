@@ -1,5 +1,5 @@
 import { normalizeName, findLinks } from "../import/parser.mjs";
-import { STAT_KEYS, TIERS, tierOf, buildStats, buildSkills, derivedStats, matchGear, npcNotes, wireCyberware } from "./cpred-npc.mjs";
+import { STAT_KEYS, TIERS, tierOf, buildStats, buildSkills, derivedStats, matchGear, npcNotes, wireCyberware, applySkillLevels } from "./cpred-npc.mjs";
 import { itemType, itemChanges, itemDescription } from "./cpred-items.mjs";
 import { DEFAULT_STAT, characterStats, characterSkills, roleRank, ledgers, lifepath, characterNotes } from "./cpred-character.mjs";
 import { CAMPAIGN_PACKS } from "../import/campaign.mjs";
@@ -244,12 +244,9 @@ async function actorItems(entry, rank, skillLevels, problems) {
   }
 
   // Core skills and core cyberware, as CPRActor.create would add them, with skill levels applied.
-  const coreSkills = (await game.packs.get(`${SYSTEM_ID}.internal_skills`).getDocuments()).map(d => d.toObject());
-  for (const { name, level } of skillLevels) {
-    const skill = coreSkills.find(s => normalizeName(s.name) === normalizeName(name));
-    if (skill) skill.system.level = level;
-    else problems.push(`Skill "${name}" is not a core skill; add it by hand.`);
-  }
+  const { skills: coreSkills, unknown } = applySkillLevels(
+    (await game.packs.get(`${SYSTEM_ID}.internal_skills`).getDocuments()).map(d => d.toObject()), skillLevels);
+  for (const name of unknown) problems.push(`Skill "${name}" is not a core skill; add it by hand.`);
   const coreCyberware = (await game.packs.get(`${SYSTEM_ID}.internal_cyberware-core`)?.getDocuments() ?? []).map(d => d.toObject());
   const { items: allItems, installed } = wireCyberware([...coreSkills, ...coreCyberware, ...items], () => foundry.utils.randomID());
 

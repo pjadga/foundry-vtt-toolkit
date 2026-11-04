@@ -66,6 +66,49 @@ export function buildSkills(entry) {
 }
 
 /**
+ * Set skill levels on a copy of the system's core skills. A specialised skill the core list doesn't
+ * have, "Language (Mandarin)" or "Local Expert (Watson)", is made from its core sibling ("Language
+ * (Streetslang)"): a "(Your Home)" sibling is renamed (it stands for the actor's home), others are
+ * copied as extra, non-core skills.
+ * @param {object[]} coreSkills Skill item data from the system's compendium (not changed).
+ * @param {{name: string, level: number}[]} levels
+ * @returns {{skills: object[], unknown: string[]}} unknown: names with no core skill or sibling.
+ */
+export function applySkillLevels(coreSkills, levels) {
+  const skills = coreSkills.map(s => structuredClone(s));
+  const named = new Set(levels.map(l => normalizeName(l.name)));
+  const unknown = [];
+  const later = [];
+  for (const l of levels) {
+    const skill = skills.find(s => normalizeName(s.name) === normalizeName(l.name));
+    if (skill) skill.system.level = l.level;
+    else later.push(l);
+  }
+  for (const { name, level } of later) {
+    // normalizeName drops brackets, so compare the part before them.
+    const baseOf = n => n.match(/^(.+?)\s*\(.+\)$/)?.[1];
+    const base = baseOf(name);
+    const siblings = base ? skills.filter(s => baseOf(s.name) && normalizeName(baseOf(s.name)) === normalizeName(base)) : [];
+    if (!siblings.length) {
+      unknown.push(name);
+      continue;
+    }
+    const home = siblings.find(s => /\(your home\)$/i.test(s.name) && !named.has(normalizeName(s.name)));
+    if (home) {
+      home.name = name;
+      home.system.level = level;
+      named.add(normalizeName(name));
+      continue;
+    }
+    const { _id, ...copy } = structuredClone(siblings[0]);
+    copy.name = name;
+    copy.system = { ...copy.system, level, core: false, basic: false };
+    skills.push(copy);
+  }
+  return { skills, unknown };
+}
+
+/**
  * Rulebook derived stats: HP = 10 + 5 x ceil((BODY + WILL) / 2); Humanity = EMP x 10 minus the
  * Humanity Loss of installed cyberware; current EMP = floor(Humanity / 10).
  * @param {object} stats

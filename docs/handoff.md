@@ -92,6 +92,16 @@ file the user copies between machines.
   sort 100 to 800; Section 9's are 09 to 23), and the track picker had filled that campaign's empty
   Tension and Finale playlists (picks removed). Re-running Build campaign would renumber the scenes
   again. Not played or tested with players.
+- **Section 9 rebuilt for three players** (4 November): the Section 9 notebook, with the group
+  Prompt 0, retuned the journals, threads, crew-size NPCs and all 15 scenes for 3 and wrote three
+  Complete Package recruits (Rook, Solo; Cipher, Netrunner; Siren, Fixer; no `player`, so GM-owned).
+  Build campaign in cpr-test with *Clean* (the user's OK) archived Section 9 and the other campaign
+  as "Section 9 (2026-11-04)" in *NotebookLM Campaigns* (the 3 November archive is still there too)
+  and built 77 documents and 27 scenes, all playlists 6/6 tracks; 01. Probation Day is active. The
+  world now holds only Section 9. The recruits' `Language (<origin>)` and `Local Expert (<place>)`
+  skills were skipped by that build; the importer now adds them (`applySkillLevels`), deployed to
+  cpr-test from the working tree (checked with `git hash-object`) and tested by re-importing the
+  three recruits with Replace: same actor ids, skills on the sheet and in the compendium copies.
 - **First release, v0.1.0** (29 October): the first `v*` tag, which ran the release workflow and
   published `module.json`, `module.zip`, `macros-module.json` and `macros-module.zip`. Before this
   there was no release, so Foundry's install-by-manifest showed "No module manifest found". Install

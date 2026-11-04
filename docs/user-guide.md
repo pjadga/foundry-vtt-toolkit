@@ -430,7 +430,9 @@ In a Cyberpunk RED world:
 
 - **Items** are built on the closest core compendium item, so weapon skills, DV tables and ammo
   stay valid. The entry's damage, rate of fire, SP, Humanity Loss and price are applied on top.
-- **NPCs** are mook actors with their role and rank, stats, skills and HP. Their gear is matched
+- **NPCs** are mook actors with their role and rank, stats, skills and HP. A specialised skill
+  such as `Language (Mandarin)` or `Local Expert (Watson)` is added as its own skill (the first
+  Local Expert takes the place of *Local Expert (Your Home)*). Their gear is matched
   to the core compendiums and equipped or installed, and Humanity and EMP are reduced for their
   cyberware.
 - **Player characters** come from a `character` entry: ask NotebookLM for "my character as a
