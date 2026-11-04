@@ -808,14 +808,14 @@ async function autoPick() {
 
 /** The image generation settings, or null when generation is off. */
 export function imageSettings(folder) {
-  const provider = game.settings.get(MODULE_ID, "imageProvider");
+  // Cloudflare Workers AI was removed; a browser still set to it uses Pollinations.
+  const chosen = game.settings.get(MODULE_ID, "imageProvider");
+  const provider = chosen === "cloudflare" ? "pollinations" : chosen;
   // "manual": the review window waits for the GM to paste each image instead of generating.
   if (!PROVIDERS.includes(provider) && provider !== "manual") return null;
   return {
     provider,
     folder,
-    url: game.settings.get(MODULE_ID, "cloudflareWorkerUrl").trim(),
-    token: game.settings.get(MODULE_ID, "cloudflareWorkerToken").trim(),
     key: provider === "gemini" ? game.settings.get(MODULE_ID, "geminiApiKey").trim() : "",
     model: game.settings.get(MODULE_ID, "geminiImageModel").trim() || DEFAULT_GEMINI_IMAGE_MODEL,
     openaiKey: provider === "openai" ? game.settings.get(MODULE_ID, "openaiApiKey").trim() : "",

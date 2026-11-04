@@ -49,9 +49,16 @@ local-device access the first time); the site is now Gemini Notebook at notebook
 ## NotebookLM import
 
 The toolkit's Configure Settings tab is regrouped by `settings-ui.mjs` (`renderSettingsConfig`;
-groups and secret keys in pure, tested `settings-layout.mjs`): hints become label tooltips, and
-`SECRET_SETTINGS` inputs become password fields with an eye toggle. A new setting goes in a group
-there, or it lands under Other.
+layout in pure, tested `settings-layout.mjs`). `SERVICE_MENUS` (Gemini, YouTube, OpenAI) are
+`registerMenu` buttons (restricted) opening a dialog with their settings, which are taken off the
+page (`config = false`); the rest sit under `SETTING_GROUPS` headings. Hints become label tooltips,
+and `SECRET_SETTINGS` inputs become password fields with an eye toggle. Model settings
+(`MODEL_SETTINGS` in pure, tested `model-lists.mjs`) are dropdowns: the dialog fetches Gemini's
+ListModels or OpenAI's /v1/models with the key in the dialog, keeps only `gemini-…` chat or image
+models (or `gpt-image…`), and always keeps the current value. A new setting goes in a service or
+a group, or it lands under Other. Every toolkit setting is GM-only: they're client
+settings (which Foundry shows to everyone), so `ready` sets `config = false` for players.
+Cloudflare Workers AI was removed (4 November); a browser still set to it uses Pollinations.
 
 Every sidebar tab has one GM-only **Toolkit** button opening a menu of that tab's actions
 (`toolkit-menu.mjs`, `addTabAction(hook, {label, icon, onClick})`; register at load, before the tab
@@ -106,8 +113,7 @@ become Foundry playlists (`youtube/playlists.mjs`, registered in `main.mjs`).
 
 `module/scripts/images/`: `prompts.mjs` (pure, tested: prompt from `visual:`, file names that
 `findImage` matches, `imagesNeeded`), `generate.mjs` (Pollinations, no key, one request per 45 s per IP
-(402 FREE_LIMIT when sooner, retried), returns about 1015×580 with a watermark; or Cloudflare Workers AI through the GM's own Worker,
-`docs/images/cloudflare-worker.js`, because Cloudflare's API sends no CORS headers; or Gemini
+(402 FREE_LIMIT when sooner, retried), returns about 1015×580 with a watermark; or Gemini
 `generateContent` with `responseModalities: ["IMAGE"]` and `imageConfig.aspectRatio`, image in
 `candidates[0].content.parts[].inlineData`, key in the `x-goog-api-key` header; pure, tested
 `geminiImageError` / `geminiImagePart`), `review.mjs`

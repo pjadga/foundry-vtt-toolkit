@@ -17,9 +17,20 @@ The module's version is set from the git tag when a release is published.
 
 ### Settings
 
-- The toolkit's settings are grouped under headings, each setting's description is a tooltip on its
-  name instead of a paragraph, and the API keys (Gemini, YouTube, OpenAI) and the Cloudflare token
-  show as dots, with an eye button to show them.
+- **Gemini**, **YouTube** and **OpenAI** buttons at the top of the toolkit's settings open a dialog
+  with that service's key and options, so the settings page is shorter.
+- The other settings are grouped under headings, each setting's description is a tooltip on its
+  name instead of a paragraph, and the API keys show as dots, with an eye button to show them.
+- All the toolkit's settings are GM-only: players no longer see them.
+- The model settings (GM Assistant, music search, Gemini image, OpenAI image) are dropdowns listing
+  the models your Gemini or OpenAI key can use. *Gemini model* is now called **Music search model**,
+  which is what it's for. Each model shows a rough strength in brackets (Low, Medium, High, Extra,
+  Max), read from its name.
+
+### Removed
+
+- **Cloudflare Workers AI** as a scene image generator, with its *Cloudflare Worker URL* and *token*
+  settings and `docs/images/cloudflare-worker.js`. A browser still set to it uses Pollinations.
 
 ### Sidebar
 

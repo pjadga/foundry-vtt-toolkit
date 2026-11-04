@@ -454,3 +454,44 @@
   flex: 0 0 auto;
   width: 2rem;
 }
+.fvtk-service-settings .fvtk-service-body {
+  padding: 0.5rem;
+}
+.fvtk-service-settings .form-footer {
+  padding: 0 0.5rem 0.5rem;
+}
+.fvtk-service-settings .fvtk-tip-icon {
+  font-size: 0.8em;
+  opacity: 0.6;
+}
+.fvtk-service-settings label.fvtk-has-tip {
+  cursor: help;
+}
+.fvtk-service-settings .fvtk-reveal {
+  flex: 0 0 auto;
+  width: 2rem;
+}
+.fvtk-service-settings .form-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.35rem 0;
+}
+.fvtk-service-settings .form-group > label {
+  flex: 2;
+}
+.fvtk-service-settings .form-group > .form-fields {
+  flex: 3;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.fvtk-service-settings .form-fields input[type="text"],
+.fvtk-service-settings .form-fields input[type="password"],
+.fvtk-service-settings .form-fields select {
+  flex: 1;
+  min-width: 0;
+}
+.fvtk-service-settings .form-footer button {
+  width: 100%;
+}

@@ -1,11 +1,8 @@
 /**
- * Free image generation for scene backgrounds.
+ * Image generation for scene backgrounds.
  *
  * - pollinations: image.pollinations.ai, no account or key. Anonymous use is limited to one image
  *   every 45 seconds per IP address (answered with 402 FREE_LIMIT) and adds a small watermark.
- * - cloudflare: Cloudflare Workers AI (FLUX.1 schnell) through the GM's own Worker
- *   (docs/images/cloudflare-worker.js), on Cloudflare's free daily allowance. Better quality, no
- *   watermark; images are square.
  * - gemini: Google's Gemini image models ("Nano Banana") with the GM's Gemini API key. Best quality,
  *   any aspect ratio, no visible watermark (SynthID only), but image models have no free tier: the
  *   key's project needs billing, at a few cents an image.
@@ -82,7 +79,7 @@ export function geminiImageError(status, data, model) {
   const freeTier = details.some(d => (d?.violations ?? []).some(v => /FreeTier/i.test(v?.quotaId ?? ""))) || /free[_ ]tier/i.test(full);
   const out = { message: first || `HTTP ${status}`, retry: false, seconds: 0, billing: false };
   if (status === 429 && (freeTier || /limit: 0\b/.test(full))) {
-    return { ...out, billing: true, message: "Gemini image models need billing on the API key's Google Cloud project (a few cents an image; set it up under Billing at aistudio.google.com). A free-tier key can't make images: choose Pollinations or Cloudflare in the toolkit settings to generate for free" };
+    return { ...out, billing: true, message: "Gemini image models need billing on the API key's Google Cloud project (a few cents an image; set it up under Billing at aistudio.google.com). A free-tier key can't make images: choose Pollinations in the toolkit settings to generate for free" };
   }
   if (status === 429) {
     const seconds = Math.ceil(parseFloat(details.find(d => d?.retryDelay)?.retryDelay) || 20) + 1;
@@ -186,13 +183,6 @@ async function pollinations(prompt, seed, aspectRatio) {
   }
 }
 
-async function cloudflare(prompt, seed, { url, token }) {
-  if (!url) throw new Error("set the Cloudflare Worker URL in the toolkit settings");
-  const headers = { "Content-Type": "application/json" };
-  if (token) headers.Authorization = `Bearer ${token}`;
-  return fetchImage(url, { method: "POST", headers, body: JSON.stringify({ prompt, seed }) });
-}
-
 async function gemini(prompt, { key, model, aspectRatio }) {
   if (!key) throw new Error("set your Gemini API key in the toolkit settings");
   model ||= DEFAULT_GEMINI_IMAGE_MODEL;
@@ -277,14 +267,14 @@ async function openai(prompt, { key, model, quality, aspectRatio }) {
 /**
  * Generate one image.
  * @param {string} prompt
- * @param {{provider: "pollinations"|"cloudflare"|"gemini"|"openai", seed?: number, url?: string, token?: string,
- *   key?: string, model?: string, openaiKey?: string, openaiModel?: string, openaiQuality?: string,
- *   aspectRatio?: string, onFallback?: (reason: string) => void}} options url/token for Cloudflare,
- *   key/model for Gemini, openai* for OpenAI. aspectRatio is "16:9" unless given; Cloudflare ignores
- *   it (its images are square). When OpenAI fails, onFallback gets the reason and Pollinations draws.
+ * @param {{provider: "pollinations"|"gemini"|"openai", seed?: number, key?: string, model?: string,
+ *   openaiKey?: string, openaiModel?: string, openaiQuality?: string, aspectRatio?: string,
+ *   onFallback?: (reason: string) => void}} options key/model for Gemini, openai* for OpenAI.
+ *   aspectRatio is "16:9" unless given. When OpenAI fails, onFallback gets the reason and
+ *   Pollinations draws.
  * @returns {Promise<Blob>}
  */
-export async function generateImage(prompt, { provider, seed = Math.floor(Math.random() * 1e9), url, token, key, model, openaiKey, openaiModel, openaiQuality, aspectRatio = "16:9", onFallback }) {
+export async function generateImage(prompt, { provider, seed = Math.floor(Math.random() * 1e9), key, model, openaiKey, openaiModel, openaiQuality, aspectRatio = "16:9", onFallback }) {
   if (provider === "openai") {
     try {
       return await openai(prompt, { key: openaiKey, model: openaiModel, quality: openaiQuality, aspectRatio });
@@ -295,9 +285,8 @@ export async function generateImage(prompt, { provider, seed = Math.floor(Math.r
     }
   }
   if (provider === "pollinations") return pollinations(prompt, seed, aspectRatio);
-  if (provider === "cloudflare") return cloudflare(prompt, seed, { url, token });
   if (provider === "gemini") return gemini(prompt, { key, model, aspectRatio });
   throw new Error(`unknown image provider "${provider}"`);
 }
 
-export const PROVIDERS = ["pollinations", "cloudflare", "gemini", "openai"];
+export const PROVIDERS = ["pollinations", "gemini", "openai"];

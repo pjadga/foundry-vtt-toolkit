@@ -80,9 +80,9 @@ it. One run:
 
 1. checks the campaign for gaps (broken links, unused NPCs and items, unvisited locations, scenes
    missing fields) and gives you a fix prompt to paste back into NotebookLM;
-2. generates scene images for locations and scenes that have none, free (Pollinations, or your own
-   Cloudflare Worker), with Gemini on a key with billing, or with OpenAI GPT Image (Pollinations as
-   the backup), or pasted from ChatGPT or any image tool, for you to review;
+2. generates scene images for locations and scenes that have none, free with Pollinations, with
+   Gemini on a key with billing, or with OpenAI GPT Image (Pollinations as the backup), or takes
+   images pasted from ChatGPT or any image tool, for you to review;
 3. imports journals, locations and story threads, and in a Cyberpunk RED world real weapons, armor,
    cyberware and gear, NPCs as mook actors with role, stats, skills and gear, and player characters
    with their lifepath, owned by their player;

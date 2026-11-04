@@ -6,7 +6,7 @@ import { openPacker, packAdventure, clearCampaign } from "./import/adventure.mjs
 import { campaignPacks, clearCampaignPacks } from "./import/campaign-packs.mjs";
 import { setupFileButtons, importFiles, exportFiles } from "./import/json-files.mjs";
 import { addTabAction } from "./toolkit-menu.mjs";
-import { setupSettingsUI } from "./settings-ui.mjs";
+import { setupSettingsUI, registerServiceMenus } from "./settings-ui.mjs";
 import { importTable, importCards } from "./import/kinds-import.mjs";
 import { openAssistant, setupAssistant, ask as askAssistant } from "./assistant/assistant.mjs";
 import { openSources, syncSources } from "./assistant/sources-sync.mjs";
@@ -129,7 +129,6 @@ Hooks.once("init", () => {
     choices: {
       none: "FVTK.Settings.ImageProvider.None",
       pollinations: "FVTK.Settings.ImageProvider.Pollinations",
-      cloudflare: "FVTK.Settings.ImageProvider.Cloudflare",
       gemini: "FVTK.Settings.ImageProvider.Gemini",
       openai: "FVTK.Settings.ImageProvider.OpenAI",
       manual: "FVTK.Settings.ImageProvider.Manual"
@@ -191,22 +190,8 @@ Hooks.once("init", () => {
     type: Boolean,
     default: false
   });
-  game.settings.register(MODULE_ID, "cloudflareWorkerUrl", {
-    name: "FVTK.Settings.CloudflareUrl.Name",
-    hint: "FVTK.Settings.CloudflareUrl.Hint",
-    scope: "client",
-    config: true,
-    type: String,
-    default: ""
-  });
-  game.settings.register(MODULE_ID, "cloudflareWorkerToken", {
-    name: "FVTK.Settings.CloudflareToken.Name",
-    hint: "FVTK.Settings.CloudflareToken.Hint",
-    scope: "client",
-    config: true,
-    type: String,
-    default: ""
-  });
+  // Gemini, YouTube and OpenAI settings live in their own dialogs, opened from the settings page.
+  registerServiceMenus();
 });
 
 Hooks.once("ready", async () => {

@@ -47,7 +47,7 @@ Release notes are in [../CHANGELOG.md](../CHANGELOG.md).
   - **Gemini:** smarter music searches, the GM Assistant and its sources. Get one at
     [aistudio.google.com](https://aistudio.google.com). Gemini scene images are the one paid
     option: they need billing on the key.
-  - **A Cloudflare Worker:** better scene images (optional).
+  - **OpenAI:** GPT Image scene images (optional, paid).
 
 All features are GM-only.
 
@@ -228,19 +228,18 @@ generated, and each card waits for an image. This is how to use a ChatGPT Plus s
 doesn't include the OpenAI API.
 
 The prompt is the entry's `visual:` line followed by the **Scene image style** setting. Choose the
-generator in the settings. Pollinations and Cloudflare are free; Gemini and OpenAI are paid:
+generator in the settings. Pollinations is free; Gemini and OpenAI are paid:
 
 | Generator | Account | Quality | Speed |
 | --- | --- | --- | --- |
 | **Pollinations** (default) | None | Basic model, about 1015×580, small watermark | One image every 45 seconds; the window shows the time left |
-| **Cloudflare Workers AI** | Free Cloudflare account and a Worker you deploy once ([setup](notebooklm/format.md#generated-scene-images)) | FLUX.1 schnell, no watermark, square | A few seconds each |
 | **Gemini** | Your Gemini API key, **with billing** turned on | Google's *Nano Banana* models, 16:9, no visible watermark | A few seconds each; a few cents an image |
 | **OpenAI** | Your OpenAI API key, with credit on the account | OpenAI's *GPT Image* models, 1536×864, no visible watermark | Up to a minute each; billed per image. A failed request is drawn by Pollinations instead |
 
 Gemini image models have no free tier. Turn on billing for the key's project in Google AI Studio
 (**Billing**). Each image costs about $0.03 with the default model, and regenerations count too.
 The review window and the build preview remind you of this. A key without billing gets a message
-saying so instead of an image; switch to Pollinations or Cloudflare to carry on for free. The
+saying so instead of an image; switch to Pollinations to carry on for free. The
 **Gemini image model** setting chooses the model.
 
 OpenAI keeps Pollinations as its backup: if a request fails (no credit, a refused prompt, a
@@ -501,13 +500,29 @@ Foundry and paste the file's contents into it.
 
 ## Settings
 
-These are in **Configure Settings → Foundry VTT Toolkit**. All of them are stored only in your
-browser (client settings), and none reach players.
+These are in **Configure Settings → Foundry VTT Toolkit**, for the GM only: players don't see the
+toolkit's settings. All of them are stored only in your browser (client settings).
 
-The page groups them under headings (API keys and accounts, Gemini and the GM Assistant, Scene
-images, YouTube, Combat, Other). Hover over a setting's name, or its ⓘ, to see what it does. API
-keys and the Cloudflare token show as dots; click the eye next to one to show it, and again to hide
-it.
+At the top, under **Services**, the **Gemini**, **YouTube** and **OpenAI** buttons open a dialog
+with that service's settings: its API key and its models or options. Below them, the other settings
+are grouped under Scene images, Combat and Other. Hover over a setting's name, or its ⓘ, to see what
+it does. API keys show as dots; click the eye next to one to show it, and again to hide it.
+
+The model settings are dropdowns. When the dialog opens, the toolkit asks Gemini or OpenAI, with your
+key, which models it offers, and lists those (Gemini chat models for the assistant and music search,
+image models for images). Without a key, or if the provider can't be reached, it lists the usual
+few. Your current choice always stays in the list.
+
+Each model has a rough strength in brackets, read from its name: **Low** (Lite), **Medium** (Flash,
+Nano Banana, GPT Image Flare), **High** (Pro, GPT Image Sunburst), **Extra** (Pro from version 3.5
+on) and **Max** (Ultra or Deep Think). Stronger models write or draw better but are slower and cost
+more. Older GPT Image models show as Low. A model whose name gives no clue (a codename) has no label.
+
+| Dialog | Settings |
+| --- | --- |
+| Gemini | Gemini API key, GM Assistant model, Music search model, Gemini image model |
+| YouTube | YouTube Data API key, Pick YouTube tracks during import |
+| OpenAI | OpenAI API key, OpenAI image model, OpenAI image quality |
 
 | Setting | Default | What it does |
 | --- | --- | --- |
@@ -518,15 +533,14 @@ it.
 | Combat narration (GM) | Post for everyone | Narrate attacks: post for everyone, show the GM first, or off |
 | Resolve attacks automatically (Cyberpunk RED) | on | Hit or miss from range DV or Evasion, with a Combat card |
 | Apply damage on a hit (Cyberpunk RED) | To NPCs only | Apply confirmed hits with the system's Apply Damage: to NPCs, to everyone, or off |
-| Gemini model | `gemini-flash-lite-latest` | The model for music search suggestions |
-| Scene image generator (GM) | Pollinations | Pollinations, Cloudflare Workers AI, Gemini (needs billing), OpenAI (Pollinations as backup), Paste my own, or off. The GM Assistant draws with it too (with Gemini when it's Paste my own or off) |
+| Music search model | `gemini-flash-lite-latest` | The Gemini model the YouTube track picker uses for search suggestions |
+| Scene image generator (GM) | Pollinations | Pollinations, Gemini (needs billing), OpenAI (Pollinations as backup), Paste my own, or off. The GM Assistant draws with it too (with Gemini when it's Paste my own or off) |
 | OpenAI API key (GM) | none | Your OpenAI key, for the OpenAI generator. Stored only in this browser |
 | OpenAI image model | `gpt-image-2.5-flare` | The GPT Image model. `gpt-image-2.5-sunburst` draws more carefully; older models such as `gpt-image-1.5` use their fixed sizes |
 | OpenAI image quality | Medium | Low, medium or high. Higher takes longer and costs more |
 | Gemini image model | `gemini-3.1-flash-lite-image` | The model for Gemini images (Nano Banana 2 Lite, the fastest and cheapest). `gemini-nano-banana-2.1` and `gemini-3-pro-image` draw more carefully and cost more |
 | Scene image style | cinematic concept art… | Added to every image prompt |
 | Keep generated images without review | off | Uploads every generated image without asking |
-| Cloudflare Worker URL / token | none | Your Worker, for the Cloudflare generator |
 | Debug logging | off | Logs the toolkit's activity to the console |
 
 The image folder, sources folder and *search the sources* choice are remembered from their dialogs.
@@ -541,14 +555,14 @@ The image folder, sources folder and *search the sources* choice are remembered 
 | A field is ignored | Use the field names from the prompt kit. Field lines go before `##BODY`, one `key: value` per line. |
 | A link shows as bold text instead of a link | Nothing has that exact name yet. A later build that adds it links it. Otherwise, fix the spelling so both entries match. |
 | A scene wasn't created ("no image") | No image matched the entry's name, generation was off, or you unticked it. Add an image named after the entry, or set an `image:` line, and build again. |
-| "Free limit reached" or images failing on Pollinations | Pollinations' free tier makes one image every 45 seconds per internet connection. The toolkit waits and retries; if images still fail, click **Regenerate** later. Other Pollinations use on the same network counts too. Cloudflare avoids the wait. |
+| "Free limit reached" or images failing on Pollinations | Pollinations' free tier makes one image every 45 seconds per internet connection. The toolkit waits and retries; if images still fail, click **Regenerate** later. Other Pollinations use on the same network counts too. |
 | "Could not read the scene image folder" | The folder doesn't exist. Pick another, or leave the field empty for the default. |
 | An NPC is missing some gear | The gear's name doesn't match the system's compendium. The NPC's GM notes list "gear not in the compendium". Use the rulebook name, or add the item as an `item` entry. |
 | No YouTube results, or "quota" errors | Check the YouTube key (in settings, YouTube Data API v3 enabled). The free quota is 10,000 units a day and resets daily. Auto-pick stops cleanly when it runs out. |
 | Music doesn't play | Browsers only play sound after you click the page, so click anywhere in Foundry. If you closed **Now playing**, music stays off on your screen until the next track. For "the owner may not allow embedding", pick another track. |
 | "The browser did not let the toolkit read the clipboard" | **Paste** needs clipboard permission. Click the card and press **Ctrl+V** instead, or allow clipboard access for the Foundry site. |
 | "OpenAI couldn't draw this …, so Pollinations did" | The OpenAI request failed and Pollinations drew the image. The message says why: a wrong key, no credit (add some under **Billing** at platform.openai.com), an organization to verify, or a refused prompt (reword it and click **Regenerate**). |
-| "Gemini image models need billing" | Image models have no free tier. Turn on billing for the key's project in Google AI Studio, or choose Pollinations or Cloudflare as the scene image generator. |
+| "Gemini image models need billing" | Image models have no free tier. Turn on billing for the key's project in Google AI Studio, or choose Pollinations as the scene image generator. |
 | "Gemini didn't answer" or a slow assistant | Keep the model on `gemini-flash-lite-latest`. Busy models are skipped for 10 minutes. The free tier allows only a few requests a minute. |
 | "Add your Gemini API key" | Add a key from [aistudio.google.com](https://aistudio.google.com) in the settings. |
 | A source file "can't be searched" | Convert it to PDF, text or Markdown. Use transcripts for audio and video, and split files over 100 MB. |
@@ -596,8 +610,7 @@ starting `foundry-vtt-toolkit |`.
 
 **Images:**
 
-- Pollinations' free model follows prompts loosely and adds a small watermark. Cloudflare images
-  are square, so they are cropped differently on wide scenes.
+- Pollinations' free model follows prompts loosely and adds a small watermark.
 - Gemini images need billing on the API key: free-tier keys get no image quota (October 2026).
 - A picture the GM Assistant draws stays only in the window until you save or use it. A reload or
   **New chat** discards it.
@@ -643,7 +656,7 @@ starting `foundry-vtt-toolkit |`.
 
 | Feature | Sent to | What |
 | --- | --- | --- |
-| Scene images | Pollinations, your Cloudflare Worker, Google (Gemini API), or OpenAI (and Pollinations when an OpenAI request fails) | The image prompt |
+| Scene images | Pollinations, Google (Gemini API), or OpenAI (and Pollinations when an OpenAI request fails) | The image prompt |
 | YouTube search | Google (YouTube Data API) | Search words |
 | Music suggestions | Google (Gemini API) | Track descriptions and playlist moods |
 | GM Assistant | Google (Gemini API) | The campaign, GM secrets included, and your questions, with each question. A picture's prompt then goes to the scene image generator |

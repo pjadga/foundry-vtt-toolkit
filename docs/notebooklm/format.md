@@ -226,28 +226,18 @@ feeling, action, and scents or tastes where they matter), which gives far better
 description. Prompts are cut at 1,200 characters, style included.
 
 Pick the generator in **Configure Settings → Foundry VTT Toolkit → Scene image generator**.
-Pollinations and Cloudflare are free; Gemini and OpenAI are paid. The settings are per browser.
+Pollinations is free; Gemini and OpenAI are paid. The settings are per browser.
 
 - **Pollinations** (default): no account or key. Free use is slow: one image every 45 seconds per
   internet connection (a campaign's 18 images take about 15 minutes; the window says how long is
   left, and a request turned away for coming too soon is retried). Images are about 1015×580, from
   a basic model, with a small "pollinations.ai" mark in the corner.
-- **Cloudflare Workers AI**: FLUX.1 schnell, much better images and no watermark, on Cloudflare's
-  free daily allowance (enough for dozens of images a day). Images are square. It needs a free
-  Cloudflare account and a small Worker you deploy once:
-  1. Cloudflare dashboard → **Workers & Pages** → **Create** → **Worker**, name it (e.g.
-     `fvtk-images`), **Deploy**, then **Edit code**, replace the code with
-     [`docs/images/cloudflare-worker.js`](../images/cloudflare-worker.js) and **Deploy**.
-  2. The Worker's **Settings → Bindings → Add → Workers AI**, variable name `AI`.
-  3. **Settings → Variables and secrets → Add**, type **Secret**, name `TOKEN`, any long random value.
-  4. In the toolkit settings set the generator to Cloudflare, **Cloudflare Worker URL** to the
-     Worker's `https://….workers.dev` address and **Cloudflare Worker token** to the same value.
 - **Gemini**: Google's Gemini image models (sold as *Nano Banana*) with your **Gemini API key**.
-  The best images of the three, in 16:9, with no visible watermark (Google adds an invisible SynthID
+  The best images, in 16:9, with no visible watermark (Google adds an invisible SynthID
   mark). Image models have **no free tier**: the key's Google Cloud project needs billing turned on
   (Google AI Studio → **Billing**), and each image, regenerations included, costs a few cents
   (about $0.03 at 1K with the default model, October 2026). A key without billing gets a message
-  saying so, not an image; switch to Pollinations or Cloudflare to carry on for free. The
+  saying so, not an image; switch to Pollinations to carry on for free. The
   **Gemini image model** setting picks the model: `gemini-3.1-flash-lite-image` (Nano Banana 2 Lite,
   the default: fastest and cheapest), `gemini-nano-banana-2.1` (Nano Banana 2.1) or
   `gemini-3-pro-image` (Nano Banana Pro, slower, about $0.13 an image). Your prompts go to Google
@@ -319,7 +309,7 @@ Google's free tier.
 - **Pictures:** ask for one ("Draw a portrait of Rook", "Paint the docks at dawn", "image: the
   vault door") or type a description and press **Image**. Gemini first writes the image prompt from
   what the campaign says (an NPC's appearance, a location's visual), then the **Scene image
-  generator** draws it: Pollinations, Cloudflare, Gemini or OpenAI as set (Gemini when scene images are
+  generator** draws it: Pollinations, Gemini or OpenAI as set (Gemini when scene images are
   Off; it needs billing, see above). Portraits are square, places 16:9. The picture shows in the
   window with its prompt. **Save** uploads it to the scene image folder (portraits in its
   `portraits/` subfolder). When the picture is of an actor or scene in the world (named in the
