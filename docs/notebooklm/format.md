@@ -1,6 +1,6 @@
 # NotebookLM bundle format
 
-The importer (`module/scripts/import/`, **Build campaign** in the Journal sidebar) reads plain-text
+The importer (`module/scripts/import/`, **Build campaign** in the Compendium sidebar) reads plain-text
 entries. NotebookLM is told to write them by the custom instruction in
 [cyberpunk-red-prompts.md](cyberpunk-red-prompts.md) (Prompt 0), or its group version in
 [cyberpunk-red-group-prompts.md](cyberpunk-red-group-prompts.md).
@@ -61,6 +61,9 @@ Markdown body. Refer to other entries as [[Exact Name]].
 | `npc` (Cyberpunk RED) | Mook actor | NotebookLM / NPCs (Actors) |
 | `character` (Cyberpunk RED) | Player character actor, owned by its player | NotebookLM / Characters (Actors) |
 | `playlist` | Playlist (tracks are picked from YouTube afterwards) | NotebookLM / Playlists (Playlists) |
+| `table` | Rollable table | NotebookLM / Tables (Rollable Tables) |
+| `cards` | Card stack (a deck, hand or pile of text cards) | NotebookLM / Card Stacks (Card Stacks) |
+| `encounter` | Journal entry (tactics), plus a combat encounter on each scene that names it | NotebookLM / Encounters (Journal) |
 | `npc`, `character` and `item` (other systems) | Not yet; listed as skipped | |
 
 ### Fields the toolkit reads
@@ -73,11 +76,21 @@ Any other `key: value` line is kept and shown on the journal or sheet. These dri
 | `journal` | anything; the Campaign Overview's `antagonist`, `plot_twists`, `ending`, `sessions` are shown as a list |
 | `thread` | `hook`, `midpoint_choice`, `success_outcome`, `failure_outcome`, `connection_to_main`, `linked_threads` |
 | `location` | `district`, `controlled_by`, `danger_level`, `notable_features`, `secrets`, `npcs` (placed as hidden tokens on its scene), `visual` (image prompt) |
-| `scene` | `session` (numbering), `location` (image fallback), `npcs_present` (hidden tokens), `soundtrack` (the playlist that plays when the scene is activated), `objective`, `complications`, `best_outcome`, `worst_outcome`, `visual` (image prompt) |
+| `scene` | `session` (numbering), `location` (image fallback), `npcs_present` (hidden tokens), `soundtrack` (the playlist that plays when the scene is activated), `objective`, `complications`, `best_outcome`, `worst_outcome`, `visual` (image prompt), `encounter` (one `[[encounter]]`: its combat on this scene), `tables` and `card_stacks` (`[[links]]`) |
 | `npc` (Cyberpunk RED) | `role`, `tier`, `stats`, `skills`, `gear`, `appearance`, `voice_and_mannerisms`, the rest as GM-only notes |
 | `character` (Cyberpunk RED) | `player`, `role`, `role_rank`, `alias`, `stats`, `skills`, `gear`, `eddies`, `improvement_points`, `reputation`, `appearance`, the lifepath fields (see below), the rest as notes |
 | `item` (Cyberpunk RED) | `category`, `price`, `damage`, `rate_of_fire`, `range_or_melee`, `sp`, `penalty`, `effect`, `humanity_loss`, `story_item`, `too_strong_flag` |
 | `playlist` | `mood`, `tracks` (one numbered line each) |
+| `table` | `formula` (e.g. `1d6`; one die covering every result when missing), `results` (one numbered line each; `2-3.` covers two rolls) |
+| `cards` | `stack_type` (`deck`, `hand` or `pile`), `cards` (one numbered line each, `1. Card name: what it does`) |
+| `encounter` | `combatants` (`[[NPC]]` links with counts, `[[Ganger]] x3, [[Boss]]`) |
+
+Tables, card stacks and encounters belong to scenes, the way NPCs and soundtracks do: a scene names
+them in `encounter:`, `tables:` and `card_stacks:`, and the campaign check reports any that no scene
+uses. When a scene is set up, its encounter becomes a combat on that scene (not started), holding
+hidden tokens for every combatant: the tokens of its `npcs_present`, plus more where the encounter
+wants more of an NPC (`x3`). Setting the scene up again replaces the combatants. The scene's journal
+links its tables and card stacks.
 
 The prompt kits, [cyberpunk-red-prompts.md](cyberpunk-red-prompts.md) (one player) and
 [cyberpunk-red-group-prompts.md](cyberpunk-red-group-prompts.md) (3 to 5 players), ask NotebookLM for
@@ -207,11 +220,13 @@ images** carries on with none.
 
 The prompt is the entry's `visual:` line (a location's opening description and `notable_features`
 if it has none; for a scene, its location's visual and its opening), followed by the **Scene image
-style** setting. Ask NotebookLM for a `visual:` line on every location (prompt kit, Prompt 3); it
-gives far better images than the description.
+style** setting. Ask NotebookLM for a `visual:` line on every location and scene (prompt kit,
+Prompts 3 and 4): at least a paragraph on one line (setting, lighting, weather, colours, mood,
+feeling, action, and scents or tastes where they matter), which gives far better images than the
+description. Prompts are cut at 1,200 characters, style included.
 
 Pick the generator in **Configure Settings → Foundry VTT Toolkit → Scene image generator**.
-Pollinations and Cloudflare are free; Gemini is paid. The settings are per browser.
+Pollinations and Cloudflare are free; Gemini and OpenAI are paid. The settings are per browser.
 
 - **Pollinations** (default): no account or key. Free use is slow: one image every 45 seconds per
   internet connection (a campaign's 18 images take about 15 minutes; the window says how long is
@@ -237,6 +252,20 @@ Pollinations and Cloudflare are free; Gemini is paid. The settings are per brows
   the default: fastest and cheapest), `gemini-nano-banana-2.1` (Nano Banana 2.1) or
   `gemini-3-pro-image` (Nano Banana Pro, slower, about $0.13 an image). Your prompts go to Google
   under the Gemini API terms.
+- **OpenAI**: OpenAI's GPT Image models with your **OpenAI API key** (create one at
+  platform.openai.com; the account needs credit, and OpenAI may ask you to verify the organization
+  first). Images are 1536×864 WebP with the 2.5 models (1536×1024 with older ones such as
+  `gpt-image-1.5`), billed per image, regenerations included. **OpenAI image model** picks the model
+  (`gpt-image-2.5-flare`, the default, or `gpt-image-2.5-sunburst`) and **OpenAI image quality** the
+  quality (medium by default). **Pollinations is the backup:** when an OpenAI request fails, for
+  any reason, Pollinations draws that image and the review card says what went wrong. Your prompts
+  go to OpenAI under its API terms.
+
+- **Paste my own**: nothing is generated. Each card has **Copy prompt** and waits for you to paste
+  (**Ctrl+V** on the card, or **Paste**) or drop an image made elsewhere, such as ChatGPT. Pasting
+  works with every generator too: a pasted image replaces the generated one on that card. A card's
+  **Pollinations** button draws that one image with Pollinations instead. Click an image to open it
+  full size in its own window (scroll to zoom, drag to pan).
 
 With **Keep generated images without review** on, the window only shows progress: everything that
 generated is uploaded and the import carries on by itself.
@@ -290,7 +319,7 @@ Google's free tier.
 - **Pictures:** ask for one ("Draw a portrait of Rook", "Paint the docks at dawn", "image: the
   vault door") or type a description and press **Image**. Gemini first writes the image prompt from
   what the campaign says (an NPC's appearance, a location's visual), then the **Scene image
-  generator** draws it: Pollinations, Cloudflare or Gemini as set (Gemini when scene images are
+  generator** draws it: Pollinations, Cloudflare, Gemini or OpenAI as set (Gemini when scene images are
   Off; it needs billing, see above). Portraits are square, places 16:9. The picture shows in the
   window with its prompt. **Save** uploads it to the scene image folder (portraits in its
   `portraits/` subfolder). When the picture is of an actor or scene in the world (named in the

@@ -51,6 +51,10 @@ https://github.com/pjadga/foundry-vtt-toolkit/releases/latest/download/module.js
 
 For development, run `FOUNDRY_DATA="<path>/Data" npm run link` to symlink `module/` into `<foundry data>/Data/modules/foundry-vtt-toolkit/`, or copy it by hand.
 
+Every sidebar tab gets GM-only **Import X** and **Export X** buttons for Foundry JSON files: a whole
+tab (with its folders) exports as one file, and imports take that file or Foundry's own
+single-document exports. The Compendium tab's buttons work on a compendium you choose.
+
 The entry point, `module/scripts/main.mjs`, loads `module/scripts/systems/<system>.mjs` for the
 active game system. Add new system support by adding a file and a line in `SYSTEM_MODULES`.
 
@@ -71,13 +75,14 @@ Write the campaign in NotebookLM with the prompts in
 [docs/notebooklm/cyberpunk-red-prompts.md](docs/notebooklm/cyberpunk-red-prompts.md) (one player) or
 [docs/notebooklm/cyberpunk-red-group-prompts.md](docs/notebooklm/cyberpunk-red-group-prompts.md)
 (a group of 3 to 5), collect the
-answers in one file, then click **Build campaign** in Foundry's Journal sidebar (GM only) and choose
+answers in one file, then click **Build campaign** in Foundry's Compendium sidebar (GM only) and choose
 it. One run:
 
 1. checks the campaign for gaps (broken links, unused NPCs and items, unvisited locations, scenes
    missing fields) and gives you a fix prompt to paste back into NotebookLM;
 2. generates scene images for locations and scenes that have none, free (Pollinations, or your own
-   Cloudflare Worker) or with Gemini on a key with billing, for you to review;
+   Cloudflare Worker), with Gemini on a key with billing, or with OpenAI GPT Image (Pollinations as
+   the backup), or pasted from ChatGPT or any image tool, for you to review;
 3. imports journals, locations and story threads, and in a Cyberpunk RED world real weapons, armor,
    cyberware and gear, NPCs as mook actors with role, stats, skills and gear, and player characters
    with their lifepath, owned by their player;

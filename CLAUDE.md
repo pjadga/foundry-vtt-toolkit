@@ -36,7 +36,8 @@ Macros and a module for FoundryVTT v13. See `README.md` for layout and release s
 `.claude/skills/campaign-designer/` (`SKILL.md`, `systems/<id>.md`, `notebooklm.md`) designs a campaign
 for Build campaign to import: intake → rules digest → bible (`##ENTRY` draft, checked) → NotebookLM kit
 and refinement → hand-off. Work lives in `campaigns/<name>/` (git-ignored: rulebooks are copyrighted).
-`scripts/campaign-tools.mjs` (pure `extractPrompt0`, `report`, tested) writes the notebook's Prompt 0
+`scripts/campaign-tools.mjs` (pure `extractPrompt0`, `fillPlayers`, `report`, tested; the group kit's
+Prompt 0 says "a group of N players" and `prompt0 <system> <dir> <players>` fills it in) writes the notebook's Prompt 0
 from the prompt kit and runs `campaignCheck`; add a system by writing its profile and adding its kit to
 `KITS`. NotebookLM has no consumer API, so the skill drives its page with the Claude in Chrome tools;
 `notebooklm.md` has the working steps and gotchas (the file input is caught by hooking
@@ -46,6 +47,26 @@ from the prompt kit and runs `campaignCheck`; add a system by writing its profil
 local-device access the first time); the site is now Gemini Notebook at notebook.google.com). Never put server details or rulebook text in the skill files.
 
 ## NotebookLM import
+
+The toolkit's Configure Settings tab is regrouped by `settings-ui.mjs` (`renderSettingsConfig`;
+groups and secret keys in pure, tested `settings-layout.mjs`): hints become label tooltips, and
+`SECRET_SETTINGS` inputs become password fields with an eye toggle. A new setting goes in a group
+there, or it lands under Other.
+
+Every sidebar tab has one GM-only **Toolkit** button opening a menu of that tab's actions
+(`toolkit-menu.mjs`, `addTabAction(hook, {label, icon, onClick})`; register at load, before the tab
+renders). **Build campaign** is in the Compendium tab's menu. Every tab's menu also has Import X /
+Export X for Foundry JSON files (`import/json-files.mjs`; pure, tested `json-docs.mjs`: `readImport` takes a
+single-document export, an array or the toolkit's bundle, `prepareDocument` drops ownership and
+`_stats` and keeps ids that are free). The combat tracker has no `.header-actions`, so its Toolkit
+button goes in a row after `nav.encounters`.
+
+NotebookLM `table`, `cards` and `encounter` entries (`kinds.mjs` pure, tested; `kinds-import.mjs`):
+tables and card stacks are handlers (compendiums `notebooklm-tables`, `-cards`); an encounter is a
+journal whose flags keep `combatants`, and `setupScene` calls `setupEncounter`, which adds hidden
+tokens up to each NPC's count and one Combat on the scene (flag `encounter`; Combats can't go in
+compendiums, and have no name or folder, so the archive and clean find them by flag). List fields
+(`tracks`, `results`, `cards`) are `LIST_FIELDS` in the parser. Prompt 0 has no playtest mode.
 
 `openImporter` is the Build campaign flow: preview with `campaignCheck` (`check.mjs`, pure, tested)
 → image review → `importEntries` → auto-pick tracks → summary. `adventure.mjs` packs every
@@ -93,7 +114,14 @@ become Foundry playlists (`youtube/playlists.mjs`, registered in `main.mjs`).
 (ApplicationV2 review window that uploads kept images with `FilePicker.upload`). `openImporter` runs it
 after the confirm step and adds the uploaded paths to the folder's images before `importEntries`.
 Gemini image models have no free tier: a key without billing gets 429 with a `…FreeTier` quotaId and
-`limit: 0`, which `geminiImageError` reports as "needs billing" without retrying. OpenAI isn't used.
+`limit: 0`, which `geminiImageError` reports as "needs billing" without retrying. OpenAI: POST
+`/v1/images/generations` from the browser (Bearer key, `output_format: "webp"`, image in
+`data[0].b64_json`); pure, tested `openaiImageSize` (any multiple of 16 on the 2.5 models, the three
+fixed sizes on `gpt-image-1*`) and `openaiImageError`. Any OpenAI failure falls back to Pollinations
+in `generateImage`, which calls `onFallback(reason)` so the review card or assistant can say so.
+The review window also takes pasted or dropped images (`pasteTarget`, `fitWithin` in `prompts.mjs`;
+converted to WebP); provider `manual` (*Paste my own*) generates nothing, and the assistant uses
+Gemini then. A paste bumps the card's `run`, so a generation still running for it is discarded.
 
 ## GM Assistant
 
@@ -182,8 +210,6 @@ step. Pull before starting and push before finishing.
   say which branch is ready for a local session.
 - **Local sessions** (on whichever machine the user is at) pull that branch, run `npm test`, deploy
   it to cpr-test, and test it live. They merge into `main` and push only with the user's OK.
-- Point-in-time state (what's open, what's deployed) goes in `docs/handoff.md`; update it when that
-  changes.
 
 ## What a feature or fix commit includes
 
@@ -210,8 +236,6 @@ are updated, in the same commit or one right after it:
   Then tell the user to paste the new Prompt 0 into the notebook's **Configure Chat**.
 - **`module/lang/en.json`:** every new string, under `FVTK.`.
 - **`CLAUDE.md`:** new architecture, gotchas or conventions a future session needs.
-- **`docs/handoff.md`:** what's deployed to cpr-test (the commit, and whether it was checked with
-  `git hash-object`), what was tested live, and the open items that closed or appeared.
 
 Nothing server-specific goes in any of these, because the repository is public.
 
@@ -228,7 +252,7 @@ each machine by hand.
 ## Testing in the cpr-test world
 
 - **`cpr-test` is a sandbox** (the user's test world for this toolkit, running Cyberpunk RED 0.93-dev
-  on Foundry v13). Changing its settings, client settings and test data is fine without asking.
+  on Foundry v13; recreated on 4 November with the world id `cyberpunk-red-test`). Changing its settings, client settings and test data is fine without asking.
 - **Ask first** before touching any other world, the server's other Foundry install, or restarting
   servers. Never type passwords or API keys: the user enters keys in the browser, and they are
   client settings that stay in that browser.
@@ -264,13 +288,15 @@ each machine by hand.
 - **Test documents** get a `QA ` name prefix (plus a `qa-` folder for files) and are deleted
   afterwards. Delete your own test chat messages too, and restore any actor you damaged. Leave the
   user's own rolls and documents alone.
-- **Roy's macros stay installed:** cpr-test keeps **Roy's Declarations** (hotbar slot 0) and
-  **Roy's History** (slot 9). After a change, overwrite their command with the latest version
-  (create them only if missing); don't delete them after a test, and leave the lines they wrote
-  and your token targets in place. To get an uncommitted macro into the page, copy it into a `qa-`
-  folder in the server's Data folder, `fetch` it from there, then remove the folder. Test them as the
-  player user who owns Roy's sheet, not as the GM; which user and world are in
-  `docs/handoff.local.md`.
+- **Roy's macros** (Roy's Declarations, Roy's History) belong to the user's Sword World 2.5 game:
+  Roy "Slayer" Belmont is a Sword World 2.5 character. They stay installed in the Sword World 2.5
+  test world **QA Roy v12** (on the v12 install). After a change, overwrite their command there with
+  the latest version (create them only if missing); don't delete them after a test, and leave the
+  lines they wrote and your token targets in place. Test them as the player user who owns Roy's
+  sheet, not as the GM; which user is in `docs/handoff.local.md`. They are not installed in the
+  Cyberpunk RED worlds (cpr-test included); don't restore them there. To get an uncommitted macro
+  into the page, copy it into a `qa-` folder in the server's Data folder, `fetch` it from there,
+  then remove the folder.
 - **Rolling like a player in Cyberpunk RED:** `item.createRoll("attack" | "damage" | "skill", actor)`,
   `await roll.roll()`, set `roll.entityData = { actor: actor.id, token: token.id }` (otherwise the card
   has no speaker), then `CPRChat.RenderRollCard(roll)`. `CPRChat` comes from
@@ -284,4 +310,5 @@ each machine by hand.
   - Pollinations allows one image per 45 s per IP address, shared with any other use from the
     same network.
 - **Gemini and YouTube keys** belong to the user. Don't print them, and keep testing light on their
-  daily quotas.
+  daily quotas. Reading field values (keys included) while debugging is fine; the user
+  said so. Just never repeat a key in a message, a commit, a doc or a test.

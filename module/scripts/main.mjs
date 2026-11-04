@@ -4,6 +4,10 @@ import { YouTubePicker, chooseAndPick } from "./youtube/picker.mjs";
 import { autoPickTracks } from "./youtube/tracks.mjs";
 import { openPacker, packAdventure, clearCampaign } from "./import/adventure.mjs";
 import { campaignPacks, clearCampaignPacks } from "./import/campaign-packs.mjs";
+import { setupFileButtons, importFiles, exportFiles } from "./import/json-files.mjs";
+import { addTabAction } from "./toolkit-menu.mjs";
+import { setupSettingsUI } from "./settings-ui.mjs";
+import { importTable, importCards } from "./import/kinds-import.mjs";
 import { openAssistant, setupAssistant, ask as askAssistant } from "./assistant/assistant.mjs";
 import { openSources, syncSources } from "./assistant/sources-sync.mjs";
 import { setupNarration } from "./narration/narration.mjs";
@@ -11,7 +15,7 @@ import { DEFAULT_ASSISTANT_MODEL } from "./assistant/gemini.mjs";
 import { setupYouTubePlayback } from "./youtube/player.mjs";
 import { DEFAULT_MODEL as GEMINI_DEFAULT_MODEL } from "./youtube/gemini.mjs";
 import { DEFAULT_STYLE as IMAGE_DEFAULT_STYLE } from "./images/prompts.mjs";
-import { DEFAULT_GEMINI_IMAGE_MODEL as GEMINI_IMAGE_DEFAULT_MODEL } from "./images/generate.mjs";
+import { DEFAULT_GEMINI_IMAGE_MODEL as GEMINI_IMAGE_DEFAULT_MODEL, DEFAULT_OPENAI_IMAGE_MODEL } from "./images/generate.mjs";
 
 const MODULE_ID = "foundry-vtt-toolkit";
 
@@ -126,7 +130,9 @@ Hooks.once("init", () => {
       none: "FVTK.Settings.ImageProvider.None",
       pollinations: "FVTK.Settings.ImageProvider.Pollinations",
       cloudflare: "FVTK.Settings.ImageProvider.Cloudflare",
-      gemini: "FVTK.Settings.ImageProvider.Gemini"
+      gemini: "FVTK.Settings.ImageProvider.Gemini",
+      openai: "FVTK.Settings.ImageProvider.OpenAI",
+      manual: "FVTK.Settings.ImageProvider.Manual"
     },
     default: "pollinations"
   });
@@ -138,6 +144,36 @@ Hooks.once("init", () => {
     config: true,
     type: String,
     default: GEMINI_IMAGE_DEFAULT_MODEL
+  });
+  // OpenAI GPT Image, with Pollinations as the backup when a request fails.
+  game.settings.register(MODULE_ID, "openaiApiKey", {
+    name: "FVTK.Settings.OpenAIKey.Name",
+    hint: "FVTK.Settings.OpenAIKey.Hint",
+    scope: "client",
+    config: true,
+    type: String,
+    default: ""
+  });
+  game.settings.register(MODULE_ID, "openaiImageModel", {
+    name: "FVTK.Settings.OpenAIImageModel.Name",
+    hint: "FVTK.Settings.OpenAIImageModel.Hint",
+    scope: "client",
+    config: true,
+    type: String,
+    default: DEFAULT_OPENAI_IMAGE_MODEL
+  });
+  game.settings.register(MODULE_ID, "openaiImageQuality", {
+    name: "FVTK.Settings.OpenAIImageQuality.Name",
+    hint: "FVTK.Settings.OpenAIImageQuality.Hint",
+    scope: "client",
+    config: true,
+    type: String,
+    choices: {
+      low: "FVTK.Settings.OpenAIImageQuality.Low",
+      medium: "FVTK.Settings.OpenAIImageQuality.Medium",
+      high: "FVTK.Settings.OpenAIImageQuality.High"
+    },
+    default: "medium"
   });
   game.settings.register(MODULE_ID, "imageStyle", {
     name: "FVTK.Settings.ImageStyle.Name",
@@ -178,12 +214,15 @@ Hooks.once("ready", async () => {
     id: MODULE_ID,
     log,
     system: null,
+    files: { import: importFiles, export: exportFiles },
     importer: { open: openImporter, importEntries, parseBundle, relink, registerType, orderScenes, pack: openPacker, packAdventure, clearCampaign, campaignPacks, clearCampaignPacks },
     youtube: { pick: playlist => new YouTubePicker(playlist).render({ force: true }), choose: chooseAndPick, autoPick: autoPickTracks },
     assistant: { open: openAssistant, ask: askAssistant, sources: openSources, syncSources }
   };
   game.modules.get(MODULE_ID).api = api;
 
+  registerType("table", { label: "Rollable tables", documentName: "RollTable", folder: "Tables", order: 5, import: importTable });
+  registerType("cards", { label: "Card stacks", documentName: "Cards", folder: "Card Stacks", order: 5, import: importCards });
   registerType("playlist", { label: "Playlists (pick YouTube tracks afterwards)", documentName: "Playlist", folder: "Playlists", order: 5, import: importPlaylist });
   setupYouTubePlayback();
   setupAssistant();
@@ -201,23 +240,14 @@ Hooks.once("ready", async () => {
   }
 });
 
-/** A GM-only button in a sidebar directory's header. */
-function addHeaderButton(html, className, icon, label, onClick) {
-  if (!game.user.isGM || html.querySelector(`.${className}`)) return;
-  const actions = html.querySelector(".header-actions");
-  if (!actions) return;
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = className;
-  button.innerHTML = `<i class="${icon}"></i> ${game.i18n.localize(label)}`;
-  button.addEventListener("click", onClick);
-  actions.append(button);
-}
-
-Hooks.on("renderJournalDirectory", (app, html) => addHeaderButton(html, "fvtk-import", "fa-solid fa-file-import", "FVTK.Import.Button", () => openImporter()));
-Hooks.on("renderJournalDirectory", (app, html) => addHeaderButton(html, "fvtk-assistant", "fa-solid fa-robot", "FVTK.Assistant.Button", () => openAssistant()));
-Hooks.on("renderPlaylistDirectory", (app, html) => addHeaderButton(html, "fvtk-youtube", "fa-brands fa-youtube", "FVTK.YouTube.Button", () => chooseAndPick()));
-Hooks.on("renderCompendiumDirectory", (app, html) => addHeaderButton(html, "fvtk-pack", "fa-solid fa-box-archive", "FVTK.Adventure.Button", () => openPacker()));
+// Each tab's toolkit actions sit in one Toolkit menu. Build campaign builds into the world
+// compendiums, so it lives on the Compendium tab.
+addTabAction("renderCompendiumDirectory", { label: "FVTK.Import.Button", icon: "fa-solid fa-wand-magic-sparkles", onClick: () => openImporter() });
+addTabAction("renderCompendiumDirectory", { label: "FVTK.Adventure.Button", icon: "fa-solid fa-box-archive", onClick: () => openPacker() });
+addTabAction("renderJournalDirectory", { label: "FVTK.Assistant.Button", icon: "fa-solid fa-robot", onClick: () => openAssistant() });
+addTabAction("renderPlaylistDirectory", { label: "FVTK.YouTube.Button", icon: "fa-brands fa-youtube", onClick: () => chooseAndPick() });
+setupFileButtons();
+setupSettingsUI();
 
 function log(...args) {
   if (game.settings.get(MODULE_ID, "debug")) console.log(`${MODULE_ID} |`, ...args);

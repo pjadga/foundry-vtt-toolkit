@@ -20,7 +20,7 @@ test("archiveName uses the overview's title, else the world's, with the date", (
 });
 
 test("one compendium per document type, and the world keeps tokens and picked tracks", () => {
-  assert.deepEqual(Object.keys(CAMPAIGN_PACKS).sort(), ["Actor", "Item", "JournalEntry", "Playlist", "Scene"]);
+  assert.deepEqual(Object.keys(CAMPAIGN_PACKS).sort(), ["Actor", "Cards", "Item", "JournalEntry", "Playlist", "RollTable", "Scene"]);
   assert.ok(Object.values(CAMPAIGN_PACKS).every(p => /^notebooklm-[a-z]+$/.test(p.name) && p.label.startsWith("FVTK.Packs.")));
   assert.ok(IN_PLACE_EMBEDDED.Scene.includes("tokens") && IN_PLACE_EMBEDDED.Scene.includes("notes"));
   assert.deepEqual(IN_PLACE_EMBEDDED.Playlist, ["sounds"]);

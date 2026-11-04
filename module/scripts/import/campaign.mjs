@@ -12,7 +12,9 @@ export const CAMPAIGN_PACKS = {
   Actor: { name: "notebooklm-actors", label: "FVTK.Packs.Actors" },
   Item: { name: "notebooklm-items", label: "FVTK.Packs.Items" },
   Scene: { name: "notebooklm-scenes", label: "FVTK.Packs.Scenes" },
-  Playlist: { name: "notebooklm-playlists", label: "FVTK.Packs.Playlists" }
+  Playlist: { name: "notebooklm-playlists", label: "FVTK.Packs.Playlists" },
+  RollTable: { name: "notebooklm-tables", label: "FVTK.Packs.Tables" },
+  Cards: { name: "notebooklm-cards", label: "FVTK.Packs.Cards" }
 };
 
 /**
@@ -25,7 +27,7 @@ export const IN_PLACE_EMBEDDED = {
   Playlist: ["sounds"]
 };
 
-const COUNT_FIELDS = ["journal", "scenes", "actors", "items", "playlists"];
+const COUNT_FIELDS = ["journal", "scenes", "actors", "items", "playlists", "tables", "cards", "combats"];
 
 /**
  * What an earlier import left: how many documents of each kind, in the world and in the campaign

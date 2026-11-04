@@ -330,6 +330,7 @@
 }
 .fvtk-assistant-chat .fvtk-assistant-use {
   margin-top: 0.25rem;
+}
 
 /* Combat narration in chat. */
 .fvtk-narration .fvtk-narration-text {
@@ -378,4 +379,78 @@
   font-size: var(--font-size-12, 12px);
   font-style: italic;
   opacity: 0.8;
+}
+.fvtk-img-fallback {
+  margin: 0;
+  font-size: var(--font-size-12, 12px);
+  opacity: 0.8;
+  font-style: italic;
+}
+/* Copy prompt and Paste share the first row; Regenerate and Pollinations take a row each. */
+.fvtk-img-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem;
+}
+.fvtk-img-buttons button {
+  width: auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fvtk-img-buttons button:nth-child(n + 3) {
+  grid-column: 1 / -1;
+}
+.fvtk-img-card:focus-visible,
+.fvtk-img-card:focus-within {
+  outline: 1px solid var(--color-border-highlight, #ff6400);
+}
+.fvtk-img-card img {
+  cursor: zoom-in;
+}
+/* The Toolkit button on each sidebar tab, and its menu. */
+.fvtk-toolkit-row {
+  margin: 0.25rem 0;
+}
+.fvtk-toolkit-row button {
+  width: 100%;
+}
+.fvtk-toolkit-menu {
+  position: fixed;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px;
+  background: var(--color-cool-5, #1b1d24);
+  border: 1px solid var(--color-border-highlight, #ff6400);
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+}
+.fvtk-toolkit-menu button {
+  justify-content: flex-start;
+  text-align: left;
+  width: 100%;
+}
+/* Configure Settings: the toolkit's settings in groups, hints as tooltips, keys hidden. */
+.fvtk-settings .fvtk-settings-heading {
+  margin: 0.75rem 0 0.25rem;
+  padding-bottom: 0.15rem;
+  border-bottom: 1px solid var(--color-border-light-2, #555);
+  font-weight: bold;
+}
+.fvtk-settings .fvtk-settings-heading:first-child {
+  margin-top: 0;
+}
+.fvtk-settings .fvtk-tip-icon {
+  font-size: 0.8em;
+  opacity: 0.6;
+}
+.fvtk-settings label.fvtk-has-tip {
+  cursor: help;
+}
+.fvtk-settings .fvtk-reveal {
+  flex: 0 0 auto;
+  width: 2rem;
 }

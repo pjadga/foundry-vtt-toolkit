@@ -20,7 +20,7 @@ test("the group kit's Prompt 0 keeps ENTRY_RULES, with only the group wording ch
     .replace("relationship_to_player,", "relationship_to_players,")
     .replace("- character: a player character, only when I ask for one.", "- character: a player character (one entry each), only when I ask for one.");
   assert.ok(block.includes(group), "keep the group kit's Prompt 0 in step with the solo kit's");
-  assert.ok(block.includes("for a group of 3 to 5 player characters") && !/single-player|companion who/i.test(block));
+  assert.ok(block.includes("for a group of N players") && block.includes("a group game for 3 to 5 player characters") && !/single-player|companion who/i.test(block));
 });
 
 test("contextText groups by kind and keeps within limits", () => {

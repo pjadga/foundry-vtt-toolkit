@@ -76,6 +76,31 @@ export function campaignCheck(entries, { known = () => false, linkedElsewhere = 
       }
     }
     if (e.type === "playlist" && !field(e, "tracks")) add(e.name, "playlist has no tracks: lines");
+
+    // Tables, card stacks and encounters belong to scenes, like NPCs and soundtracks.
+    const SCENE_PARTS = { table: ["tables", "rollable table"], cards: ["card_stacks", "card stack"], encounter: ["encounter", "encounter"] };
+    if (story && e.type in SCENE_PARTS && !from(e).some(o => o.type === "scene") && !elsewhere.includes("scene")) {
+      const [key, label] = SCENE_PARTS[e.type];
+      add(e.name, `${label} is used by no scene (add it to a scene's ${key}: field)`);
+    }
+    if (e.type === "scene") {
+      for (const [type, [key, label]] of Object.entries(SCENE_PARTS)) {
+        for (const name of findLinks(field(e, key))) {
+          const target = entries.find(o => normalizeName(o.name) === normalizeName(name));
+          if (target && target.type !== type) add(e.name, `${key}: [[${name}]] is the ${target.type} entry, not ${/^[aeiou]/.test(label) ? "an" : "a"} ${label}`);
+        }
+      }
+    }
+    if (e.type === "table" && !field(e, "results")) add(e.name, "rollable table has no results: lines");
+    if (e.type === "cards" && !field(e, "cards")) add(e.name, "card stack has no cards: lines");
+    if (e.type === "encounter") {
+      const names = findLinks(field(e, "combatants"));
+      if (!names.length) add(e.name, "encounter has no combatants: [[NPC]] links");
+      for (const name of names) {
+        const target = entries.find(o => normalizeName(o.name) === normalizeName(name));
+        if (target && target.type !== "npc") add(e.name, `combatants: [[${name}]] is the ${target.type} entry, not an NPC`);
+      }
+    }
   }
   return issues;
 }

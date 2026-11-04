@@ -72,9 +72,10 @@ them change direction now: later stages are slower.
 
 ### 4. NotebookLM kit and refinement
 
-1. `node scripts/campaign-tools.mjs prompt0 <system> campaigns/<name>` writes `notebooklm/prompt-0.txt`
+1. `node scripts/campaign-tools.mjs prompt0 <system> campaigns/<name> [players]` writes `notebooklm/prompt-0.txt`
    from the prompt kit (it checks the 10,000-character limit). Pick the kit by group size: `cpred`
-   for one player, `cpred-group` for 3 to 5 (its Prompts 1 to 9 say "N": write the number in when
+   for one player, `cpred-group` for 3 to 5 (give the number of players: its Prompt 0 says "a group
+   of N players" and `prompt0` fills it in; Prompts 1 to 9 say "N" too, so write the number in when
    tailoring them). For another group size, edit the copy in `notebooklm/prompt-0.txt` (never the
    kit) and check it stays under the limit.
    Rulebook PDFs over about 9 MB can't go through the browser upload tool in one piece: split them by
@@ -101,7 +102,7 @@ or touch a notebook you didn't create. If any browser step fails twice, stop and
 
 Join the answers into `output/campaign.txt` (the later copy of an entry wins; `replaces:` fields stay),
 then run the check on it and fix gaps by asking NotebookLM with the fix prompt the check prints, until
-it's clean. Then tell the user to run **Build campaign** in Foundry's Journal sidebar with that file.
+it's clean. Then tell the user to run **Build campaign** in Foundry's Compendium sidebar with that file.
 Before building, compare the campaign's entry names with the world's existing journals, actors, items,
 scenes and playlists (the importer keeps an existing document and skips yours, which leaves your links
 pointing at the old one): name the overview "<Campaign> Overview" and prefix playlists with the
@@ -124,7 +125,8 @@ else).
   `gear`); spell them the same everywhere; no numbers in front. The importer links by exact name.
 - **Don't hand NotebookLM secrets of the repo.** Sources are the user's rulebooks and the bible only.
 - **Copyright.** Rulebooks stay in `campaigns/`. Don't quote long passages into the bible; summarise.
-- **Playtest and Campaign over** are Prompt 0 modes the user can run in the notebook themselves.
+- **Campaign over** is a Prompt 0 command the user can run in the notebook themselves. Prompt 0 has
+  no playtest mode any more.
 
 ## Adding a system
 

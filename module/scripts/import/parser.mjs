@@ -21,12 +21,15 @@ export function clean(raw) {
     .replace(/ ?(?<!\[)\[[\d,\s–-]*\d[\d,\s–-]*\](?!\])/g, ""); // citations like [1, 2-4]; keeps [[links]]
 }
 
+/** Fields that hold one numbered line per value, like a playlist's tracks or a table's results. */
+export const LIST_FIELDS = ["tracks", "results", "cards"];
+
 /**
  * A field line as [key, value], or null when the line isn't one. Tolerates the formatting NotebookLM
  * sometimes adds despite the instructions: bold keys (`**name:** X`, `**name**: X`), bullets
  * (`- name: X`) and a bold value. Tracks are often a bulleted list too, so a bulleted line without a
  * bold key only counts as a field when its key looks like one (lowercase_with_underscores), and
- * inside a tracks list only for the entry fields (type, name, ...).
+ * inside a list field (tracks, results, cards) only for the entry fields (type, name, ...).
  * @param {string} line
  * @param {string|null} [last] The field the previous lines belong to.
  * @returns {[string, string]|null}
@@ -40,7 +43,7 @@ export function fieldLine(line, last = null) {
   const m = unbolded.match(/^([A-Za-z][\w -]*?):[ \t]*(.*)$/);
   if (!m) return null;
   const key = m[1].trim().toLowerCase().replace(/[ -]+/g, "_");
-  if (bullet && !bold && (!/^[a-z][a-z0-9_]*$/.test(m[1].trim()) || (last === "tracks" && !META_KEYS.has(key)))) return null;
+  if (bullet && !bold && (!/^[a-z][a-z0-9_]*$/.test(m[1].trim()) || (LIST_FIELDS.includes(last) && !META_KEYS.has(key)))) return null;
   const value = m[2].trim().replace(/^(\*\*|__)(.*)\1$/, "$2").trim();
   return [key, value];
 }

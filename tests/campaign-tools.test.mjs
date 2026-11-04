@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import { extractPrompt0, report, KITS, PROMPT_LIMIT } from "../scripts/campaign-tools.mjs";
+import { extractPrompt0, fillPlayers, report, KITS, PROMPT_LIMIT } from "../scripts/campaign-tools.mjs";
 
 test("every system's Prompt 0 can be extracted and fits NotebookLM's limit", () => {
   for (const [system, file] of Object.entries(KITS)) {
@@ -42,4 +42,10 @@ test("report is clean for a bundle with no gaps", () => {
 
 test("report warns when there are no entries", () => {
   assert.equal(report("just prose").warnings.length, 1);
+});
+
+test("fillPlayers writes the group size into Prompt 0", () => {
+  assert.equal(fillPlayers("for a group of N players that", 3), "for a group of 3 players that");
+  assert.equal(fillPlayers("for a group of N players that"), "for a group of N players that");
+  assert.equal(fillPlayers("Nothing here", 4), "Nothing here");
 });

@@ -4,8 +4,9 @@
  */
 import { normalizeName, findLinks } from "../import/parser.mjs";
 
-export const DEFAULT_STYLE = "cinematic concept art, wide establishing shot, atmospheric lighting, rich colour, highly detailed, no text, no letters, no watermark";
-const MAX_PROMPT = 700;
+export const DEFAULT_STYLE = "cinematic concept art, wide establishing shot, atmospheric lighting, rich colour, highly detailed";
+// A paragraph of `visual:` plus the style; FLUX reads about 256 tokens, Pollinations takes it in the URL.
+const MAX_PROMPT = 1200;
 
 /** Markdown and [[links]] -> plain prose. */
 export function plainText(markdown) {
@@ -75,4 +76,53 @@ export function imagesNeeded(entries, has) {
     if (!loc || plainText(e.fields?.visual)) out.push({ entry: e, location: loc });
   }
   return out;
+}
+
+/**
+ * Which review card a pasted image goes to: the card the GM is on (focused or under the pointer),
+ * else the first ticked card that has no image yet and isn't generating, else any ticked card
+ * without an image.
+ * @param {{include: boolean, blob: any, status: string}[]} jobs
+ * @param {number} [preferred] Index of the card the GM is on, or -1.
+ * @returns {number} -1 when there is nowhere to put it.
+ */
+export function pasteTarget(jobs, preferred = -1) {
+  if (preferred >= 0 && preferred < jobs.length) return preferred;
+  const free = jobs.findIndex(j => j.include && !j.blob && j.status !== "generating");
+  return free >= 0 ? free : jobs.findIndex(j => j.include && !j.blob);
+}
+
+/**
+ * Pixel size to keep a pasted image at: as it is, or scaled down to `max` on its longer side.
+ * @returns {{width: number, height: number}}
+ */
+export function fitWithin(width, height, max = 2560) {
+  const scale = Math.min(1, max / Math.max(width, height));
+  return { width: Math.round(width * scale), height: Math.round(height * scale) };
+}
+
+/**
+ * The prompt as a request to a chat assistant such as ChatGPT, for Copy prompt: it names the scene
+ * and asks for a wide picture, since chat image tools draw squares unless told otherwise.
+ * @param {string} name The entry's name.
+ * @param {string} prompt The image prompt.
+ * @returns {string}
+ */
+export function chatImageRequest(name, prompt) {
+  const scene = String(name ?? "").trim();
+  const subject = scene ? `the scene "${scene}" in my tabletop role-playing campaign` : "a scene in my tabletop role-playing campaign";
+  return `Please create an image for ${subject}. Make it a wide landscape picture (16:9) that I can use as the scene's background.\n\n${String(prompt ?? "").trim()}`;
+}
+
+/**
+ * Zoom an image view around a point (the mouse pointer), keeping that point still.
+ * @param {{scale: number, x: number, y: number}} view Current scale and top-left offset.
+ * @param {number} px Pointer x.
+ * @param {number} py Pointer y.
+ * @param {boolean} zoomIn
+ * @returns {{scale: number, x: number, y: number}} scale stays between 0.1 and 8.
+ */
+export function zoomAt({ scale, x, y }, px, py, zoomIn) {
+  const next = Math.min(8, Math.max(0.1, scale * (zoomIn ? 1.2 : 1 / 1.2)));
+  return { scale: next, x: px - ((px - x) * next) / scale, y: py - ((py - y) * next) / scale };
 }

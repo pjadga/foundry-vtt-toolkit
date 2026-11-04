@@ -61,7 +61,7 @@ export function imagePlanRequest(request, style) {
     `Write the prompt for an image generator for this request: "${request}"`,
     "",
     'Reply with JSON only: {"prompt": "...", "subject": "...", "kind": "portrait" or "scene"}',
-    `- prompt: one paragraph of at most ${MAX_PROMPT - 200} characters describing only what is visible, the subject first. For a person or creature: their appearance, clothing, expression and pose, head and shoulders, against a simple background. For a place or a moment: a wide establishing shot with the setting, lighting, weather, colours and action. Use what the campaign says about them (appearance, visual, description) and stay consistent with it. No names, no text, signs with words, logos or watermarks.`,
+    `- prompt: one paragraph of at most ${MAX_PROMPT - 200} characters describing only what is visible, the subject first. For a person or creature: their appearance, clothing, expression and pose, head and shoulders, against a simple background. For a place or a moment: a wide establishing shot with the setting, lighting, weather, colours and action. Use what the campaign says about them (appearance, visual, description) and stay consistent with it. Describe people and places rather than naming them, since the image model does not know the names.`,
     `  End the prompt with this art style, leaving out framing words that don't fit a portrait: ${style}`,
     "- subject: the exact name of the campaign NPC, location or scene the image shows, spelled as in the campaign, or \"\" if it shows none of them.",
     '- kind: "portrait" for a person or creature, "scene" for a place or a moment.'

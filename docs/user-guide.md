@@ -61,10 +61,10 @@ All features are GM-only.
 2. Enable **Foundry VTT Toolkit** in your world (**Game Settings → Manage Modules**).
 3. Optional: add your keys in **Configure Settings → Foundry VTT Toolkit** (see [Settings](#settings)).
 
-Two buttons appear at the top of the Journal sidebar: **Build campaign** and **GM Assistant**. **Pack
-campaign** is in the Compendium sidebar, and **YouTube tracks** is in the Playlists sidebar.
-
-![Build campaign and GM Assistant buttons in the Journal sidebar](images/screenshots/sidebar-buttons.png)
+Every sidebar tab has a **Toolkit** button (GM only) that opens a menu of that tab's toolkit
+actions. **Build campaign** and **Pack campaign** are in the Compendium tab's menu, **GM Assistant**
+in the Journal tab's, and **YouTube tracks** in the Playlists tab's. Every tab's menu also has
+**Import X** and **Export X** for Foundry JSON files (see [Import and export JSON files](#import-and-export-json-files)).
 
 ## Quick start
 
@@ -88,17 +88,14 @@ which gives every character something to do in each scene, a side thread per cha
 companion, and an optional Prompt 9 that writes the player characters. Both write the same entries.
 Each has:
 
-- **Prompt 0, the chat configuration (about 9,600 or 9,900 of NotebookLM's 10,000 characters).** It makes
+- **Prompt 0, the chat configuration (about 7,900 or 8,100 of NotebookLM's 10,000 characters).** It makes
   NotebookLM answer in the toolkit's `##ENTRY` format, with every type's fields and the
-  consistency rules. It has three modes:
-  - **Build mode (the default):** everything you ask for comes back as entries ready to import.
-  - **Playtest mode:** say **start playtest** and NotebookLM runs the campaign as GM, in prose,
-    so you can check it's fun. **End playtest** gives a report of what dragged, balance problems
-    and gaps, each with a fix. **Apply the fixes** turns the ones you accept into entries.
-  - **Campaign over:** NotebookLM asks whether to **scrap** the campaign for a new one or
-    **continue** with a sequel.
+  consistency rules, so everything you ask for comes back as entries ready to import. Say
+  **campaign over** when you're done, and NotebookLM asks whether to **scrap** the campaign for a
+  new one or **continue** with a sequel.
 - **Prompts 1–8** build the campaign in order: concept, story threads, locations, NPCs, items,
-  playlists, scenes, and a consistency check.
+  playlists, scenes, and a consistency check. **Prompt 7b**, after the scenes, adds the combat
+  encounters, rollable tables and card stacks the scenes need.
 
 An entry looks like this:
 
@@ -119,7 +116,7 @@ token placement and soundtracks.
 
 ### Build campaign
 
-**Build campaign** (Journal sidebar) imports a NotebookLM bundle and sets everything up in one run.
+**Build campaign** (Compendium sidebar) imports a NotebookLM bundle and sets everything up in one run.
 
 ![The Build campaign dialog](images/screenshots/build-dialog.png)
 
@@ -216,21 +213,41 @@ name (`the-overlook.jpg`), so the next build finds them.
 - **Edit a prompt and click Regenerate** for anything you don't like.
 - **Untick a card** to leave that entry without a scene. Unticked images aren't generated.
 - **Upload and import** saves the kept images and carries on. **Import without images** skips them.
+- **Use your own image** on any card: click **Copy prompt**, which copies a request ready to paste
+  into ChatGPT (it names the scene and asks for a wide 16:9 picture, then gives the prompt), make the
+  picture there or in any other image tool, copy it (right-click, **Copy image**), then click the card and press **Ctrl+V** or
+  click **Paste**. You can also drop an image file on a card. Your image replaces whatever was
+  generated there, and big images are saved as WebP up to 2560 px wide.
+- **Click an image** to open it full size in its own window. Scroll to zoom in around the
+  pointer, drag to move around, and double-click to fit it to the window again.
+- **Pollinations** on a card draws that one image with Pollinations (free, about 45 seconds each)
+  instead of the chosen generator, or instead of pasting one.
+
+To make every image yourself, set **Scene image generator** to *Paste my own*: nothing is
+generated, and each card waits for an image. This is how to use a ChatGPT Plus subscription, which
+doesn't include the OpenAI API.
 
 The prompt is the entry's `visual:` line followed by the **Scene image style** setting. Choose the
-generator in the settings. Pollinations and Cloudflare are free; Gemini is paid:
+generator in the settings. Pollinations and Cloudflare are free; Gemini and OpenAI are paid:
 
 | Generator | Account | Quality | Speed |
 | --- | --- | --- | --- |
 | **Pollinations** (default) | None | Basic model, about 1015×580, small watermark | One image every 45 seconds; the window shows the time left |
 | **Cloudflare Workers AI** | Free Cloudflare account and a Worker you deploy once ([setup](notebooklm/format.md#generated-scene-images)) | FLUX.1 schnell, no watermark, square | A few seconds each |
 | **Gemini** | Your Gemini API key, **with billing** turned on | Google's *Nano Banana* models, 16:9, no visible watermark | A few seconds each; a few cents an image |
+| **OpenAI** | Your OpenAI API key, with credit on the account | OpenAI's *GPT Image* models, 1536×864, no visible watermark | Up to a minute each; billed per image. A failed request is drawn by Pollinations instead |
 
 Gemini image models have no free tier. Turn on billing for the key's project in Google AI Studio
 (**Billing**). Each image costs about $0.03 with the default model, and regenerations count too.
 The review window and the build preview remind you of this. A key without billing gets a message
 saying so instead of an image; switch to Pollinations or Cloudflare to carry on for free. The
 **Gemini image model** setting chooses the model.
+
+OpenAI keeps Pollinations as its backup: if a request fails (no credit, a refused prompt, a
+missing key or an outage), Pollinations draws that image and the card says why. OpenAI may ask you
+to verify your organization (platform.openai.com, **Settings → Organization**) before its first
+image. **OpenAI image model** and **OpenAI image quality** (low, medium or high; higher costs more)
+choose the model and quality.
 
 With **Keep generated images without review** on, the window only shows progress and the build
 carries on by itself.
@@ -402,6 +419,22 @@ players read the result.
 Set **Combat narration** to *Show me first* to read each narration before players do. Suppressive
 fire, and attacks in other game systems, get attempt narration only, with no resolution.
 
+### Import and export JSON files
+
+Every sidebar tab (Actors, Items, Scenes, Playlists, Card Stacks, Rollable Tables, Journal and
+Combat Encounters) has **Import X** and **Export X**, named after the tab, in its **Toolkit** menu.
+
+- **Export X** saves everything on that tab, with its folders, as one JSON file
+  (`fvtk-actors-<world>-<date>.json`) in your browser's downloads.
+- **Import X** takes one or more JSON files: the toolkit's export, or Foundry's own **Export Data**
+  file for a single document. Folders are recreated, and documents keep their ids when the world
+  doesn't already use them, so links between them (a scene's tokens, a combat's scene, journal links)
+  still work. A file holding another kind of document is skipped with a warning.
+- On the **Compendium** tab, **Import Compendium** and **Export Compendium** ask which compendium to
+  use. Import adds to an unlocked compendium; export saves any compendium.
+
+Permissions and creation dates from the old world aren't imported.
+
 ### Pack campaign, and starting over
 
 **Pack campaign** (Compendium sidebar) packs the whole campaign into one Foundry **Adventure** in
@@ -471,6 +504,11 @@ Foundry and paste the file's contents into it.
 These are in **Configure Settings → Foundry VTT Toolkit**. All of them are stored only in your
 browser (client settings), and none reach players.
 
+The page groups them under headings (API keys and accounts, Gemini and the GM Assistant, Scene
+images, YouTube, Combat, Other). Hover over a setting's name, or its ⓘ, to see what it does. API
+keys and the Cloudflare token show as dots; click the eye next to one to show it, and again to hide
+it.
+
 | Setting | Default | What it does |
 | --- | --- | --- |
 | YouTube Data API key (GM) | none | Searches and auto-picks YouTube tracks |
@@ -481,7 +519,10 @@ browser (client settings), and none reach players.
 | Resolve attacks automatically (Cyberpunk RED) | on | Hit or miss from range DV or Evasion, with a Combat card |
 | Apply damage on a hit (Cyberpunk RED) | To NPCs only | Apply confirmed hits with the system's Apply Damage: to NPCs, to everyone, or off |
 | Gemini model | `gemini-flash-lite-latest` | The model for music search suggestions |
-| Scene image generator (GM) | Pollinations | Pollinations, Cloudflare Workers AI, Gemini (needs billing), or off. The GM Assistant draws with it too |
+| Scene image generator (GM) | Pollinations | Pollinations, Cloudflare Workers AI, Gemini (needs billing), OpenAI (Pollinations as backup), Paste my own, or off. The GM Assistant draws with it too (with Gemini when it's Paste my own or off) |
+| OpenAI API key (GM) | none | Your OpenAI key, for the OpenAI generator. Stored only in this browser |
+| OpenAI image model | `gpt-image-2.5-flare` | The GPT Image model. `gpt-image-2.5-sunburst` draws more carefully; older models such as `gpt-image-1.5` use their fixed sizes |
+| OpenAI image quality | Medium | Low, medium or high. Higher takes longer and costs more |
 | Gemini image model | `gemini-3.1-flash-lite-image` | The model for Gemini images (Nano Banana 2 Lite, the fastest and cheapest). `gemini-nano-banana-2.1` and `gemini-3-pro-image` draw more carefully and cost more |
 | Scene image style | cinematic concept art… | Added to every image prompt |
 | Keep generated images without review | off | Uploads every generated image without asking |
@@ -494,7 +535,8 @@ The image folder, sources folder and *search the sources* choice are remembered 
 
 | Problem | Cause and fix |
 | --- | --- |
-| No **Build campaign** or **GM Assistant** button | These are GM-only, in the Journal sidebar. Check the module is enabled in this world. |
+| No **Build campaign** or **GM Assistant** | They're GM-only, in the **Toolkit** menus: Build campaign on the Compendium tab, GM Assistant on the Journal tab. Check the module is enabled in this world. |
+| "… isn't an Actor" (or another kind) when importing JSON | That file holds a different kind of document. Import it on its own tab: an exported item goes in **Import Items**, and so on. |
 | "0 entries found" or "the line breaks are missing" | Copy NotebookLM's answer from inside its code block, or export the note as a file and choose it. |
 | A field is ignored | Use the field names from the prompt kit. Field lines go before `##BODY`, one `key: value` per line. |
 | A link shows as bold text instead of a link | Nothing has that exact name yet. A later build that adds it links it. Otherwise, fix the spelling so both entries match. |
@@ -504,6 +546,8 @@ The image folder, sources folder and *search the sources* choice are remembered 
 | An NPC is missing some gear | The gear's name doesn't match the system's compendium. The NPC's GM notes list "gear not in the compendium". Use the rulebook name, or add the item as an `item` entry. |
 | No YouTube results, or "quota" errors | Check the YouTube key (in settings, YouTube Data API v3 enabled). The free quota is 10,000 units a day and resets daily. Auto-pick stops cleanly when it runs out. |
 | Music doesn't play | Browsers only play sound after you click the page, so click anywhere in Foundry. If you closed **Now playing**, music stays off on your screen until the next track. For "the owner may not allow embedding", pick another track. |
+| "The browser did not let the toolkit read the clipboard" | **Paste** needs clipboard permission. Click the card and press **Ctrl+V** instead, or allow clipboard access for the Foundry site. |
+| "OpenAI couldn't draw this …, so Pollinations did" | The OpenAI request failed and Pollinations drew the image. The message says why: a wrong key, no credit (add some under **Billing** at platform.openai.com), an organization to verify, or a refused prompt (reword it and click **Regenerate**). |
 | "Gemini image models need billing" | Image models have no free tier. Turn on billing for the key's project in Google AI Studio, or choose Pollinations or Cloudflare as the scene image generator. |
 | "Gemini didn't answer" or a slow assistant | Keep the model on `gemini-flash-lite-latest`. Busy models are skipped for 10 minutes. The free tier allows only a few requests a minute. |
 | "Add your Gemini API key" | Add a key from [aistudio.google.com](https://aistudio.google.com) in the settings. |
@@ -599,7 +643,7 @@ starting `foundry-vtt-toolkit |`.
 
 | Feature | Sent to | What |
 | --- | --- | --- |
-| Scene images | Pollinations, your Cloudflare Worker, or Google (Gemini API) | The image prompt |
+| Scene images | Pollinations, your Cloudflare Worker, Google (Gemini API), or OpenAI (and Pollinations when an OpenAI request fails) | The image prompt |
 | YouTube search | Google (YouTube Data API) | Search words |
 | Music suggestions | Google (Gemini API) | Track descriptions and playlist moods |
 | GM Assistant | Google (Gemini API) | The campaign, GM secrets included, and your questions, with each question. A picture's prompt then goes to the scene image generator |

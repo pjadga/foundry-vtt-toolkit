@@ -113,7 +113,8 @@ export async function ask(question) {
  */
 function drawSettings() {
   const settings = imageSettings(importFolder());
-  if (settings) return settings;
+  // Pasting is for the review window; the assistant draws with Gemini then too.
+  if (settings && settings.provider !== "manual") return settings;
   return { provider: "gemini", folder: importFolder(), key: game.settings.get(MODULE_ID, "geminiApiKey").trim(), model: game.settings.get(MODULE_ID, "geminiImageModel").trim() || DEFAULT_GEMINI_IMAGE_MODEL };
 }
 
@@ -154,14 +155,19 @@ export async function draw(request) {
     const plan = parseImagePlan(answer.text, guess?.kind);
     const settings = drawSettings();
     let blob;
+    let drawnBy = settings.provider === "gemini" ? settings.model : settings.provider === "openai" ? settings.openaiModel : settings.provider;
+    const onFallback = reason => {
+      drawnBy = "pollinations (backup)";
+      ui.notifications.warn(game.i18n.format("FVTK.Images.Fallback", { message: reason }));
+    };
     try {
-      blob = await generateImage(plan.prompt, { ...settings, aspectRatio: aspectFor(plan.kind) });
+      blob = await generateImage(plan.prompt, { ...settings, aspectRatio: aspectFor(plan.kind), onFallback });
     } catch (err) {
       throw new Error(t("DrawFailed", { provider: settings.provider, message: err.message }));
     }
     const image = { url: URL.createObjectURL(blob), blob, prompt: plan.prompt, kind: plan.kind, subject: plan.subject, provider: settings.provider, path: null };
     const targets = imageTargets({ subject: plan.subject, request, previous, kind: plan.kind }, targetDocuments());
-    const message = { role: "model", text: `(Image of ${plan.subject || "the request"}: ${plan.prompt})`, image, targets, model: `${answer.model} + ${settings.provider === "gemini" ? settings.model : settings.provider}`, html: "" };
+    const message = { role: "model", text: `(Image of ${plan.subject || "the request"}: ${plan.prompt})`, image, targets, model: `${answer.model} + ${drawnBy}`, html: "" };
     conversation.push(message);
     return message;
   } catch (err) {

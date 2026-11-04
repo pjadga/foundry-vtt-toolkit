@@ -25,7 +25,8 @@ Read these from the rulebook and note the page for each. Skip what the campaign 
 
 ## Entry types and fields
 
-Use Prompt 0's FIELDS BY TYPE exactly (journal, thread, location, npc, item, playlist, scene), with its
+Use Prompt 0's FIELDS BY TYPE exactly (journal, thread, location, npc, item, playlist, scene, table,
+cards, encounter), with its
 format and consistency rules. The points a bible most often gets wrong:
 
 - A `location` needs `visual:`; a `scene` needs `session`, `location`, `npcs_present`, `soundtrack` and
@@ -37,6 +38,9 @@ format and consistency rules. The points a bible most often gets wrong:
   cyberware `effect` and `humanity_loss`. Variants carry the core item's name.
 - A campaign is for one player character: give them a likable companion and personal stakes.
 - Three `playlist` entries (Street, Tension, Finale) with `tracks:` as genre words, never song names.
+- An `encounter` for each scene with a fight (`combatants:` as `[[NPC]] x3`), and `table` / `cards`
+  entries where a scene needs random results or a deck; the scene names them in `encounter:`,
+  `tables:` and `card_stacks:`.
 
 ## Query list (stage 4)
 
@@ -51,6 +55,7 @@ extend** the bible's entries, keeping names exactly and using `replaces:` on any
 5. Items
 6. Playlists
 7. Scenes
+7b. Encounters, rollable tables and card stacks
 8. Consistency check
 
 Add queries where the rulebook matters: for example "which weapons and cyberware in my sources fit this

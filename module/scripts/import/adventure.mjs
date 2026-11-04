@@ -5,7 +5,7 @@ const escape = s => foundry.utils.escapeHTML(String(s ?? ""));
 const t = (key, data) => (data ? game.i18n.format(`FVTK.Adventure.${key}`, data) : game.i18n.localize(`FVTK.Adventure.${key}`));
 
 // Adventure fields, and the world collection each is packed from.
-const CONTENTS = { scenes: "scenes", actors: "actors", items: "items", journal: "journal", playlists: "playlists" };
+const CONTENTS = { scenes: "scenes", actors: "actors", items: "items", journal: "journal", playlists: "playlists", tables: "tables", cards: "cards", combats: "combats" };
 
 /**
  * A NotebookLM folder: the root folder of a document type, or anything inside one. The Compendium
@@ -18,12 +18,12 @@ function inCampaignFolder(folder) {
 
 /**
  * Everything a NotebookLM build made, or that sits in its folders: scenes, actors, items, journals,
- * playlists and the folders themselves.
+ * playlists, rollable tables, card stacks, encounters (combats, which have no folder) and the folders.
  */
 export function campaignDocuments() {
   const ours = d => d.flags[MODULE_ID]?.source === "notebooklm" || inCampaignFolder(d.folder);
   const out = { folders: game.folders.filter(inCampaignFolder) };
-  for (const [field, collection] of Object.entries(CONTENTS)) out[field] = game[collection].filter(ours);
+  for (const [field, collection] of Object.entries(CONTENTS)) out[field] = game[collection].filter(d => ours(d) || (field === "combats" && d.flags[MODULE_ID]?.encounter));
   return out;
 }
 
@@ -74,13 +74,15 @@ export function holdsAll(adventure, docs) {
 }
 
 /**
- * Remove the campaign from the world, e.g. after packing it, to start a new one: its scenes,
- * actors, items, journals, playlists (stopped first) and NotebookLM folders. Image files stay.
+ * Remove the campaign from the world, e.g. after packing it, to start a new one: its encounters,
+ * scenes, actors, items, journals, playlists (stopped first), tables, card stacks and NotebookLM
+ * folders. Image files stay.
  * @param {ReturnType<typeof campaignDocuments>} [docs]
  */
 export async function clearCampaign(docs = campaignDocuments()) {
   for (const playlist of docs.playlists) if (playlist.playing) await playlist.stopAll();
-  const classes = { scenes: Scene, actors: Actor, items: Item, journal: JournalEntry, playlists: Playlist };
+  // Combats first: they point at the scenes and tokens.
+  const classes = { combats: Combat, scenes: Scene, actors: Actor, items: Item, journal: JournalEntry, playlists: Playlist, tables: RollTable, cards: Cards };
   for (const [field, cls] of Object.entries(classes)) {
     const ids = docs[field].map(d => d.id).filter(id => game[CONTENTS[field]].has(id));
     if (ids.length) await cls.deleteDocuments(ids);

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { errorMessage, retryAfter, geminiImageError, geminiImagePart, sizeFor, SIZE, PROVIDERS } from "../module/scripts/images/generate.mjs";
+import { errorMessage, retryAfter, geminiImageError, geminiImagePart, sizeFor, SIZE, PROVIDERS, openaiImageSize, openaiImageError } from "../module/scripts/images/generate.mjs";
 
 const FREE_LIMIT = '{"status":402,"success":false,"error":{"code":"FREE_LIMIT","message":"Free limit reached: 1 image every 45 seconds per IP"}}';
 
@@ -63,4 +63,33 @@ test("sizeFor keeps scene images at SIZE and fits other shapes to the same area"
   assert.deepEqual(sizeFor("1:1"), { width: 1008, height: 1008 });
   assert.deepEqual(sizeFor("nonsense"), SIZE);
   assert.ok(PROVIDERS.includes("gemini"));
+});
+
+test("openaiImageSize uses free sizes on 2.5 models and the fixed three on older ones", () => {
+  assert.equal(openaiImageSize("16:9"), "1536x864");
+  assert.equal(openaiImageSize("1:1"), "1152x1152");
+  assert.equal(openaiImageSize("16:9", "gpt-image-1.5"), "1536x1024");
+  assert.equal(openaiImageSize("1:1", "gpt-image-1-mini"), "1024x1024");
+  assert.equal(openaiImageSize("2:3", "gpt-image-1"), "1024x1536");
+  for (const ratio of ["16:9", "1:1", "2:3", "4:3", "nonsense"]) {
+    const [w, h] = openaiImageSize(ratio).split("x").map(Number);
+    assert.ok(w % 16 === 0 && h % 16 === 0, ratio);
+    assert.ok(w * h >= 655_360 && Math.max(w, h) <= 3840, ratio);
+  }
+});
+
+test("openaiImageError explains keys, credit, verification and refusals, and retries only what can pass", () => {
+  const err = (status, error) => openaiImageError(status, { error }, "gpt-image-2.5-flare");
+  assert.match(err(401, { message: "Incorrect API key provided: sk-...", code: "invalid_api_key" }).message, /refused the API key/);
+  const quota = err(429, { message: "You exceeded your current quota", code: "insufficient_quota" });
+  assert.equal(quota.retry, false);
+  assert.match(quota.message, /no credit/);
+  assert.match(err(403, { message: "Your organization must be verified to use the model" }).message, /verified/);
+  const limit = err(429, { message: "Rate limit reached", code: "rate_limit_exceeded" });
+  assert.equal(limit.retry, true);
+  assert.equal(err(500, { message: "oops" }).retry, true);
+  assert.match(err(400, { message: "Your request was rejected", code: "moderation_blocked" }).message, /declined/);
+  assert.match(err(404, { message: "nope", code: "model_not_found" }).message, /no image model "gpt-image-2.5-flare"/);
+  assert.equal(err(400, { message: "Invalid size\nmore" }).message, "400: Invalid size");
+  assert.ok(PROVIDERS.includes("openai"));
 });

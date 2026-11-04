@@ -1,6 +1,6 @@
 import { parseBundle, resolveLinks, toMarkdown, normalizeName, findImage, findLinks, progressionKey, stripNumber, numberInOrder } from "./parser.mjs";
 import { imagePrompt, imagesNeeded, DEFAULT_STYLE } from "../images/prompts.mjs";
-import { PROVIDERS, DEFAULT_GEMINI_IMAGE_MODEL } from "../images/generate.mjs";
+import { PROVIDERS, DEFAULT_GEMINI_IMAGE_MODEL, DEFAULT_OPENAI_IMAGE_MODEL } from "../images/generate.mjs";
 import { generateSceneImages } from "../images/review.mjs";
 import { autoPickTracks, playlistsToFill } from "../youtube/tracks.mjs";
 import { namesIn, tokenPositions, notePosition } from "./setup.mjs";
@@ -8,6 +8,7 @@ import { campaignCheck, fixPrompt } from "./check.mjs";
 import { campaignPacks, campaignPackCount, clearCampaignPacks, copyDocument, ensureFolder } from "./campaign-packs.mjs";
 import { existingCampaign, archiveName } from "./campaign.mjs";
 import { campaignDocuments, clearCampaign, packAdventure, holdsAll } from "./adventure.mjs";
+import { setupEncounter } from "./kinds-import.mjs";
 
 const MODULE_ID = "foundry-vtt-toolkit";
 const ROOT_FOLDER = "NotebookLM";
@@ -17,7 +18,9 @@ const JOURNAL_TYPES = {
   journal: "Campaign",
   location: "Locations",
   thread: "Story Threads",
-  scene: "Scenes"
+  scene: "Scenes",
+  // An encounter is a journal (its tactics); scene setup makes the Combat from its combatants.
+  encounter: "Encounters"
 };
 
 // Journal types that also become a Foundry scene when they have an image, and the scene subfolder.
@@ -57,7 +60,7 @@ const isSupported = type => !!documentNameFor(type);
  */
 export function worldLookup() {
   const index = new Map();
-  const docs = [...game.actors, ...game.items, ...game.journal, ...game.playlists];
+  const docs = [...game.actors, ...game.items, ...game.journal, ...game.playlists, ...game.tables, ...game.cards];
   const isImport = d => d.flags[MODULE_ID]?.source === "notebooklm";
   for (const d of [...docs.filter(d => !isImport(d)), ...docs.filter(isImport)]) index.set(normalizeName(d.name), d.uuid);
   return name => index.get(normalizeName(name)) ?? null;
@@ -144,6 +147,7 @@ export async function importEntries(entries, { overwrite = false, images = [] } 
     built.push({ documentName, id, name: entry.name });
     const baseFlags = { source: "notebooklm", type: entry.type, tags: entry.tags };
     if (entry.type === "scene") baseFlags.order = progressionKey(entry);
+    if (entry.type === "encounter") Object.assign(baseFlags, { baseName: entry.name, combatants: entry.fields.combatants ?? "" });
 
     if (documentName === "JournalEntry") {
       const raw = toMarkdown(entry);
@@ -412,6 +416,7 @@ async function setupScene(scene, entry, journal) {
   if (playlist && scene._source.playlist !== playlist.id) Object.assign(update, { playlist: playlist.id, playlistSound: null });
   else if (soundtrack.length && !playlist) missing.push(...soundtrack);
   await scene.update(update);
+  if (entry.type === "scene") missing.push(...(await setupEncounter(scene, entry, named)));
   return missing;
 }
 
@@ -607,8 +612,8 @@ function previewHTML({ entries, warnings }, images = [], jobs = [], issues = nul
   });
   const warn = warnings.length ? `<p><strong>Warnings</strong></p><ul>${warnings.map(w => `<li>${escape(w)}</li>`).join("")}</ul>` : "";
   const provider = game.settings.get(MODULE_ID, "imageProvider");
-  const cost = provider === "gemini" ? ` ${game.i18n.localize("FVTK.Images.GeminiCost")}` : "";
-  const generate = jobs.length ? `<p>${escape(game.i18n.format("FVTK.Images.WillGenerate", { count: jobs.length, provider }) + cost)}</p>` : "";
+  const cost = provider === "gemini" ? ` ${game.i18n.localize("FVTK.Images.GeminiCost")}` : provider === "openai" ? ` ${game.i18n.localize("FVTK.Images.OpenAICost")}` : "";
+  const generate = jobs.length ? `<p>${escape(game.i18n.format(provider === "manual" ? "FVTK.Images.WillPaste" : "FVTK.Images.WillGenerate", { count: jobs.length, provider }) + cost)}</p>` : "";
   const found = `${entries.length} entr${entries.length === 1 ? "y" : "ies"} found.`;
   const summary = counts.replaced || counts.kept ? ` ${game.i18n.format("FVTK.Import.Counts", counts)}` : "";
   const clean = cleaning ? `<p class="fvtk-clean-note"><i class="fa-solid fa-broom"></i> ${escape(game.i18n.localize("FVTK.Import.Existing.WillClean"))}</p>` : "";
@@ -804,7 +809,8 @@ async function autoPick() {
 /** The image generation settings, or null when generation is off. */
 export function imageSettings(folder) {
   const provider = game.settings.get(MODULE_ID, "imageProvider");
-  if (!PROVIDERS.includes(provider)) return null;
+  // "manual": the review window waits for the GM to paste each image instead of generating.
+  if (!PROVIDERS.includes(provider) && provider !== "manual") return null;
   return {
     provider,
     folder,
@@ -812,6 +818,9 @@ export function imageSettings(folder) {
     token: game.settings.get(MODULE_ID, "cloudflareWorkerToken").trim(),
     key: provider === "gemini" ? game.settings.get(MODULE_ID, "geminiApiKey").trim() : "",
     model: game.settings.get(MODULE_ID, "geminiImageModel").trim() || DEFAULT_GEMINI_IMAGE_MODEL,
+    openaiKey: provider === "openai" ? game.settings.get(MODULE_ID, "openaiApiKey").trim() : "",
+    openaiModel: game.settings.get(MODULE_ID, "openaiImageModel").trim() || DEFAULT_OPENAI_IMAGE_MODEL,
+    openaiQuality: game.settings.get(MODULE_ID, "openaiImageQuality"),
     autoApprove: game.settings.get(MODULE_ID, "imageAutoApprove")
   };
 }

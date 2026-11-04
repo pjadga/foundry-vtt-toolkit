@@ -4,6 +4,34 @@ The module's version is set from the git tag when a release is published.
 
 ## Unreleased
 
+### Building a campaign from NotebookLM (new kinds)
+
+- **Rollable tables, card stacks and combat encounters:** new entry types `table`, `cards` and
+  `encounter`. A scene names them in `encounter:`, `tables:` and `card_stacks:`; **Build campaign**
+  makes rollable tables and card stacks (in the new *NotebookLM Rollable Tables* and *NotebookLM
+  Card Stacks* compendiums too), an encounter journal, and a combat encounter on the scene holding
+  hidden tokens for its combatants. **Pack campaign** and cleaning a campaign include them.
+  Prompt 0 (both kits) has the new types, and **Prompt 7b** asks NotebookLM for what the scenes need.
+- **Prompt 0 has no playtest mode** any more: it only builds the campaign (and handles **campaign
+  over**). It's about 2,000 characters shorter.
+
+### Settings
+
+- The toolkit's settings are grouped under headings, each setting's description is a tooltip on its
+  name instead of a paragraph, and the API keys (Gemini, YouTube, OpenAI) and the Cloudflare token
+  show as dots, with an eye button to show them.
+
+### Sidebar
+
+- **Toolkit** button on every sidebar tab, opening a menu of that tab's toolkit actions.
+- **Import X and Export X** on every sidebar tab (Actors, Items, Scenes, Playlists, Card Stacks,
+  Rollable Tables, Journal, Combat Encounters): export a tab's documents and folders as one JSON
+  file, and import the toolkit's files or Foundry's own single-document exports. On the Compendium
+  tab, **Import Compendium** and **Export Compendium** work on a compendium you choose.
+- **Build campaign** moved from the Journal sidebar to the Compendium sidebar's Toolkit menu, next
+  to **Pack campaign**. **GM Assistant** (Journal) and **YouTube tracks** (Playlists) are in their
+  tabs' Toolkit menus.
+
 ### Building a campaign from NotebookLM
 
 - **Build campaign builds into compendiums first:** journals, actors, items, scenes and playlists go
@@ -14,6 +42,27 @@ The module's version is set from the git tag when a release is published.
 - **A campaign is already imported:** Build campaign asks whether to *Clean the world first* (after
   archiving the old campaign in *NotebookLM Campaigns*, ticked by default) or *Keep it and add to it*.
   Nothing is removed until the preview is confirmed, and nothing at all if the archive fails.
+
+### Scene images
+
+- **OpenAI GPT Image generator:** choose *OpenAI GPT Image* as the **Scene image generator** and set
+  **OpenAI API key**, **OpenAI image model** (`gpt-image-2.5-flare` by default) and **OpenAI image
+  quality**. Images are 16:9 WebP. When an OpenAI request fails, Pollinations draws that image
+  instead and the review card (or a notification in the GM Assistant) says why.
+- **Paste your own images:** every card in the *Scene images* window has **Copy prompt** and
+  **Paste**, and takes an image pasted with Ctrl+V or dropped on it, so pictures made in ChatGPT or
+  any other tool are named and uploaded for you. **Copy prompt** copies a request ready for
+  ChatGPT (the scene's name, a wide 16:9 picture, then the prompt). The *Paste my own* generator
+  makes nothing itself and waits for your images. A card's **Pollinations** button draws that one
+  image with Pollinations instead, for free.
+- Click an image in the *Scene images* window to open it full size in its own window, where the
+  mouse wheel zooms and dragging pans, to check the details before uploading.
+- NotebookLM's Prompt 0 (both kits) asks for a `visual:` of at least a paragraph on every location
+  and scene instead of one sentence (adding mood, feeling, and scents or tastes where they matter), and image prompts may now run to 1,200 characters.
+  Prompt 0, the location and scene prompts and the GM Assistant's image prompt no longer tell the
+  writer to leave out text, signs, logos or named people. The group kit's Prompt 0 says "a group of N
+  players", and `campaign-tools.mjs prompt0 cpred-group <dir> <players>` fills in the number.
+- The default **Scene image style** no longer ends with "no text, no letters, no watermark".
 
 ### Designing a campaign
 

@@ -2,7 +2,7 @@
 
 *Written on 23 October 2026 by the Claude session that built most of this project, for the session
 that continues it on the user's home machine (or anywhere else). Read this first, then
-[CLAUDE.md](../CLAUDE.md) and [handoff.md](handoff.md). Server-specific details (host, SSH key, paths,
+[CLAUDE.md](../CLAUDE.md). Server-specific details (host, SSH key, paths,
 Foundry login) are deliberately not in this file, because this repository is public. They're in
 `docs/handoff.local.md`, a git-ignored file the user copies onto each machine.*
 
@@ -209,7 +209,6 @@ foundry-vtt-toolkit/
 ├─ docs/
 │  ├─ user-guide.md          the user-facing manual, with 13 screenshots (features, settings,
 │  │                         troubleshooting, known issues, privacy, API)
-│  ├─ handoff.md             point-in-time state and open items (keep current)
 │  ├─ handoff.local.md       NOT COMMITTED: server specifics, copied by hand
 │  ├─ project-brief.md       this file
 │  ├─ images/
@@ -984,7 +983,7 @@ Gemini image work. Deploy current `main` before testing images.
 
 1. **Get current:** `git pull` in the clone. Make sure `docs/handoff.local.md` is there; the user
    has a copy.
-2. **Read** `CLAUDE.md`, `docs/handoff.md` and this brief. Run `npm test`, and expect 89 to pass.
+2. **Read** `CLAUDE.md` and this brief. Run `npm test`, and expect 89 to pass.
 3. **Set up deploying:**
    - Help the user make an SSH key for this machine (`ssh-keygen -t ed25519`), and add its public
      half to the server's `~/.ssh/authorized_keys`. The work machine has access already, or the
@@ -996,7 +995,7 @@ Gemini image work. Deploy current `main` before testing images.
    browser.
 5. **Ask the user what's next.** Start with open item 1 (their combat test) or 2 (deploying
    `main`).
-6. **As you go:** keep `docs/handoff.md` current, commit and push when the user asks, and follow
+6. **As you go:** commit and push when the user asks, and follow
    the safety rules in §2.
 
 ## 14. Recipes for common changes
@@ -1095,7 +1094,6 @@ served file with `fetch(url, { cache: "no-store" })`.
   service).
 - **The release notes** (`CHANGELOG.md`), under the unreleased version.
 - **`CLAUDE.md`** for architecture, gotchas and conventions a future session needs.
-- **`docs/handoff.md`** for what's open and what's deployed.
 
 Check the links resolve, and that nothing server-specific went in; the repository is public.
 

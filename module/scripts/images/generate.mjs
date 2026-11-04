@@ -9,6 +9,9 @@
  * - gemini: Google's Gemini image models ("Nano Banana") with the GM's Gemini API key. Best quality,
  *   any aspect ratio, no visible watermark (SynthID only), but image models have no free tier: the
  *   key's project needs billing, at a few cents an image.
+ * - openai: OpenAI's GPT Image models with the GM's OpenAI API key (billed per image; the
+ *   organization may need verifying first). If a request fails, the image is made with Pollinations
+ *   instead, so a build never stops for want of a picture.
  */
 
 const POLLINATIONS = "https://image.pollinations.ai/prompt/";
@@ -21,6 +24,10 @@ export const SIZE = { width: 1344, height: 768 };
 const GEMINI_API = "https://generativelanguage.googleapis.com/v1beta/models/";
 // Nano Banana 2 Lite: the fastest and cheapest image model (October 2026, about $0.03 an image).
 export const DEFAULT_GEMINI_IMAGE_MODEL = "gemini-3.1-flash-lite-image";
+const OPENAI_API = "https://api.openai.com/v1/images/generations";
+// Fast, everyday GPT Image model (November 2026).
+export const DEFAULT_OPENAI_IMAGE_MODEL = "gpt-image-2.5-flare";
+export const OPENAI_QUALITIES = ["low", "medium", "high"];
 // A rate limit that asks for a longer wait than this is reported instead of waited out.
 const MAX_GEMINI_WAIT_S = 60;
 
@@ -104,6 +111,45 @@ export function geminiImagePart(data) {
   throw new Error(`Gemini returned no image (${reason})${text ? `: ${text}` : ""}`);
 }
 
+/**
+ * The size to ask a GPT Image model for. The 2.5 models take any multiple of 16 (between 655,360 and
+ * about 8.3 million pixels); older ones only 1024x1024, 1536x1024 and 1024x1536, so they get the
+ * nearest of those.
+ * @param {string} aspectRatio "16:9", "1:1"...
+ * @param {string} model
+ * @returns {string} "WIDTHxHEIGHT"
+ */
+export function openaiImageSize(aspectRatio = "16:9", model = DEFAULT_OPENAI_IMAGE_MODEL) {
+  const [w, h] = String(aspectRatio).split(":").map(Number);
+  const ratio = w > 0 && h > 0 ? w / h : 16 / 9;
+  if (/^(gpt-image-1|dall-e)/.test(model)) return ratio > 1.2 ? "1536x1024" : ratio < 1 / 1.2 ? "1024x1536" : "1024x1024";
+  // About 1.33 million pixels: 1536x864 for 16:9, 1152x1152 for a square.
+  const height = Math.round(Math.sqrt(1536 * 864 / ratio) / 16) * 16;
+  return `${Math.round((height * ratio) / 16) * 16}x${height}`;
+}
+
+/**
+ * A readable error for a failed OpenAI image request, and whether it is worth retrying.
+ * @param {number} status
+ * @param {object} data The parsed response body.
+ * @param {string} model
+ * @returns {{message: string, retry: boolean, seconds: number}}
+ */
+export function openaiImageError(status, data, model) {
+  const error = data?.error ?? {};
+  const message = String(error.message ?? "").split("\n")[0].trim() || `HTTP ${status}`;
+  const code = String(error.code ?? error.type ?? "");
+  const out = { message: `${status}: ${message}`, retry: false, seconds: 0 };
+  if (status === 401) return { ...out, message: "OpenAI refused the API key: check the OpenAI API key in the toolkit settings" };
+  if (/insufficient_quota|billing/i.test(code + message)) return { ...out, message: "The OpenAI account has no credit left: add some under Billing at platform.openai.com" };
+  if (status === 403 && /verif/i.test(message)) return { ...out, message: "OpenAI wants the organization verified before it makes images: verify it under Settings > Organization at platform.openai.com" };
+  if (status === 429) return { ...out, retry: true, seconds: 20, message: `OpenAI's rate limit for ${model} was reached, try again later (${message})` };
+  if (status >= 500) return { ...out, retry: true, seconds: 5, message: `OpenAI is busy or failed (${status}): ${message}` };
+  if (/moderation|content_policy|safety/i.test(code)) return { ...out, message: "OpenAI declined to draw this (its safety system): try rewording the prompt" };
+  if (status === 404 || /model_not_found/.test(code)) return { ...out, message: `OpenAI has no image model "${model}" for this key: check the OpenAI image model in the toolkit settings` };
+  return out;
+}
+
 async function fetchImage(url, options = {}) {
   for (let attempt = 1; ; attempt++) {
     const controller = new AbortController();
@@ -185,19 +231,73 @@ async function gemini(prompt, { key, model, aspectRatio }) {
   }
 }
 
+async function openai(prompt, { key, model, quality, aspectRatio }) {
+  if (!key) throw new Error("set your OpenAI API key in the toolkit settings");
+  model ||= DEFAULT_OPENAI_IMAGE_MODEL;
+  const options = {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+    body: JSON.stringify({
+      model, prompt, n: 1,
+      size: openaiImageSize(aspectRatio, model),
+      quality: OPENAI_QUALITIES.includes(quality) ? quality : "medium",
+      // WebP keeps a scene background to a few hundred kB instead of a few MB of PNG.
+      output_format: "webp",
+      output_compression: 85
+    })
+  };
+  for (let attempt = 1; ; attempt++) {
+    const controller = new AbortController();
+    // Higher qualities can take a minute or two.
+    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS * 2);
+    let response;
+    let data;
+    try {
+      response = await fetch(OPENAI_API, { ...options, signal: controller.signal });
+      data = await response.json().catch(() => ({}));
+    } catch (err) {
+      if (attempt >= MAX_TRIES) throw new Error(err.name === "AbortError" ? `no image within ${(TIMEOUT_MS * 2) / 1000} seconds` : err.message);
+      await wait(5_000);
+      continue;
+    } finally {
+      clearTimeout(timer);
+    }
+    if (response.ok) {
+      const b64 = data?.data?.[0]?.b64_json;
+      if (!b64) throw new Error("OpenAI returned no image");
+      const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+      return new Blob([bytes], { type: `image/${data.output_format ?? "webp"}` });
+    }
+    const { message, retry, seconds } = openaiImageError(response.status, data, model);
+    if (!retry || attempt >= MAX_TRIES) throw new Error(message);
+    await wait(seconds * 1000);
+  }
+}
+
 /**
  * Generate one image.
  * @param {string} prompt
- * @param {{provider: "pollinations"|"cloudflare"|"gemini", seed?: number, url?: string, token?: string,
- *   key?: string, model?: string, aspectRatio?: string}} options url/token for Cloudflare, key/model for
- *   Gemini. aspectRatio is "16:9" unless given; Cloudflare ignores it (its images are square).
+ * @param {{provider: "pollinations"|"cloudflare"|"gemini"|"openai", seed?: number, url?: string, token?: string,
+ *   key?: string, model?: string, openaiKey?: string, openaiModel?: string, openaiQuality?: string,
+ *   aspectRatio?: string, onFallback?: (reason: string) => void}} options url/token for Cloudflare,
+ *   key/model for Gemini, openai* for OpenAI. aspectRatio is "16:9" unless given; Cloudflare ignores
+ *   it (its images are square). When OpenAI fails, onFallback gets the reason and Pollinations draws.
  * @returns {Promise<Blob>}
  */
-export async function generateImage(prompt, { provider, seed = Math.floor(Math.random() * 1e9), url, token, key, model, aspectRatio = "16:9" }) {
+export async function generateImage(prompt, { provider, seed = Math.floor(Math.random() * 1e9), url, token, key, model, openaiKey, openaiModel, openaiQuality, aspectRatio = "16:9", onFallback }) {
+  if (provider === "openai") {
+    try {
+      return await openai(prompt, { key: openaiKey, model: openaiModel, quality: openaiQuality, aspectRatio });
+    } catch (err) {
+      console.warn(`foundry-vtt-toolkit | OpenAI image failed, using Pollinations: ${err.message}`);
+      onFallback?.(err.message);
+      return pollinations(prompt, seed, aspectRatio);
+    }
+  }
   if (provider === "pollinations") return pollinations(prompt, seed, aspectRatio);
   if (provider === "cloudflare") return cloudflare(prompt, seed, { url, token });
   if (provider === "gemini") return gemini(prompt, { key, model, aspectRatio });
   throw new Error(`unknown image provider "${provider}"`);
 }
 
-export const PROVIDERS = ["pollinations", "cloudflare", "gemini"];
+export const PROVIDERS = ["pollinations", "cloudflare", "gemini", "openai"];

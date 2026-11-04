@@ -1,5 +1,6 @@
 // Helpers for the campaign-designer skill (.claude/skills/campaign-designer). Pure functions plus a small CLI:
-//   node scripts/campaign-tools.mjs prompt0 <system> <campaign-dir>   writes notebooklm/prompt-0.txt
+//   node scripts/campaign-tools.mjs prompt0 <system> <campaign-dir> [players]   writes notebooklm/prompt-0.txt
+//     (the group kit's "a group of N players" gets the number of players)
 //   node scripts/campaign-tools.mjs check <entries.txt> [more.txt…]   the campaign check, as Build campaign runs it
 import fs from "node:fs";
 import path from "node:path";
@@ -26,6 +27,12 @@ export function extractPrompt0(kit) {
   return close === -1 ? null : text.slice(open + 4, close);
 }
 
+/** Prompt 0 with the group kit's "a group of N players" filled in (unchanged without a number). */
+export function fillPlayers(prompt, players) {
+  const n = Number(players);
+  return Number.isInteger(n) && n > 0 ? prompt.replace(/\ba group of N players\b/g, `a group of ${n} players`) : prompt;
+}
+
 /** The parse warnings and campaign check for entries in the toolkit's ##ENTRY format. */
 export function report(raw) {
   const { entries, warnings } = parseBundle(raw);
@@ -38,10 +45,12 @@ export function report(raw) {
 function main(args) {
   const [command, ...rest] = args;
   if (command === "prompt0") {
-    const [system, dir] = rest;
-    if (!KITS[system] || !dir) throw new Error(`usage: prompt0 <${Object.keys(KITS).join("|")}> <campaign-dir>`);
-    const prompt = extractPrompt0(fs.readFileSync(KITS[system], "utf8"));
-    if (!prompt) throw new Error(`${KITS[system]} has no Prompt 0 code block`);
+    const [system, dir, players] = rest;
+    if (!KITS[system] || !dir) throw new Error(`usage: prompt0 <${Object.keys(KITS).join("|")}> <campaign-dir> [players]`);
+    const kit = extractPrompt0(fs.readFileSync(KITS[system], "utf8"));
+    if (!kit) throw new Error(`${KITS[system]} has no Prompt 0 code block`);
+    const prompt = fillPlayers(kit, players);
+    if (/a group of N players/.test(prompt)) console.log("Give the number of players to fill in \"a group of N players\".");
     if (prompt.length > PROMPT_LIMIT) throw new Error(`Prompt 0 is ${prompt.length} characters; NotebookLM takes ${PROMPT_LIMIT}`);
     const out = path.join(dir, "notebooklm", "prompt-0.txt");
     fs.mkdirSync(path.dirname(out), { recursive: true });
